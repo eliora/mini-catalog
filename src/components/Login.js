@@ -96,12 +96,6 @@ const Login = ({ onLogin }) => {
               {loading ? 'מתחבר...' : 'התחבר'}
             </Button>
           </FormContainer>
-
-          <Box sx={{ mt: 3, textAlign: 'center' }}>
-            <Typography variant="body2" color="text.secondary">
-              פרטי התחברות ברירת מחדל: admin / qprffo
-            </Typography>
-          </Box>
         </CardContent>
       </Card>
     </Container>

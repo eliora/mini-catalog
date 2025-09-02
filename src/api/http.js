@@ -20,7 +20,20 @@ export const http = async (endpoint, { body, token, ...customConfig } = {}) => {
   let data;
   try {
     const response = await fetch(`${API_BASE}/${endpoint}`, config);
-    data = await response.json();
+    
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.indexOf('application/json') !== -1) {
+      data = await response.json();
+    } else {
+      // If not JSON, handle as text to prevent parsing errors
+      const textData = await response.text();
+      if (response.ok) {
+        return textData; // Or handle as needed
+      }
+      // Provide a more informative error for non-JSON responses
+      throw new Error(`Expected JSON but received ${contentType || 'other'}. Response: ${textData.substring(0, 100)}...`);
+    }
+
     if (response.ok) {
       return data;
     }

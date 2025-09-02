@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { getProducts, getProductLines, saveProduct, deleteProduct as apiDeleteProduct } from '../api/products';
+import React, { useState, useEffect, useCallback } from 'react';
+import { getProducts, saveProduct, deleteProduct as apiDeleteProduct } from '../api/products';
 import { getOrders as apiGetOrders, updateOrder as apiUpdateOrder } from '../api/orders';
 import { importCsv as apiImportCsv, getCsvHeaders as apiGetCsvHeaders, exportCsv as apiExportCsv, replacePicsFromCsv } from '../api/csv';
 import {
@@ -26,7 +26,6 @@ import {
   Snackbar,
   Tabs,
   Tab,
-  Chip,
   Divider,
   FormControl,
   InputLabel,
@@ -40,16 +39,14 @@ import {
   Upload as UploadIcon,
   Download as DownloadIcon,
   Add as AddIcon,
-  Edit as EditIcon,
   Delete as DeleteIcon,
-  Visibility as ViewIcon,
   Close as CloseIcon,
   ExpandMore as ExpandMoreIcon,
   Logout as LogoutIcon,
   Remove as RemoveIcon
 } from '@mui/icons-material';
-
-const API_BASE = '/api';
+import ProductRow from './ProductRow';
+import OrderRow from './OrderRow';
 
 const Admin = ({ onLogout, adminToken }) => {
   const [tabValue, setTabValue] = useState(0);
@@ -95,12 +92,7 @@ const Admin = ({ onLogout, adminToken }) => {
     highlights: []
   });
 
-  useEffect(() => {
-    loadProducts();
-    loadOrders();
-  }, []);
-
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     try {
       console.log('[FE] Load products');
       const data = await getProducts();
@@ -110,9 +102,9 @@ const Admin = ({ onLogout, adminToken }) => {
       console.error('[FE] Load products error', error);
       showSnackbar('שגיאה בטעינת מוצרים', 'error');
     }
-  };
+  }, []);
 
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     try {
       console.log('[FE] Load orders');
       const data = await apiGetOrders(adminToken);
@@ -122,7 +114,12 @@ const Admin = ({ onLogout, adminToken }) => {
       console.error('[FE] Load orders error', error);
       showSnackbar('שגיאה בטעינת הזמנות', 'error');
     }
-  };
+  }, [adminToken]);
+
+  useEffect(() => {
+    loadProducts();
+    loadOrders();
+  }, [loadProducts, loadOrders]);
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
@@ -237,12 +234,10 @@ const Admin = ({ onLogout, adminToken }) => {
       console.log('[FE] Save product', productForm);
       await saveProduct(productForm, adminToken);
       
-      {
-        console.log('[FE] Save product success');
-        showSnackbar('מוצר נשמר בהצלחה', 'success');
-        setProductDialog(false);
-        loadProducts();
-      }
+      console.log('[FE] Save product success');
+      showSnackbar('מוצר נשמר בהצלחה', 'success');
+      setProductDialog(false);
+      loadProducts();
     } catch (error) {
       console.error('[FE] Save product network error', error);
       showSnackbar(error.message || 'שגיאה בשמירת מוצר', 'error');
@@ -254,11 +249,9 @@ const Admin = ({ onLogout, adminToken }) => {
       try {
         console.log('[FE] Delete product', ref);
         await apiDeleteProduct(ref, adminToken);
-        {
-          console.log('[FE] Delete product success');
-          showSnackbar('מוצר נמחק בהצלחה', 'success');
-          loadProducts();
-        }
+        console.log('[FE] Delete product success');
+        showSnackbar('מוצר נמחק בהצלחה', 'success');
+        loadProducts();
       } catch (error) {
         console.error('[FE] Delete product network error', error);
         showSnackbar(error.message || 'שגיאה במחיקת מוצר', 'error');
@@ -371,20 +364,12 @@ const Admin = ({ onLogout, adminToken }) => {
               </TableHead>
               <TableBody>
                 {products.map((product) => (
-                  <TableRow key={product.ref}>
-                    <TableCell sx={{ textAlign: 'right' }}>{product.ref}</TableCell>
-                    <TableCell sx={{ textAlign: 'right' }}>{product.productName}</TableCell>
-                    <TableCell sx={{ textAlign: 'right' }}>{product.line}</TableCell>
-                    <TableCell sx={{ textAlign: 'right' }}>${product.unitPrice}</TableCell>
-                    <TableCell sx={{ textAlign: 'right' }}>
-                      <IconButton onClick={() => handleEditProduct(product)}>
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton onClick={() => handleDeleteProduct(product.ref)}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
+                  <ProductRow
+                    key={product.ref}
+                    product={product}
+                    onEdit={handleEditProduct}
+                    onDelete={handleDeleteProduct}
+                  />
                 ))}
               </TableBody>
             </Table>
@@ -413,17 +398,12 @@ const Admin = ({ onLogout, adminToken }) => {
               <TableBody>
                 {Array.isArray(orders) && orders.length > 0 ? (
                   orders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell sx={{ textAlign: 'right' }}>{order.id}</TableCell>
-                      <TableCell sx={{ textAlign: 'right' }}>{order.customerName}</TableCell>
-                      <TableCell sx={{ textAlign: 'right' }}>${order.total}</TableCell>
-                      <TableCell sx={{ textAlign: 'right' }}>{formatDate(order.created_at)}</TableCell>
-                      <TableCell sx={{ textAlign: 'right' }}>
-                        <IconButton onClick={() => handleViewOrder(order)}>
-                          <ViewIcon />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
+                    <OrderRow
+                      key={order.id}
+                      order={order}
+                      onView={handleViewOrder}
+                      formatDate={formatDate}
+                    />
                   ))
                 ) : (
                   <TableRow>

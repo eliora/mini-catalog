@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { createOrder } from '../api/orders';
 import { useCart } from '../context/CartContext';
 import { useForm } from 'react-hook-form';
@@ -8,7 +8,6 @@ import {
   Paper,
   Typography,
   Button,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -23,28 +22,22 @@ import {
   Container,
   useTheme,
   useMediaQuery,
+  Chip,
   List,
   ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  Avatar,
-  CardActions,
-  Chip
+  ListItemText
 } from '@mui/material';
 import {
-  Remove as RemoveIcon,
-  Add as AddIcon,
-  Delete as DeleteIcon,
   ShoppingCart as CartIcon,
   CheckCircle as CheckIcon,
   Receipt as ReceiptIcon,
   LocalShipping as ShippingIcon
 } from '@mui/icons-material';
+import CartItem from './CartItem';
 
 const OrderForm = () => {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
   
   const [checkoutDialog, setCheckoutDialog] = useState(false);
@@ -56,17 +49,17 @@ const OrderForm = () => {
     }
   });
 
-  const calculateSubtotal = () => {
+  const subtotal = useMemo(() => {
     return cart.reduce((total, item) => total + (item.unitPrice * item.quantity), 0);
-  };
+  }, [cart]);
 
-  const calculateTax = () => {
-    return calculateSubtotal() * 0.17; // 17% tax
-  };
+  const tax = useMemo(() => {
+    return subtotal * 0.17; // 17% tax
+  }, [subtotal]);
 
-  const calculateTotal = () => {
-    return calculateSubtotal() + calculateTax();
-  };
+  const total = useMemo(() => {
+    return subtotal + tax;
+  }, [subtotal, tax]);
 
   const handleCheckout = async (data) => {
     console.log('=== CHECKOUT DEBUG ===');
@@ -133,15 +126,15 @@ const OrderForm = () => {
 
       const orderData = {
         customerName: customerName.trim(),
-        total: parseFloat(calculateTotal().toFixed(2)),
+        total: parseFloat(total.toFixed(2)),
         items: validatedItems
       };
       
       console.log('=== ORDER SUBMISSION DEBUG ===');
       console.log('Customer name:', customerName.trim());
       console.log('Customer name length:', customerName.trim().length);
-      console.log('Total calculated:', calculateTotal());
-      console.log('Total formatted:', parseFloat(calculateTotal().toFixed(2)));
+      console.log('Total calculated:', total);
+      console.log('Total formatted:', parseFloat(total.toFixed(2)));
       console.log('Cart length:', validatedItems.length);
       console.log('Cart items:', validatedItems);
       console.log('First cart item:', validatedItems[0]);
@@ -203,250 +196,119 @@ const OrderForm = () => {
         <Grid item xs={12} lg={8}>
           <Stack spacing={isSmall ? 1 : 2}>
             {cart.map((item) => (
-              <Card key={item.ref} sx={{ borderRadius: 2 }}>
-                <CardContent sx={{ p: isSmall ? 2 : 3 }}>
-                  <Stack direction="row" spacing={2} alignItems="flex-start">
-                    {/* Product Image Placeholder */}
-                    <Avatar
-                      sx={{
-                        width: isSmall ? 60 : 80,
-                        height: isSmall ? 60 : 80,
-                        bgcolor: 'primary.light',
-                        fontSize: isSmall ? '1rem' : '1.2rem'
-                      }}
-                    >
-                      {item.productName?.charAt(0)}
-                    </Avatar>
-
-                    {/* Product Details */}
-                    <Stack spacing={1} sx={{ flex: 1, textAlign: 'right' }}>
-                      <Typography 
-                        variant={isSmall ? "subtitle1" : "h6"} 
-                        sx={{ fontWeight: 600, lineHeight: 1.2 }}
-                      >
-                        {item.productName}
-                      </Typography>
-                      
-                      {item.productName2 && (
-                        <Typography 
-                          variant="body2" 
-                          color="text.secondary"
-                          sx={{ fontStyle: 'italic' }}
-                        >
-                          {item.productName2}
-                        </Typography>
-                      )}
-
-                      <Stack direction="row" spacing={1} justifyContent="flex-end">
-                        <Chip 
-                          label={`#${item.ref}`} 
-                          size="small" 
-                          variant="outlined" 
-                        />
-                        <Chip 
-                          label={`$${item.unitPrice}`} 
-                          size="small" 
-                          color="primary"
-                        />
-                      </Stack>
-
-                      {/* Quantity Controls */}
-                      <Stack 
-                        direction="row" 
-                        alignItems="center" 
-                        justifyContent="space-between"
-                        sx={{ mt: 1 }}
-                      >
-                        <Stack direction="row" alignItems="center" spacing={1}>
-                          <IconButton
-                            size="small"
-                            onClick={() => updateQuantity(item.ref, item.quantity - 1)}
-                            disabled={item.quantity <= 1}
-                            sx={{ 
-                              border: '1px solid',
-                              borderColor: 'divider',
-                              width: 32,
-                              height: 32
-                            }}
-                          >
-                            <RemoveIcon fontSize="small" />
-                          </IconButton>
-                          
-                          <Typography 
-                            variant="h6" 
-                            sx={{ 
-                              minWidth: 40, 
-                              textAlign: 'center',
-                              fontWeight: 600
-                            }}
-                          >
-                            {item.quantity}
-                          </Typography>
-                          
-                          <IconButton
-                            size="small"
-                            onClick={() => updateQuantity(item.ref, item.quantity + 1)}
-                            sx={{ 
-                              border: '1px solid',
-                              borderColor: 'divider',
-                              width: 32,
-                              height: 32
-                            }}
-                          >
-                            <AddIcon fontSize="small" />
-                          </IconButton>
-                        </Stack>
-
-                        {/* Item Total and Delete */}
-                        <Stack direction="row" alignItems="center" spacing={1}>
-                          <Typography 
-                            variant="h6" 
-                            color="primary"
-                            sx={{ fontWeight: 600 }}
-                          >
-                            ${(item.unitPrice * item.quantity).toFixed(2)}
-                          </Typography>
-                          
-                          <IconButton
-                            color="error"
-                            size="small"
-                            onClick={() => removeFromCart(item.ref)}
-                            sx={{ 
-                              '&:hover': {
-                                backgroundColor: 'error.main',
-                                color: 'error.contrastText'
-                              }
-                            }}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Stack>
-                      </Stack>
-                    </Stack>
-                  </Stack>
-                </CardContent>
-              </Card>
+              <CartItem
+                key={item.ref}
+                item={item}
+                onUpdateQuantity={updateQuantity}
+                onRemove={removeFromCart}
+              />
             ))}
           </Stack>
         </Grid>
 
         {/* Order Summary Sidebar */}
         <Grid item xs={12} lg={4}>
-          <Card 
+          <Paper 
+            variant="outlined"
             sx={{ 
               borderRadius: 2,
               position: { lg: 'sticky' },
-              top: { lg: 20 }
+              top: { lg: 20 },
+              p: isSmall ? 2 : 3
             }}
           >
-            <CardContent sx={{ p: isSmall ? 2 : 3 }}>
-              <Stack spacing={2}>
-                {/* Header */}
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <ReceiptIcon color="primary" />
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    סיכום הזמנה
+            <Stack spacing={2}>
+              {/* Header */}
+              <Stack direction="row" alignItems="center" spacing={1.5}>
+                <ReceiptIcon color="primary" />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  סיכום הזמנה
+                </Typography>
+              </Stack>
+
+              {/* Order Details List */}
+              <List disablePadding>
+                <ListItem disableGutters>
+                  <ListItemText primary="מוצרים בעגלה:" />
+                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    {cart.length}
                   </Typography>
-                </Stack>
+                </ListItem>
+                <ListItem disableGutters>
+                  <ListItemText primary="כמות כוללת:" />
+                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    {cart.reduce((sum, item) => sum + item.quantity, 0)}
+                  </Typography>
+                </ListItem>
+                <ListItem disableGutters>
+                  <ListItemText primary="סכום ביניים:" />
+                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    ${subtotal.toFixed(2)}
+                  </Typography>
+                </ListItem>
+                <ListItem disableGutters sx={{ color: 'text.secondary' }}>
+                  <ListItemText primary="מס (17%):" />
+                  <Typography variant="body2">
+                    ${tax.toFixed(2)}
+                  </Typography>
+                </ListItem>
+              </List>
 
-                <Divider />
+              <Divider />
 
-                {/* Order Details */}
-                <Stack spacing={1.5}>
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography variant="body1">מוצרים בעגלה:</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                      {cart.length}
-                    </Typography>
-                  </Stack>
-
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography variant="body1">כמות כוללת:</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                      {cart.reduce((sum, item) => sum + item.quantity, 0)}
-                    </Typography>
-                  </Stack>
-
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography variant="body1">סכום ביניים:</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                      ${calculateSubtotal().toFixed(2)}
-                    </Typography>
-                  </Stack>
-
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography variant="body1">מס (17%):</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                      ${calculateTax().toFixed(2)}
-                    </Typography>
-                  </Stack>
-                </Stack>
-
-                <Divider />
-
-                {/* Total */}
+              {/* Total */}
+              <Box
+                sx={{
+                  p: 2,
+                  bgcolor: 'grey.50',
+                  borderRadius: 1,
+                  border: '1px solid',
+                  borderColor: 'divider'
+                }}
+              >
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
                   <Typography variant="h6" sx={{ fontWeight: 700 }}>
                     סה"כ לתשלום:
                   </Typography>
                   <Typography 
                     variant="h5" 
-                    color="primary"
+                    color="primary.main"
                     sx={{ fontWeight: 700 }}
                   >
-                    ${calculateTotal().toFixed(2)}
+                    ${total.toFixed(2)}
                   </Typography>
                 </Stack>
+              </Box>
 
-                <Divider />
-
-                {/* Action Buttons */}
-                <Stack spacing={1}>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    fullWidth
-                    startIcon={<CheckIcon />}
-                    onClick={() => setCheckoutDialog(true)}
-                    sx={{ 
-                      py: 1.5,
-                      fontSize: '1.1rem',
-                      fontWeight: 600
-                    }}
-                  >
-                    המשך לתשלום
-                  </Button>
-
-                  <Button
-                    variant="outlined"
-                    size="medium"
-                    fullWidth
-                    onClick={clearCart}
-                    color="error"
-                  >
-                    נקה עגלה
-                  </Button>
-                </Stack>
-
-                {/* Shipping Info */}
-                <Paper 
+              {/* Action Buttons */}
+              <Stack spacing={1.5}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  fullWidth
+                  startIcon={<CheckIcon />}
+                  onClick={() => setCheckoutDialog(true)}
                   sx={{ 
-                    p: 1.5, 
-                    bgcolor: 'primary.light', 
-                    color: 'primary.contrastText',
-                    borderRadius: 1
+                    py: 1.25,
+                    fontSize: '1rem',
+                    fontWeight: 600
                   }}
                 >
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <ShippingIcon fontSize="small" />
-                    <Typography variant="body2">
-                      משלוח חינם מעל $100
-                    </Typography>
-                  </Stack>
-                </Paper>
+                  המשך לתשלום
+                </Button>
+
+                <Button
+                  variant="text"
+                  size="medium"
+                  fullWidth
+                  onClick={clearCart}
+                  color="error"
+                >
+                  נקה עגלה
+                </Button>
               </Stack>
-            </CardContent>
-          </Card>
+            </Stack>
+          </Paper>
         </Grid>
       </Grid>
     </Container>
@@ -521,14 +383,14 @@ const OrderForm = () => {
                 <Stack direction="row" justifyContent="space-between">
                   <Typography variant="body1">סכום ביניים:</Typography>
                   <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    ${calculateSubtotal().toFixed(2)}
+                    ${subtotal.toFixed(2)}
                   </Typography>
                 </Stack>
                 
                 <Stack direction="row" justifyContent="space-between">
                   <Typography variant="body1">מס (17%):</Typography>
                   <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    ${calculateTax().toFixed(2)}
+                    ${tax.toFixed(2)}
                   </Typography>
                 </Stack>
                 
@@ -539,7 +401,7 @@ const OrderForm = () => {
                     סה"כ לתשלום:
                   </Typography>
                   <Typography variant="h6" color="primary" sx={{ fontWeight: 700 }}>
-                    ${calculateTotal().toFixed(2)}
+                    ${total.toFixed(2)}
                   </Typography>
                 </Stack>
               </Stack>
