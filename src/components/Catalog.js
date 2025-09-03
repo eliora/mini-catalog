@@ -23,7 +23,7 @@ import {
   Fab,
   useTheme,
   useMediaQuery,
-  Container,
+
   ToggleButton,
   ToggleButtonGroup,
   Chip,
@@ -43,12 +43,15 @@ import {
   ViewList as ViewListIcon,
 } from '@mui/icons-material';
 import { useCart } from '../context/CartContext';
+import { useCompany } from '../context/CompanyContext';
 import { getProducts, getProductLines } from '../api/products';
 import ProductCard from './ProductCard';
 import ProductListItem from './ProductListItem';
+import OptimizedImage from './OptimizedImage';
 
 const Catalog = () => {
   const { cart, addToCart, updateQuantity, removeFromCart } = useCart();
+  const { settings: companySettings } = useCompany();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
@@ -226,315 +229,300 @@ const Catalog = () => {
   const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <Container maxWidth="lg" sx={{ direction: 'rtl', py: 3 }}>
+    <Box className="catalog-container" sx={{ direction: 'rtl', py: 3, width: '100%', maxWidth: 'none' }}>
       
-      {/* Sticky Mobile Header */}
-      {isMobile && (
-        <Paper
-          elevation={3}
-          sx={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 1100,
-            borderRadius: 0,
-            bgcolor: 'primary.main',
-            color: 'primary.contrastText'
-          }}
-        >
-          <Box sx={{ px: 2, py: 1.5 }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
+      {/* Modern Sticky Ecommerce Header */}
+      <Paper
+        elevation={2}
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 1100,
+          borderRadius: 0,
+          bgcolor: 'background.paper',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          mb: 2,
+        }}
+      >
+        {/* Main Header Row */}
+        <Box sx={{ px: { xs: 2, sm: 3 }, py: 1.5 }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
+            
+            {/* Left: Logo/Brand + Search */}
+            <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1, minWidth: 0 }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: 700, 
+                  color: 'primary.main',
+                  whiteSpace: 'nowrap',
+                  fontSize: { xs: '1rem', sm: '1.25rem' }
+                }}
+              >
+                {companySettings.companyName}
+              </Typography>
               
-              {/* Left: Cart Info */}
-              <Stack direction="row" spacing={1} alignItems="center">
+              {/* Integrated Search - Desktop */}
+              {!isMobile && (
+                <TextField
+                  size="small"
+                  placeholder="חיפוש מוצרים..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon color="action" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: searchTerm && (
+                      <InputAdornment position="end">
+                        <IconButton size="small" onClick={() => setSearchTerm('')}>
+                          <ClearIcon />
+                        </IconButton>
+                      </InputAdornment>
+                    )
+                  }}
+                  sx={{ 
+                    width: { sm: 200, md: 300 },
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      bgcolor: 'grey.50',
+                      '&:hover': { bgcolor: 'grey.100' },
+                      '&.Mui-focused': { bgcolor: 'background.paper' }
+                    }
+                  }}
+                />
+              )}
+            </Stack>
+
+            {/* Right: Cart + Actions */}
+            <Stack direction="row" alignItems="center" spacing={1}>
+              
+              {/* Category Filter - Desktop */}
+              {!isMobile && (
+                <FormControl size="small" sx={{ minWidth: 120 }}>
+                  <Select
+                    value={selectedLine}
+                    onChange={(e) => setSelectedLine(e.target.value)}
+                    displayEmpty
+                    sx={{ 
+                      borderRadius: 2,
+                      bgcolor: 'grey.50',
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'primary.main'
+                      }
+                    }}
+                  >
+                    <MenuItem value="">
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <FilterIcon fontSize="small" />
+                        <span>כל הקטגוריות</span>
+                      </Stack>
+                    </MenuItem>
+                    {productLines.map((line) => (
+                      <MenuItem key={line} value={line}>
+                        {line}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+
+              {/* View Mode Toggle - Desktop */}
+              {!isMobile && (
+                <ToggleButtonGroup
+                  value={viewMode}
+                  exclusive
+                  onChange={handleViewModeChange}
+                  size="small"
+                  aria-label="view mode"
+                >
+                  <ToggleButton value="catalog" aria-label="grid view">
+                    <ViewModuleIcon fontSize="small" />
+                  </ToggleButton>
+                  <ToggleButton value="compact" aria-label="list view">
+                    <ViewListIcon fontSize="small" />
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              )}
+
+              {/* Cart Button with Badge */}
+              <Button
+                variant="contained"
+                color="primary"
+                size={isMobile ? "small" : "medium"}
+                startIcon={
+                  <Badge badgeContent={totalCartItems} color="error" max={99}>
+                    <CartIcon />
+                  </Badge>
+                }
+                onClick={() => {
+                  // Navigate to order tab using the existing app-level navigation
+                  const event = new CustomEvent('navigateToTab', { detail: { tab: 1 } });
+                  window.dispatchEvent(event);
+                }}
+                sx={{ 
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  borderRadius: 2,
+                  px: { xs: 1.5, sm: 2 },
+                  minWidth: { xs: 'auto', sm: 100 }
+                }}
+              >
+                {!isMobile && (totalCartItems > 0 ? `עגלה (${totalCartItems})` : 'עגלה')}
+              </Button>
+
+              {/* Checkout Button - when cart has items */}
+              {totalCartItems > 0 && (
                 <Button
                   variant="contained"
                   color="secondary"
-                  size="small"
-                  startIcon={<CartIcon />}
-                  onClick={() => window.location.href = '/order'}
+                  size={isMobile ? "small" : "medium"}
+                  onClick={() => {
+                    // Navigate to order tab using the existing app-level navigation
+                    const event = new CustomEvent('navigateToTab', { detail: { tab: 1 } });
+                    window.dispatchEvent(event);
+                  }}
                   sx={{ 
                     textTransform: 'none',
                     fontWeight: 600,
                     borderRadius: 2,
-                    minWidth: 'auto'
+                    display: { xs: 'none', sm: 'flex' }
                   }}
                 >
-                  {totalCartItems || 0}
+                  המשך להזמנה
                 </Button>
-                
-                {totalCartItems > 0 && (
+              )}
+            </Stack>
+          </Stack>
+        </Box>
+
+        {/* Mobile Search & Filters Row */}
+        {isMobile && (
+          <Box sx={{ px: 2, pb: 1.5 }}>
+            <Stack spacing={1.5}>
+              {/* Mobile Search */}
+              <TextField
+                size="small"
+                placeholder="חיפוש מוצרים..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon color="action" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: searchTerm && (
+                    <InputAdornment position="end">
+                      <IconButton size="small" onClick={() => setSearchTerm('')}>
+                        <ClearIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }}
+                sx={{ 
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    bgcolor: 'grey.50'
+                  }
+                }}
+              />
+
+              {/* Mobile Controls Row */}
+              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                {/* Category Filter */}
+                <FormControl size="small" sx={{ minWidth: 120 }}>
+                  <Select
+                    value={selectedLine}
+                    onChange={(e) => setSelectedLine(e.target.value)}
+                    displayEmpty
+                    sx={{ borderRadius: 2, bgcolor: 'grey.50' }}
+                  >
+                    <MenuItem value="">כל הקטגוריות</MenuItem>
+                    {productLines.map((line) => (
+                      <MenuItem key={line} value={line}>
+                        {line.length > 15 ? line.substring(0, 15) + '...' : line}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                {/* View Mode Toggle */}
+                <ToggleButtonGroup
+                  value={viewMode}
+                  exclusive
+                  onChange={handleViewModeChange}
+                  size="small"
+                >
+                  <ToggleButton value="catalog">
+                    <ViewModuleIcon fontSize="small" />
+                  </ToggleButton>
+                  <ToggleButton value="compact">
+                    <ViewListIcon fontSize="small" />
+                  </ToggleButton>
+                </ToggleButtonGroup>
+
+                {/* Clear Filters */}
+                {(selectedLine || searchTerm) && (
                   <Button
                     variant="outlined"
                     size="small"
-                    onClick={() => window.location.href = '/order'}
+                    startIcon={<ClearIcon />}
+                    onClick={handleClearSearch}
                     sx={{ 
-                      textTransform: 'none',
-                      borderColor: 'primary.contrastText',
-                      color: 'primary.contrastText',
-                      '&:hover': {
-                        borderColor: 'primary.contrastText',
-                        backgroundColor: 'rgba(255,255,255,0.1)'
-                      }
+                      borderRadius: 2,
+                      textTransform: 'none'
                     }}
                   >
-                    הזמן
+                    נקה
                   </Button>
                 )}
               </Stack>
-
-              {/* Center: Title */}
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                קטלוג
-              </Typography>
-
-              {/* Right: Quick Category Switch */}
-              <FormControl size="small" sx={{ minWidth: 80 }}>
-                <Select
-                  value={selectedLine}
-                  onChange={(e) => setSelectedLine(e.target.value)}
-                  displayEmpty
-                  sx={{ 
-                    color: 'primary.contrastText',
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'primary.contrastText'
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'primary.contrastText'
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'primary.contrastText'
-                    },
-                    '& .MuiSvgIcon-root': {
-                      color: 'primary.contrastText'
-                    }
-                  }}
-                >
-                  <MenuItem value="">כל</MenuItem>
-                  {productLines.map((line) => (
-                    <MenuItem key={line} value={line}>
-                      {line.length > 10 ? line.substring(0, 10) + '...' : line}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
             </Stack>
           </Box>
-        </Paper>
-      )}
-      
-      {/* Add padding for mobile sticky header */}
-      <Box sx={{ height: isMobile ? 8 : 0 }} />
-      
+        )}
 
-
-      {/* Search and Filter Section */}
-      <Paper 
-        elevation={1}
-        sx={{ 
-          p: 3, 
-          mb: 3, 
-          borderRadius: 2,
-          border: '1px solid',
-          borderColor: 'divider'
-        }}
-      >
-        <Stack spacing={3}>
-          
-          {/* Search Bar */}
-          <Box>
-            <Typography 
-              variant="subtitle1" 
-              gutterBottom 
-              sx={{ 
-                fontWeight: 600,
-                textAlign: 'right',
-                mb: 1.5
-              }}
-            >
-              חיפוש מוצרים
-            </Typography>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="חיפוש לפי מספר מוצר או שם..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon color="action" />
-                  </InputAdornment>
-                ),
-                endAdornment: searchTerm && (
-                  <InputAdornment position="end">
-                    <IconButton 
-                      size="small" 
-                      onClick={() => setSearchTerm('')}
-                      edge="end"
-                    >
-                      <ClearIcon />
-                    </IconButton>
-                  </InputAdornment>
-                )
-              }}
-              sx={{ 
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                }
-              }}
-            />
-          </Box>
-          
-          {/* Filter Controls */}
-          <Stack 
-            direction={isSmall ? "column" : "row"} 
-            spacing={2} 
-            alignItems={isSmall ? "stretch" : "flex-end"}
-          >
-            
-            {/* Category Filter */}
-            <Box sx={{ flex: isSmall ? 'unset' : 1, maxWidth: isSmall ? 'unset' : 300 }}>
-              <Typography 
-                variant="subtitle2" 
-                gutterBottom 
-                sx={{ 
-                  fontWeight: 600,
-                  textAlign: 'right',
-                  mb: 1
-                }}
-              >
-                סינון לפי קטגוריה
+        {/* Active Filters Breadcrumb */}
+        {(selectedLine || searchTerm) && (
+          <Box sx={{ px: { xs: 2, sm: 3 }, pb: 1 }}>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+              <Typography variant="caption" color="text.secondary">
+                מוצגים:
               </Typography>
-              <FormControl fullWidth>
-                <Select
-                  value={selectedLine}
-                  onChange={(e) => setSelectedLine(e.target.value)}
-                  displayEmpty
-                  sx={{ borderRadius: 2 }}
-                >
-                  <MenuItem value="">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <FilterIcon fontSize="small" />
-                      כל הקטגוריות
-                    </Box>
-                  </MenuItem>
-                  {productLines.map((line) => (
-                    <MenuItem key={line} value={line}>
-                      {line}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-            
-            {/* Clear Filter Button */}
-            {(selectedLine || searchTerm) && (
-              <Button
-                variant="contained"
-                color="secondary"
-                startIcon={<ClearIcon />}
-                onClick={handleClearSearch}
-                sx={{ 
-                  borderRadius: 2,
-                  minWidth: 100,
-                  alignSelf: 'flex-end',
-                  textTransform: 'none',
-                  fontWeight: 500
-                }}
-              >
-                נקה
-              </Button>
-            )}
-          </Stack>
-          
-          {/* View Mode Toggle - Compact Row */}
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between',
-            py: 1,
-            px: 2,
-            bgcolor: 'grey.50',
-            borderRadius: 2,
-            border: '1px solid',
-            borderColor: 'divider'
-          }}>
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                fontWeight: 600,
-                color: 'text.secondary'
-              }}
-            >
-              תצוגה:
-            </Typography>
-            <ToggleButtonGroup
-              value={viewMode}
-              exclusive
-              onChange={handleViewModeChange}
-              size="small"
-              sx={{ 
-                '& .MuiToggleButton-root': {
-                  borderRadius: 1,
-                  px: 2,
-                  py: 0.5,
-                  fontSize: '0.875rem',
-                  border: 'none',
-                  '&.Mui-selected': {
-                    backgroundColor: 'primary.main',
-                    color: 'primary.contrastText',
-                    '&:hover': {
-                      backgroundColor: 'primary.dark',
-                    }
-                  },
-                  '&:not(.Mui-selected)': {
-                    backgroundColor: 'transparent',
-                    color: 'text.secondary',
-                    '&:hover': {
-                      backgroundColor: 'action.hover',
-                    }
-                  }
-                }
-              }}
-            >
-              <ToggleButton value="catalog" aria-label="catalog view">
-                <ViewModuleIcon fontSize="small" sx={{ mr: 0.5 }} />
-                רשת
-              </ToggleButton>
-              <ToggleButton value="compact" aria-label="compact view">
-                <ViewListIcon fontSize="small" sx={{ mr: 0.5 }} />
-                רשימה
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
-          
-          {/* Active Filters Only */}
-          {(selectedLine || searchTerm) && (
-            <Stack direction="row" spacing={1} alignItems="center">
               {selectedLine && (
                 <Chip 
                   label={selectedLine}
-                  color="secondary"
-                  variant="outlined"
                   size="small"
+                  variant="outlined"
+                  color="primary"
                   onDelete={() => setSelectedLine('')}
+                  sx={{ height: 24 }}
                 />
               )}
               {searchTerm && (
                 <Chip 
                   label={`חיפוש: "${searchTerm}"`}
-                  color="default"
-                  variant="outlined"
                   size="small"
+                  variant="outlined"
                   onDelete={() => setSearchTerm('')}
+                  sx={{ height: 24 }}
                 />
               )}
+              <Typography variant="caption" color="text.secondary">
+                ({filteredProducts.length} מוצרים)
+              </Typography>
             </Stack>
-          )}
-        </Stack>
+          </Box>
+        )}
       </Paper>
+      
+
+
+
 
       {/* Products Display - Conditional Rendering */}
       {viewMode === 'catalog' ? (
@@ -619,31 +607,15 @@ const Catalog = () => {
                   {/* Product Header */}
                   <Stack direction="row" spacing={2} alignItems="flex-start">
                     {selectedProduct.mainPic && (
-                      <CardMedia
-                        component="img"
+                      <OptimizedImage
                         src={selectedProduct.mainPic}
                         alt={selectedProduct.productName}
-                        crossOrigin="anonymous"
-                        sx={{
-                          width: isSmall ? 80 : 120,
-                          height: isSmall ? 80 : 120,
-                          objectFit: 'contain',
-                          borderRadius: 2,
-                          backgroundColor: 'grey.50',
-                          cursor: 'pointer'
-                        }}
+                        width={isSmall ? 80 : 120}
+                        height={isSmall ? 80 : 120}
                         onClick={() => handleZoom(selectedProduct.mainPic)}
-                        onError={(e) => {
-                          console.warn('Product image load failed:', selectedProduct.mainPic);
-                          if (e.currentTarget.src !== selectedProduct.mainPic) {
-                            e.currentTarget.src = selectedProduct.mainPic;
-                          } else {
-                            e.currentTarget.src = 'https://via.placeholder.com/120x120/cccccc/666666?text=אין+תמונה';
-                          }
-                        }}
-                        onLoad={() => {
-                          console.log('Product image loaded successfully:', selectedProduct.mainPic);
-                        }}
+                        objectFit="contain"
+                        borderRadius={2}
+                        priority={true}
                       />
                     )}
                     
@@ -743,31 +715,14 @@ const Catalog = () => {
                         <Grid container spacing={1}>
                           {parseJsonField(selectedProduct.pics).map((pic, idx) => (
                             <Grid item key={idx}>
-                              <img
+                              <OptimizedImage
                                 src={pic}
                                 alt={`${selectedProduct.productName} ${idx + 1}`}
-                                loading="lazy"
-                                crossOrigin="anonymous"
-                                onError={(e) => {
-                                  console.warn('Additional image load failed:', pic);
-                                  if (e.currentTarget.src !== pic) {
-                                    e.currentTarget.src = pic;
-                                  } else {
-                                    e.currentTarget.src = 'https://via.placeholder.com/100x100/cccccc/666666?text=אין+תמונה';
-                                  }
-                                }}
-                                onLoad={() => {
-                                  console.log('Additional image loaded successfully:', pic);
-                                }}
-                                style={{
-                                  width: 100,
-                                  height: 100,
-                                  objectFit: 'contain',
-                                  borderRadius: 8,
-                                  cursor: 'pointer',
-                                  backgroundColor: '#f5f5f5'
-                                }}
+                                width={100}
+                                height={100}
                                 onClick={() => handleZoom(pic)}
+                                objectFit="contain"
+                                borderRadius={2}
                               />
                             </Grid>
                           ))}
@@ -841,16 +796,17 @@ const Catalog = () => {
 
       {/* Image Zoom Dialog */}
       <Dialog open={imageZoom.open} onClose={() => setImageZoom({ open: false, src: '' })} maxWidth="lg" fullWidth>
-        <DialogContent sx={{ display: 'flex', justifyContent: 'center', p: 1 }}>
+        <DialogContent sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 1, minHeight: '60vh' }}>
           {imageZoom.src && (
-            <img 
-              src={imageZoom.src} 
-              alt="zoom" 
-              style={{ 
-                maxWidth: '100%', 
-                maxHeight: '80vh', 
-                objectFit: 'contain'
-              }} 
+            <OptimizedImage
+              src={imageZoom.src}
+              alt="zoom"
+              width="100%"
+              height="80vh"
+              objectFit="contain"
+              priority={true}
+              quality={95}
+              style={{ maxWidth: '100%', maxHeight: '80vh' }}
             />
           )}
         </DialogContent>
@@ -858,7 +814,7 @@ const Catalog = () => {
           <Button onClick={() => setImageZoom({ open: false, src: '' })}>סגור</Button>
         </DialogActions>
       </Dialog>
-    </Container>
+    </Box>
   );
 };
 

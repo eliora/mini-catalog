@@ -1,9 +1,21 @@
 1) catalog:
-    image exist in db, if click it open, but not seen without click, also pic is big and sometimes low res is needed. think of how to show it without need to upload all pics everytime
-    in non-mobile view like desktop size is on the right of the name, not good. make it look like in mobile. size on the left
-    make it possible to edit qty with typing in keyboard.
+✅ COMPLETED - Remove "קטלוג מוצרים" - now uses dynamic company settings
+
 2) order form:
-i dont like layout follow mui for order summary practices.
-add missing client name field.
-print/save button make it not good lookin, bad layout, make it look nice.
-order number looks un professional, like a token then a typical orde number.
+✅ COMPLETED - Professional invoice-style print layout following ecommerce best practices
+✅ COMPLETED - Classic MUI order summary design with proper styling
+✅ COMPLETED - Professional order number format (YYYY-NNNN)
+✅ COMPLETED - Fixed margins, padding, and spacing issues in print layout
+
+3) order summary after submit:
+✅ COMPLETED - More compact view 2-4 lines max פרטי ההזמנה
+✅ COMPLETED - מספר הזמנה format: #2025-NNNN
+
+4) ✅ NEW FEATURE - Admin Panel Company Settings:
+✅ COMPLETED - Created editable company information system
+✅ COMPLETED - Fields for "קטלוג מוצרים", "מערכת ניהול הזמנות", "אתר מקצועי למוצרי יופי"
+✅ COMPLETED - Admin panel interface in "מערכת" tab
+✅ COMPLETED - Dynamic integration with catalog header and print layouts
+✅ COMPLETED - Company contact info (address, phone, email)
+✅ COMPLETED - Customizable invoice footer text
+✅ COMPLETED - Real-time preview of changes

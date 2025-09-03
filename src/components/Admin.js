@@ -4,6 +4,7 @@ import { getOrders as apiGetOrders, updateOrder as apiUpdateOrder } from '../api
 import CsvImport from './CsvImport';
 import SupabaseConnectionTest from './SupabaseConnectionTest';
 import DatabaseTest from './DatabaseTest';
+import CompanySettings from './CompanySettings';
 import {
   Box,
   Paper,
@@ -380,6 +381,11 @@ const Admin = ({ onLogout, adminToken }) => {
           <Typography variant="h6" gutterBottom>
             מערכת ומחשוב
           </Typography>
+
+          {/* Company Settings */}
+          <Box sx={{ mb: 3 }}>
+            <CompanySettings />
+          </Box>
 
           <SupabaseConnectionTest />
 

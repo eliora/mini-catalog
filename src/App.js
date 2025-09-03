@@ -19,6 +19,8 @@ import Login from './components/Login';
 import AppProviders from './providers/AppProviders';
 import { useAuth } from './context/AuthContext';
 import { useCart } from './context/CartContext';
+// Import performance monitor for development
+import './utils/imagePerformance';
 
 // RTL theme with Hebrew font support
 const theme = createTheme({
@@ -70,6 +72,18 @@ function AppInner() {
   useEffect(() => {
     console.log('Cart updated:', cart);
   }, [cart]);
+
+  // Listen for navigation events from child components
+  useEffect(() => {
+    const handleNavigateToTab = (event) => {
+      setSelectedTab(event.detail.tab);
+    };
+
+    window.addEventListener('navigateToTab', handleNavigateToTab);
+    return () => {
+      window.removeEventListener('navigateToTab', handleNavigateToTab);
+    };
+  }, []);
 
   // Save selected tab to localStorage whenever it changes
   useEffect(() => {

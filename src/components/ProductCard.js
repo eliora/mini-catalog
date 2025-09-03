@@ -4,6 +4,7 @@ import {
   Typography, Chip, IconButton, TextField, Stack, Box, useTheme, useMediaQuery
 } from '@mui/material';
 import { Add as AddIcon, Remove as RemoveIcon, Info as InfoIcon } from '@mui/icons-material';
+import OptimizedImage from './OptimizedImage';
 
 const ProductCard = ({
   product,
@@ -37,49 +38,18 @@ const ProductCard = ({
           height: isSmall ? 200 : 240,
           position: 'relative',
           backgroundColor: 'grey.50',
-          cursor: 'pointer',
         }}
-        onClick={() => onImageClick(product.mainPic)}
       >
-        {product.mainPic ? (
-          <img
-            src={product.mainPic}
-            alt={product.productName}
-            loading="lazy"
-            crossOrigin="anonymous"
-            onError={(e) => {
-              console.warn('Image load failed:', product.mainPic);
-              // Try to load image directly without proxy
-              if (e.currentTarget.src !== product.mainPic) {
-                e.currentTarget.src = product.mainPic;
-              } else {
-                // If still failing, show placeholder
-                e.currentTarget.src = 'https://via.placeholder.com/300x200/cccccc/666666?text=אין+תמונה';
-              }
-            }}
-            onLoad={() => {
-              console.log('Image loaded successfully:', product.mainPic);
-            }}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              padding: '8px',
-            }}
-          />
-        ) : (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100%',
-              color: 'text.secondary',
-            }}
-          >
-            <Typography variant="body2">אין תמונה</Typography>
-          </Box>
-        )}
+        <OptimizedImage
+          src={product.mainPic}
+          alt={product.productName}
+          width={isSmall ? 200 : 240}
+          height={isSmall ? 200 : 240}
+          onClick={() => onImageClick(product.mainPic)}
+          objectFit="contain"
+          style={{ padding: '8px' }}
+          borderRadius={0}
+        />
         {product.line && (
           <Chip
             label={product.line}
@@ -176,9 +146,23 @@ const ProductCard = ({
               }}
               sx={{
                 width: 60,
-                '& .MuiOutlinedInput-root': { height: 32 },
+                '& .MuiOutlinedInput-root': { 
+                  height: 32,
+                  '& fieldset': {
+                    borderColor: 'divider'
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'primary.main'
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'primary.main'
+                  }
+                },
                 '& input': {
                   textAlign: 'center',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  padding: '6px 4px',
                   MozAppearance: 'textfield',
                   '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button': {
                     WebkitAppearance: 'none',

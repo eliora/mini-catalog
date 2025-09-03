@@ -4,6 +4,7 @@ import {
   Grid, Typography, Chip, IconButton, Stack, Box, TextField, useTheme, useMediaQuery
 } from '@mui/material';
 import { Add as AddIcon, Remove as RemoveIcon, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
+import OptimizedImage from './OptimizedImage';
 
 const ProductListItem = ({
   product,
@@ -30,48 +31,19 @@ const ProductListItem = ({
         />
       </Grid>
       <Grid item xs="auto">
-        <Box
-          sx={{
-            width: 36,
-            height: 36,
-            borderRadius: 1,
-            backgroundColor: 'grey.100',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-            cursor: 'pointer',
-          }}
+        <OptimizedImage
+          src={product.mainPic}
+          alt={product.productName}
+          width={48}
+          height={48}
           onClick={(e) => {
             e.stopPropagation();
             onImageClick(product.mainPic);
           }}
-        >
-          {product.mainPic ? (
-            <img
-              src={product.mainPic}
-              alt={product.productName}
-              loading="lazy"
-              crossOrigin="anonymous"
-              onError={(e) => {
-                console.warn('Image load failed:', product.mainPic);
-                if (e.currentTarget.src !== product.mainPic) {
-                  e.currentTarget.src = product.mainPic;
-                } else {
-                  e.currentTarget.src = 'https://via.placeholder.com/36x36/e0e0e0/757575?text=?';
-                }
-              }}
-              onLoad={() => {
-                console.log('Image loaded successfully:', product.mainPic);
-              }}
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-            />
-          ) : (
-            <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.6rem' }}>
-              ?
-            </Typography>
-          )}
-        </Box>
+          objectFit="contain"
+          style={{ padding: '2px' }}
+          borderRadius={1}
+        />
       </Grid>
       <Grid item xs>
         <Box sx={{ textAlign: 'right', minWidth: 0 }}>
@@ -139,7 +111,26 @@ const ProductListItem = ({
                 onQuantityChange(product.ref, '99');
               }
             }}
-            sx={{ width: 54, '& .MuiOutlinedInput-root': { height: 28 }, '& input': { textAlign: 'center', fontSize: '0.75rem', p: 0 } }}
+            sx={{ 
+              width: 54, 
+              '& .MuiOutlinedInput-root': { 
+                height: 28,
+                '& fieldset': {
+                  border: 'none'
+                }
+              }, 
+              '& input': { 
+                textAlign: 'center', 
+                fontSize: '0.75rem', 
+                fontWeight: 600,
+                p: 0,
+                MozAppearance: 'textfield',
+                '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button': {
+                  WebkitAppearance: 'none',
+                  margin: 0,
+                },
+              } 
+            }}
             inputProps={{ min: 0, max: 99, step: 1, inputMode: 'numeric', pattern: '[0-9]*' }}
           />
           <IconButton size="small" onClick={() => onIncrement(product)} sx={{ width: 28, height: 28, borderRadius: '0 4px 4px 0' }}>
@@ -224,8 +215,23 @@ const ProductListItem = ({
             }}
             sx={{
               width: 44,
-              '& .MuiOutlinedInput-root': { height: 24 },
-              '& input': { textAlign: 'center', fontSize: '0.7rem', p: 0 }
+              '& .MuiOutlinedInput-root': { 
+                height: 24,
+                '& fieldset': {
+                  border: 'none'
+                }
+              },
+              '& input': { 
+                textAlign: 'center', 
+                fontSize: '0.7rem', 
+                fontWeight: 600,
+                p: 0,
+                MozAppearance: 'textfield',
+                '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button': {
+                  WebkitAppearance: 'none',
+                  margin: 0,
+                },
+              }
             }}
             inputProps={{ min: 0, max: 99, step: 1, inputMode: 'numeric', pattern: '[0-9]*' }}
           />
@@ -300,33 +306,15 @@ const ProductListItem = ({
         <Stack spacing={1.5} sx={{ textAlign: 'right' }}>
           {isMobile && product.mainPic && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
-              <Box
-                sx={{
-                  width: 120,
-                  height: 120,
-                  borderRadius: 2,
-                  backgroundColor: 'grey.50',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                }}
+              <OptimizedImage
+                src={product.mainPic}
+                alt={product.productName}
+                width={120}
+                height={120}
                 onClick={() => onImageClick(product.mainPic)}
-              >
-                <img
-                  src={product.mainPic}
-                  alt={product.productName}
-                  loading="lazy"
-                  crossOrigin="anonymous"
-                  onError={(e) => {
-                    e.currentTarget.src = 'https://via.placeholder.com/120x120/e0e0e0/757575?text=אין+תמונה';
-                  }}
-                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                />
-              </Box>
+                objectFit="contain"
+                borderRadius={2}
+              />
             </Box>
           )}
           {shouldRenderContent(product.description) && (
@@ -360,29 +348,16 @@ const ProductListItem = ({
               </Typography>
               <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
                 {parseJsonField(product.pics).slice(0, 4).map((pic, idx) => (
-                  <Box
+                  <OptimizedImage
                     key={idx}
-                    sx={{
-                      width: 60,
-                      height: 60,
-                      borderRadius: 1,
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      backgroundColor: 'grey.50',
-                    }}
+                    src={pic}
+                    alt={`${product.productName} ${idx + 1}`}
+                    width={60}
+                    height={60}
                     onClick={() => onImageClick(pic)}
-                  >
-                    <img
-                      src={pic}
-                      alt={`${product.productName} ${idx + 1}`}
-                      loading="lazy"
-                      crossOrigin="anonymous"
-                      onError={(e) => {
-                        e.currentTarget.src = 'https://via.placeholder.com/60x60/cccccc/666666?text=אין+תמונה';
-                      }}
-                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                    />
-                  </Box>
+                    objectFit="contain"
+                    borderRadius={1}
+                  />
                 ))}
               </Stack>
             </Box>

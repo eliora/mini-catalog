@@ -1,3 +1,4 @@
+always prefer inline, non pop-up window, full width, compact view
 only react no node.js
 keep system errors in english
 Use React hooks efficiently and avoid class components unless necessary.
