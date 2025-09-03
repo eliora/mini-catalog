@@ -53,14 +53,32 @@ const theme = createTheme({
   },
 });
 
+
+
 function AppInner() {
-  const [selectedTab, setSelectedTab] = useState(0);
+  // Get initial tab from localStorage or URL, default to 0
+  const getInitialTab = () => {
+    const savedTab = localStorage.getItem('selectedTab');
+    const urlTab = new URLSearchParams(window.location.search).get('tab');
+    return urlTab ? parseInt(urlTab) : (savedTab ? parseInt(savedTab) : 0);
+  };
+
+  const [selectedTab, setSelectedTab] = useState(getInitialTab());
   const { cart, getCartItemCount } = useCart();
   const { isAdmin, token, logout } = useAuth();
 
   useEffect(() => {
     console.log('Cart updated:', cart);
   }, [cart]);
+
+  // Save selected tab to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('selectedTab', selectedTab.toString());
+    // Also update URL for bookmarkability
+    const url = new URL(window.location);
+    url.searchParams.set('tab', selectedTab.toString());
+    window.history.replaceState(null, '', url.toString());
+  }, [selectedTab]);
 
   const handleAdminLogin = async () => {
     setSelectedTab(2);
@@ -96,18 +114,18 @@ function AppInner() {
         </AppBar>
 
         <Container maxWidth="xl" sx={{ mt: 3, mb: 3 }}>
-          <Tabs 
-            value={selectedTab} 
+          <Tabs
+            value={selectedTab}
             onChange={(e, newValue) => setSelectedTab(newValue)}
             sx={{ mb: 3 }}
           >
             <Tab label="קטלוג" />
-            <Tab 
+            <Tab
               label={
                 <Badge badgeContent={getCartItemCount()} color="secondary">
                   טופס הזמנה
                 </Badge>
-              } 
+              }
             />
             <Tab label="ניהול" />
           </Tabs>

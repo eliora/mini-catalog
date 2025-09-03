@@ -12,28 +12,20 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "cors": "^2.8.5",
-    "csv-parser": "^3.0.0",
     "dotenv": "^17.2.2",
-    "express": "^4.18.2",
-    "multer": "^1.4.5-lts.1",
+
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-hook-form": "^7.62.0",
-    "react-hook-form-mui": "^8.0.0",
+
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
+    "start:no-browser": "set BROWSER=none&& react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "server": "node server.js",
-    "server:supabase": "node server-supabase.js",
-    "dev": "concurrently \"npm run server\" \"npm run start\"",
-    "dev:supabase": "concurrently \"npm run server:supabase\" \"npm run start\"",
-    "migrate:supabase": "node migrate-to-supabase.js"
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
@@ -55,6 +47,5 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
-  },
-  "proxy": "http://localhost:5000"
+  }
 }

@@ -1,23 +1,15 @@
-import React, { useState, useMemo } from 'react';
-import { createOrder } from '../api/orders';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
+import { createOrder, getOrderById } from '../api/orders';
 import { useCart } from '../context/CartContext';
-import { useForm } from 'react-hook-form';
-import { FormContainer, TextFieldElement } from 'react-hook-form-mui';
 import {
   Box,
   Paper,
   Typography,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Alert,
   Snackbar,
   Divider,
   Grid,
-  Card,
-  CardContent,
   Stack,
   Container,
   useTheme,
@@ -25,13 +17,19 @@ import {
   Chip,
   List,
   ListItem,
-  ListItemText
+  ListItemText,
+} from '@mui/material';
+import {
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody
 } from '@mui/material';
 import {
   ShoppingCart as CartIcon,
   CheckCircle as CheckIcon,
-  Receipt as ReceiptIcon,
-  LocalShipping as ShippingIcon
+  Receipt as ReceiptIcon
 } from '@mui/icons-material';
 import CartItem from './CartItem';
 
@@ -39,19 +37,25 @@ const OrderForm = () => {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
   const theme = useTheme();
   const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
-  
-  const [checkoutDialog, setCheckoutDialog] = useState(false);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-  const formContext = useForm({
-    defaultValues: {
-      customerName: ''
-    }
-  });
+  // const [checkoutDialog, setCheckoutDialog] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [customerName, setCustomerName] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderSummary, setOrderSummary] = useState(null);
+  const summaryRef = useRef(null);
 
   const subtotal = useMemo(() => {
     return cart.reduce((total, item) => total + (item.unitPrice * item.quantity), 0);
   }, [cart]);
+
+  const formatCurrency = useCallback((amount) => {
+    try {
+      return new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', minimumFractionDigits: 2 }).format(amount);
+    } catch (_) {
+      return `₪${amount.toFixed(2)}`;
+    }
+  }, []);
 
   const tax = useMemo(() => {
     return subtotal * 0.17; // 17% tax
@@ -61,26 +65,18 @@ const OrderForm = () => {
     return subtotal + tax;
   }, [subtotal, tax]);
 
-  const handleCheckout = async (data) => {
-    console.log('=== CHECKOUT DEBUG ===');
-    console.log('Cart at checkout:', cart);
-    console.log('Cart length:', cart.length);
-    if (cart.length > 0) {
-      console.log('First cart item:', cart[0]);
-      console.log('First cart item keys:', Object.keys(cart[0]));
+  const handleCheckout = useCallback(async () => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('=== CHECKOUT DEBUG ===');
+      console.log('Cart at checkout:', cart);
+      console.log('Cart length:', cart.length);
+      if (cart.length > 0) {
+        console.log('First cart item:', cart[0]);
+        console.log('First cart item keys:', Object.keys(cart[0]));
+      }
     }
     
-    const customerName = data.customerName;
-    
-    if (!customerName || !customerName.trim()) {
-      setSnackbar({ open: true, message: 'אנא הזן שם לקוח', severity: 'error' });
-      return;
-    }
-
-    if (customerName.trim().length < 2) {
-      setSnackbar({ open: true, message: 'שם לקוח חייב להיות לפחות 2 תווים', severity: 'error' });
-      return;
-    }
+    const finalCustomerName = (customerName && customerName.trim().length >= 2) ? customerName.trim() : 'ללא שם';
 
     if (cart.length === 0) {
       setSnackbar({ open: true, message: 'העגלה ריקה', severity: 'error' });
@@ -110,6 +106,8 @@ const OrderForm = () => {
     }
 
     try {
+      setIsSubmitting(true);
+
       // Ensure cart items have all required fields
       const validatedItems = cart.map(item => ({
         ref: item.ref || '',
@@ -125,43 +123,73 @@ const OrderForm = () => {
       }));
 
       const orderData = {
-        customerName: customerName.trim(),
+        customerName: finalCustomerName,
         total: parseFloat(total.toFixed(2)),
         items: validatedItems
       };
-      
-      console.log('=== ORDER SUBMISSION DEBUG ===');
-      console.log('Customer name:', customerName.trim());
-      console.log('Customer name length:', customerName.trim().length);
-      console.log('Total calculated:', total);
-      console.log('Total formatted:', parseFloat(total.toFixed(2)));
-      console.log('Cart length:', validatedItems.length);
-      console.log('Cart items:', validatedItems);
-      console.log('First cart item:', validatedItems[0]);
-      console.log('Order data to send:', orderData);
-      console.log('JSON stringified length:', JSON.stringify(orderData).length);
-      console.log('=== END DEBUG ===');
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('=== ORDER SUBMISSION DEBUG ===');
+        console.log('Customer name:', customerName.trim());
+        console.log('Customer name length:', customerName.trim().length);
+        console.log('Total calculated:', total);
+        console.log('Total formatted:', parseFloat(total.toFixed(2)));
+        console.log('Cart length:', validatedItems.length);
+        console.log('Cart items:', validatedItems);
+        console.log('First cart item:', validatedItems[0]);
+        console.log('Order data to send:', orderData);
+        console.log('JSON stringified length:', JSON.stringify(orderData).length);
+        console.log('=== END DEBUG ===');
+      }
 
       const result = await createOrder(orderData);
       if (result && result.id) {
-        setSnackbar({ 
-          open: true, 
+        try {
+          // optional verification read-back
+          await getOrderById(result.id);
+        } catch (_) {}
+        setSnackbar({
+          open: true,
           message: `ההזמנה מספר #${result.id} הוגשה בהצלחה!`,
-          severity: 'success' 
+          severity: 'success'
         });
-        setCheckoutDialog(false);
-        formContext.reset();
-        // Clear cart after successful order
+        // Capture a snapshot for the summary page
+        setOrderSummary({ 
+          id: result.id, 
+          customerName: finalCustomerName,
+          items: validatedItems,
+          subtotal: parseFloat(subtotal.toFixed(2)),
+          tax: parseFloat(tax.toFixed(2)),
+          total: parseFloat(total.toFixed(2))
+        });
+        setCustomerName('');
         clearCart();
       } else {
-        setSnackbar({ open: true, message: 'שגיאה בשליחת ההזמנה', severity: 'error' });
+        throw new Error('הזמנה לא התקבלה כראוי');
       }
     } catch (error) {
-      setSnackbar({ open: true, message: error.message || 'שגיאה בהגשת הזמנה', severity: 'error' });
-    }
-  };
+      console.error('Order submission error:', error);
 
-  if (cart.length === 0) {
+      // Provide more specific error messages
+      let errorMessage = `שגיאה בהגשת ההזמנה: ${error.message}`;
+
+      if (error.message.includes('customerName') || error.message.includes('column')) {
+        errorMessage = 'שגיאה במסד הנתונים: אנא בדוק שהטבלה "orders" קיימת עם העמודות הנכונות';
+      } else if (error.message.includes('network') || error.message.includes('fetch')) {
+        errorMessage = 'שגיאת רשת: אנא בדוק את החיבור לאינטרנט ונסה שוב';
+      }
+
+      setSnackbar({
+        open: true,
+        message: errorMessage,
+        severity: 'error'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [cart, customerName, total, clearCart, subtotal, tax]);
+
+  if (!orderSummary && cart.length === 0) {
     return (
       <Box sx={{ p: 3, textAlign: 'center', direction: 'rtl' }}>
         <CartIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
@@ -178,11 +206,79 @@ const OrderForm = () => {
   return (
     <>
     <Container maxWidth="lg" sx={{ direction: 'rtl', py: 2 }}>
+      {/* Post submit full-width summary page */}
+      {orderSummary && (
+        <Paper ref={summaryRef} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+            <Typography variant={isSmall ? 'h6' : 'h5'} sx={{ fontWeight: 700 }}>
+              סיכום הזמנה
+            </Typography>
+            <Stack direction="row" spacing={1}>
+              <Button variant="outlined" onClick={() => window.print()}>הדפס / שמור כ-PDF</Button>
+            </Stack>
+          </Stack>
+
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={12} md={4}>
+              <Typography variant="subtitle2" color="text.secondary">מספר הזמנה</Typography>
+              <Typography variant="body1" sx={{ fontWeight: 600 }}>{orderSummary.id}</Typography>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Typography variant="subtitle2" color="text.secondary">שם לקוח</Typography>
+              <Typography variant="body1" sx={{ fontWeight: 600 }}>{orderSummary.customerName}</Typography>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Typography variant="subtitle2" color="text.secondary">סה"כ לתשלום</Typography>
+              <Typography variant="body1" sx={{ fontWeight: 700, color: 'primary.main' }}>{formatCurrency(orderSummary.total)}</Typography>
+            </Grid>
+          </Grid>
+
+          <Table size={isSmall ? 'small' : 'medium'}>
+            <TableHead>
+              <TableRow>
+                <TableCell align="right">מקט</TableCell>
+                <TableCell align="right">מוצר</TableCell>
+                <TableCell align="right">גודל</TableCell>
+                <TableCell align="right">כמות</TableCell>
+                <TableCell align="right">מחיר יחידה</TableCell>
+                <TableCell align="right">סה"כ</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {orderSummary.items.map((it) => (
+                <TableRow key={`${it.ref}-${it.size || ''}`}>
+                  <TableCell align="right">{it.ref}</TableCell>
+                  <TableCell align="right">{it.productName || it.productName2}</TableCell>
+                  <TableCell align="right">{it.size || '-'}</TableCell>
+                  <TableCell align="right">{it.quantity}</TableCell>
+                  <TableCell align="right">{formatCurrency(it.unitPrice)}</TableCell>
+                  <TableCell align="right">{formatCurrency(it.unitPrice * it.quantity)}</TableCell>
+                </TableRow>
+              ))}
+              <TableRow>
+                <TableCell colSpan={4} />
+                <TableCell align="right" sx={{ fontWeight: 600 }}>סכום ביניים</TableCell>
+                <TableCell align="right">{formatCurrency(orderSummary.subtotal)}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell colSpan={4} />
+                <TableCell align="right" sx={{ color: 'text.secondary' }}>מס (17%)</TableCell>
+                <TableCell align="right">{formatCurrency(orderSummary.tax)}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell colSpan={4} />
+                <TableCell align="right" sx={{ fontWeight: 700 }}>סה"כ לתשלום</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 700, color: 'primary.main' }}>{formatCurrency(orderSummary.total)}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </Paper>
+      )}
       {/* Header */}
       <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
         <CartIcon color="primary" sx={{ fontSize: isSmall ? 28 : 32 }} />
         <Typography variant={isSmall ? "h5" : "h4"} sx={{ fontWeight: 600 }}>
-          עגלת קניות
+          סיכום הזמנה
         </Typography>
         <Chip 
           label={`${cart.length} מוצרים`} 
@@ -192,6 +288,7 @@ const OrderForm = () => {
       </Stack>
 
       {/* Cart Items - Mobile First Design */}
+      {!orderSummary && (
       <Grid container spacing={isSmall ? 2 : 3}>
         <Grid item xs={12} lg={8}>
           <Stack spacing={isSmall ? 1 : 2}>
@@ -242,14 +339,14 @@ const OrderForm = () => {
                 </ListItem>
                 <ListItem disableGutters>
                   <ListItemText primary="סכום ביניים:" />
-                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                    ${subtotal.toFixed(2)}
+                  <Typography variant="body1" sx={{ fontWeight: 500 }} aria-label="סכום ביניים">
+                    {formatCurrency(subtotal)}
                   </Typography>
                 </ListItem>
                 <ListItem disableGutters sx={{ color: 'text.secondary' }}>
                   <ListItemText primary="מס (17%):" />
-                  <Typography variant="body2">
-                    ${tax.toFixed(2)}
+                  <Typography variant="body2" aria-label="מס">
+                    {formatCurrency(tax)}
                   </Typography>
                 </ListItem>
               </List>
@@ -274,8 +371,9 @@ const OrderForm = () => {
                     variant="h5" 
                     color="primary.main"
                     sx={{ fontWeight: 700 }}
+                    aria-label={'סה"כ לתשלום'}
                   >
-                    ${total.toFixed(2)}
+                    {formatCurrency(total)}
                   </Typography>
                 </Stack>
               </Box>
@@ -287,14 +385,15 @@ const OrderForm = () => {
                   size="large"
                   fullWidth
                   startIcon={<CheckIcon />}
-                  onClick={() => setCheckoutDialog(true)}
+                  onClick={handleCheckout}
                   sx={{ 
                     py: 1.25,
                     fontSize: '1rem',
                     fontWeight: 600
                   }}
+                  disabled={isSubmitting}
                 >
-                  המשך לתשלום
+                  {isSubmitting ? 'שולח...' : 'הגש הזמנה'}
                 </Button>
 
                 <Button
@@ -311,135 +410,10 @@ const OrderForm = () => {
           </Paper>
         </Grid>
       </Grid>
+      )}
     </Container>
 
-    {/* Checkout Dialog */}
-      <Dialog 
-        open={checkoutDialog} 
-        onClose={() => setCheckoutDialog(false)} 
-        maxWidth="sm" 
-        fullWidth
-        fullScreen={isSmall}
-      >
-        <DialogTitle sx={{ textAlign: 'right', pb: 1 }}>
-          <Stack direction="row" alignItems="center" spacing={1} justifyContent="flex-end">
-            <CheckIcon color="primary" />
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              השלם את ההזמנה שלך
-            </Typography>
-          </Stack>
-        </DialogTitle>
-        
-        <DialogContent sx={{ px: isSmall ? 2 : 3 }}>
-          <Stack spacing={3} sx={{ mt: 1 }}>
-            {/* Customer Details */}
-            <Paper sx={{ p: 2, borderRadius: 2, bgcolor: 'grey.50' }}>
-              <Typography variant="h6" gutterBottom sx={{ textAlign: 'right', fontWeight: 600 }}>
-                פרטי לקוח
-              </Typography>
-              
-              <FormContainer
-                formContext={formContext}
-                onSuccess={handleCheckout}
-                id="checkout-form"
-              >
-                <TextFieldElement
-                  name="customerName"
-                  label="שם לקוח מלא"
-                  required
-                  fullWidth
-                  placeholder="הזן שם לקוח מלא"
-                  size={isSmall ? "small" : "medium"}
-                  validation={{
-                    required: 'שם לקוח הוא שדה חובה',
-                    minLength: {
-                      value: 2,
-                      message: 'שם לקוח חייב להיות לפחות 2 תווים'
-                    }
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2
-                    }
-                  }}
-                />
-              </FormContainer>
-            </Paper>
-
-            {/* Order Summary */}
-            <Paper sx={{ p: 2, borderRadius: 2 }}>
-              <Typography variant="h6" gutterBottom sx={{ textAlign: 'right', fontWeight: 600 }}>
-                סיכום הזמנה סופי
-              </Typography>
-              
-              <Stack spacing={1}>
-                <Stack direction="row" justifyContent="space-between">
-                  <Typography variant="body1">מוצרים:</Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {cart.length}
-                  </Typography>
-                </Stack>
-                
-                <Stack direction="row" justifyContent="space-between">
-                  <Typography variant="body1">סכום ביניים:</Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    ${subtotal.toFixed(2)}
-                  </Typography>
-                </Stack>
-                
-                <Stack direction="row" justifyContent="space-between">
-                  <Typography variant="body1">מס (17%):</Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    ${tax.toFixed(2)}
-                  </Typography>
-                </Stack>
-                
-                <Divider sx={{ my: 1 }} />
-                
-                <Stack direction="row" justifyContent="space-between">
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    סה"כ לתשלום:
-                  </Typography>
-                  <Typography variant="h6" color="primary" sx={{ fontWeight: 700 }}>
-                    ${total.toFixed(2)}
-                  </Typography>
-                </Stack>
-              </Stack>
-            </Paper>
-
-            {/* Terms */}
-            <Alert severity="info" sx={{ textAlign: 'right' }}>
-              <Typography variant="body2">
-                בלחיצה על "הגש הזמנה", אתה מאשר שכל המידע נכון ומסכים לתנאי השירות.
-              </Typography>
-            </Alert>
-          </Stack>
-        </DialogContent>
-        
-        <DialogActions sx={{ p: isSmall ? 2 : 3, gap: 1 }}>
-          <Button 
-            onClick={() => setCheckoutDialog(false)}
-            variant="outlined"
-            size={isSmall ? "medium" : "large"}
-            sx={{ minWidth: 100 }}
-          >
-            ביטול
-          </Button>
-          
-          <Button
-            onClick={formContext.handleSubmit(handleCheckout)}
-            variant="contained"
-            size={isSmall ? "medium" : "large"}
-            startIcon={<CheckIcon />}
-            sx={{ 
-              minWidth: 140,
-              fontWeight: 600
-            }}
-          >
-            הגש הזמנה
-          </Button>
-        </DialogActions>
-      </Dialog>
+    {/* Removed checkout dialog in favor of inline flow */}
 
       {/* Snackbar */}
       <Snackbar

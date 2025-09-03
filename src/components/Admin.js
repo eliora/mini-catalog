@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getProducts, saveProduct, deleteProduct as apiDeleteProduct } from '../api/products';
 import { getOrders as apiGetOrders, updateOrder as apiUpdateOrder } from '../api/orders';
-import { importCsv as apiImportCsv, getCsvHeaders as apiGetCsvHeaders, exportCsv as apiExportCsv, replacePicsFromCsv } from '../api/csv';
+import CsvImport from './CsvImport';
+import SupabaseConnectionTest from './SupabaseConnectionTest';
+import DatabaseTest from './DatabaseTest';
 import {
   Box,
   Paper,
@@ -20,28 +22,17 @@ import {
   DialogActions,
   IconButton,
   Grid,
-  Card,
-  CardContent,
   Alert,
   Snackbar,
   Tabs,
   Tab,
   Divider,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails
+  CircularProgress
 } from '@mui/material';
 import {
-  Upload as UploadIcon,
-  Download as DownloadIcon,
   Add as AddIcon,
   Delete as DeleteIcon,
   Close as CloseIcon,
-  ExpandMore as ExpandMoreIcon,
   Logout as LogoutIcon,
   Remove as RemoveIcon
 } from '@mui/icons-material';
@@ -52,212 +43,143 @@ const Admin = ({ onLogout, adminToken }) => {
   const [tabValue, setTabValue] = useState(0);
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [productDialog, setProductDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [orderDialog, setOrderDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [editableOrder, setEditableOrder] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  const [csvHeaders, setCsvHeaders] = useState([]);
-  const [columnMapping, setColumnMapping] = useState({
-    ref: 'ref no',
-    productName: 'hebrew_name',
-    productName2: 'Product Name2',
-    line: 'line',
-    notice: 'short_description_he',
-    size: 'Size',
-    unitPrice: 'unitPrice',
-    productType: 'productType',
-    description: 'description_he',
-    activeIngredients: 'WirkungInhaltsstoffe_he',
-    usageInstructions: 'Anwendung_he'
-  });
+  // CSV functionality removed - using direct Supabase operations instead
 
   // Product form state
   const [productForm, setProductForm] = useState({
     ref: '',
-    productName: '',
-    productName2: '',
-    line: '',
-    notice: '',
+    productName: '', // hebrew_name
+    productName2: '', // product_name (English)
     size: '',
     unitPrice: '',
     productType: '',
-    mainPic: '',
-    pics: [],
-    description: '',
-    activeIngredients: '',
-    usageInstructions: '',
-    highlights: []
+    mainPic: '', // pic
+    pics: [], // all_pics
+    description: '', // description_he
+    activeIngredients: '', // wirkunginhaltsstoffe_he
+    usageInstructions: '', // anwendung_he
+    short_description_he: '',
+    skin_type_he: '',
+    notice: ''
   });
 
-  const loadProducts = useCallback(async () => {
-    try {
-      console.log('[FE] Load products');
-      const data = await getProducts();
-      console.log('[FE] Products loaded', Array.isArray(data) ? data.length : data);
-      setProducts(data);
-    } catch (error) {
-      console.error('[FE] Load products error', error);
-      showSnackbar('שגיאה בטעינת מוצרים', 'error');
-    }
+  const showSnackbar = useCallback((message, severity) => {
+    setSnackbar({ open: true, message, severity });
   }, []);
 
-  const loadOrders = useCallback(async () => {
+  const loadProducts = useCallback(async () => {
+    setLoading(true);
     try {
-      console.log('[FE] Load orders');
-      const data = await apiGetOrders(adminToken);
-      console.log('[FE] Orders loaded', Array.isArray(data) ? data.length : data);
-      setOrders(data);
+      const data = await getProducts();
+      setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('[FE] Load orders error', error);
-      showSnackbar('שגיאה בטעינת הזמנות', 'error');
+      console.error('Load products error:', error);
+      showSnackbar('שגיאה בטעינת מוצרים', 'error');
+      setProducts([]);
+    } finally {
+      setLoading(false);
     }
-  }, [adminToken]);
+  }, [showSnackbar]);
+
+  const loadOrders = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await apiGetOrders();
+      setOrders(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Load orders error:', error);
+      showSnackbar('שגיאה בטעינת הזמנות', 'error');
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [showSnackbar]);
 
   useEffect(() => {
     loadProducts();
     loadOrders();
   }, [loadProducts, loadOrders]);
 
-  const handleFileSelect = (event) => {
-    const file = event.target.files[0];
-    setSelectedFile(file);
-    
-    if (file) {
-      console.log('[FE] CSV file selected', file.name, file.size);
-      // Get CSV headers for column mapping
-      apiGetCsvHeaders(file)
-      .then(data => {
-        console.log('[FE] CSV headers', data);
-        setCsvHeaders(data.headers);
-      })
-      .catch(error => {
-        console.error('[FE] Error getting CSV headers', error);
-      });
-    }
-  };
+  // CSV functionality will be implemented later with Supabase file storage
 
-  const handleImportCSV = async () => {
-    if (!selectedFile) {
-      showSnackbar('אנא בחר קובץ', 'error');
-      return;
-    }
+  const emptyProductForm = useMemo(() => ({
+    ref: '',
+    productName: '', // hebrew_name
+    productName2: '', // product_name (English)
+    size: '',
+    unitPrice: '',
+    productType: '',
+    mainPic: '', // pic
+    pics: [], // all_pics
+    description: '', // description_he
+    activeIngredients: '', // wirkunginhaltsstoffe_he
+    usageInstructions: '', // anwendung_he
+    short_description_he: '',
+    skin_type_he: '',
+    notice: ''
+  }), []);
 
-    try {
-      console.log('[FE] Import CSV', selectedFile.name, columnMapping);
-      const data = await apiImportCsv(selectedFile, columnMapping);
-      
-      if (data && data.message) {
-        console.log('[FE] Import CSV success', data);
-        showSnackbar(data.message, 'success');
-        loadProducts();
-        setSelectedFile(null);
-      } else {
-        console.warn('[FE] Import CSV failed', data);
-        showSnackbar(data.error || 'שגיאה בייבוא CSV', 'error');
-      }
-    } catch (error) {
-      console.error('[FE] Import CSV network error', error);
-      showSnackbar('שגיאה בייבוא CSV', 'error');
-    }
-  };
-
-  const handleFixImagesFromCsv = async () => {
-    if (!selectedFile) {
-      showSnackbar('אנא בחר קובץ', 'error');
-      return;
-    }
-    try {
-      const token = adminToken;
-      const result = await replacePicsFromCsv(selectedFile, token);
-      showSnackbar(`תמונות עודכנו: ${result.updated || 0}`, 'success');
-      loadProducts();
-    } catch (error) {
-      showSnackbar(error.message || 'שגיאה בעדכון תמונות', 'error');
-    }
-  };
-
-  const handleExportCSV = async () => {
-    try {
-      console.log('[FE] Export CSV');
-      const response = await apiExportCsv();
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'products_export.csv';
-      a.click();
-      window.URL.revokeObjectURL(url);
-      console.log('[FE] Export CSV success');
-      showSnackbar('CSV יוצא בהצלחה', 'success');
-    } catch (error) {
-      console.error('[FE] Export CSV network error', error);
-      showSnackbar('שגיאה בייצוא CSV', 'error');
-    }
-  };
-
-  const handleAddProduct = () => {
+  const handleAddProduct = useCallback(() => {
     setEditingProduct(null);
-    setProductForm({
-      ref: '',
-      productName: '',
-      productName2: '',
-      line: '',
-      notice: '',
-      size: '',
-      unitPrice: '',
-      productType: '',
-      mainPic: '',
-      pics: [],
-      description: '',
-      activeIngredients: '',
-      usageInstructions: '',
-      highlights: []
-    });
+    setProductForm(emptyProductForm);
     setProductDialog(true);
-  };
+  }, [emptyProductForm]);
 
-  const handleEditProduct = (product) => {
+  const handleEditProduct = useCallback((product) => {
     setEditingProduct(product);
     setProductForm({
       ...product,
-      pics: product.pics ? JSON.parse(product.pics) : [],
-      highlights: product.highlights ? JSON.parse(product.highlights) : []
+      pics: Array.isArray(product.pics) ? product.pics : (product.all_pics ? product.all_pics.split(' | ').filter(Boolean) : [])
     });
     setProductDialog(true);
-  };
+  }, []);
 
-  const handleSaveProduct = async () => {
+  const updateProductForm = useCallback((field, value) => {
+    setProductForm(prev => ({ ...prev, [field]: value }));
+  }, []);
+
+  const handleSaveProduct = useCallback(async () => {
+    if (!productForm.ref || !productForm.productName) {
+      showSnackbar('נדרש מספר מוצר ושם מוצר', 'error');
+      return;
+    }
+    
+    setLoading(true);
     try {
-      console.log('[FE] Save product', productForm);
-      await saveProduct(productForm, adminToken);
-      
-      console.log('[FE] Save product success');
+      await saveProduct(productForm);
       showSnackbar('מוצר נשמר בהצלחה', 'success');
       setProductDialog(false);
       loadProducts();
     } catch (error) {
-      console.error('[FE] Save product network error', error);
+      console.error('Save product error:', error);
       showSnackbar(error.message || 'שגיאה בשמירת מוצר', 'error');
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [productForm, loadProducts, showSnackbar]);
 
-  const handleDeleteProduct = async (ref) => {
-    if (window.confirm('האם אתה בטוח שברצונך למחוק מוצר זה?')) {
-      try {
-        console.log('[FE] Delete product', ref);
-        await apiDeleteProduct(ref, adminToken);
-        console.log('[FE] Delete product success');
-        showSnackbar('מוצר נמחק בהצלחה', 'success');
-        loadProducts();
-      } catch (error) {
-        console.error('[FE] Delete product network error', error);
-        showSnackbar(error.message || 'שגיאה במחיקת מוצר', 'error');
-      }
+  const handleDeleteProduct = useCallback(async (ref) => {
+    if (!window.confirm('האם אתה בטוח שברצונך למחוק מוצר זה?')) return;
+    
+    setLoading(true);
+    try {
+      await apiDeleteProduct(ref);
+      showSnackbar('מוצר נמחק בהצלחה', 'success');
+      loadProducts();
+    } catch (error) {
+      console.error('Delete product error:', error);
+      showSnackbar(error.message || 'שגיאה במחיקת מוצר', 'error');
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [loadProducts, showSnackbar]);
 
   const handleViewOrder = (order) => {
     setSelectedOrder(order);
@@ -270,51 +192,53 @@ const Admin = ({ onLogout, adminToken }) => {
     setOrderDialog(true);
   };
 
-  const recalcOrderTotal = (items) => {
-    return items.reduce((sum, it) => sum + (Number(it.unitPrice || 0) * Number(it.quantity || 0)), 0);
-  };
+  const recalcOrderTotal = useCallback((items) => {
+    return items.reduce((sum, item) => sum + (Number(item.unitPrice || 0) * Number(item.quantity || 0)), 0);
+  }, []);
 
-  const handleOrderItemQty = (ref, delta) => {
+  const handleOrderItemQty = useCallback((ref, delta) => {
     setEditableOrder(prev => {
       if (!prev) return prev;
-      const nextItems = prev.items.map(it => it.ref === ref ? { ...it, quantity: Math.max(0, Number(it.quantity || 0) + delta) } : it)
-                                 .filter(it => it.quantity > 0);
+      const nextItems = prev.items
+        .map(item => item.ref === ref ? { ...item, quantity: Math.max(0, Number(item.quantity || 0) + delta) } : item)
+        .filter(item => item.quantity > 0);
       const nextTotal = recalcOrderTotal(nextItems);
       return { ...prev, items: nextItems, total: nextTotal };
     });
-  };
+  }, [recalcOrderTotal]);
 
-  const handleOrderNameChange = (name) => {
+  const handleOrderNameChange = useCallback((name) => {
     setEditableOrder(prev => prev ? { ...prev, customerName: name } : prev);
-  };
+  }, []);
 
-  const handleSaveOrder = async () => {
+  const handleSaveOrder = useCallback(async () => {
     if (!editableOrder) return;
+    
+    setLoading(true);
     try {
       await apiUpdateOrder(editableOrder.id, {
         customerName: editableOrder.customerName,
         total: Number(editableOrder.total || 0),
         items: editableOrder.items
-      }, adminToken);
+      });
       showSnackbar('הזמנה עודכנה בהצלחה', 'success');
       setOrderDialog(false);
       loadOrders();
-    } catch (err) {
-      showSnackbar(err.message || 'שגיאה בעדכון הזמנה', 'error');
+    } catch (error) {
+      console.error('Update order error:', error);
+      showSnackbar(error.message || 'שגיאה בעדכון הזמנה', 'error');
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [editableOrder, loadOrders, showSnackbar]);
 
   const handlePrintOrder = () => {
     window.print();
   };
 
-  const showSnackbar = (message, severity) => {
-    setSnackbar({ open: true, message, severity });
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString();
-  };
+  const formatDate = useCallback((dateString) => {
+    return new Date(dateString).toLocaleString('he-IL');
+  }, []);
 
   return (
     <Box sx={{ p: 3, direction: 'rtl' }}>
@@ -334,7 +258,8 @@ const Admin = ({ onLogout, adminToken }) => {
       <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} sx={{ mb: 3 }}>
         <Tab label="מוצרים" />
         <Tab label="הזמנות" />
-        <Tab label="ייבוא/ייצוא" />
+        <Tab label="ייבוא CSV" />
+        <Tab label="מערכת" />
       </Tabs>
 
       {/* Products Tab */}
@@ -363,14 +288,28 @@ const Admin = ({ onLogout, adminToken }) => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {products.map((product) => (
-                  <ProductRow
-                    key={product.ref}
-                    product={product}
-                    onEdit={handleEditProduct}
-                    onDelete={handleDeleteProduct}
-                  />
-                ))}
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} sx={{ textAlign: 'center', py: 4 }}>
+                      <CircularProgress />
+                    </TableCell>
+                  </TableRow>
+                ) : products.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} sx={{ textAlign: 'center', py: 4 }}>
+                      אין מוצרים
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  products.map((product) => (
+                    <ProductRow
+                      key={product.ref}
+                      product={product}
+                      onEdit={handleEditProduct}
+                      onDelete={handleDeleteProduct}
+                    />
+                  ))
+                )}
               </TableBody>
             </Table>
           </TableContainer>
@@ -396,7 +335,19 @@ const Admin = ({ onLogout, adminToken }) => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {Array.isArray(orders) && orders.length > 0 ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} sx={{ textAlign: 'center', py: 4 }}>
+                      <CircularProgress />
+                    </TableCell>
+                  </TableRow>
+                ) : orders.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} sx={{ textAlign: 'center', py: 4 }}>
+                      אין הזמנות
+                    </TableCell>
+                  </TableRow>
+                ) : (
                   orders.map((order) => (
                     <OrderRow
                       key={order.id}
@@ -405,12 +356,6 @@ const Admin = ({ onLogout, adminToken }) => {
                       formatDate={formatDate}
                     />
                   ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} sx={{ textAlign: 'center' }}>
-                      {Array.isArray(orders) ? 'אין הזמנות' : 'טוען הזמנות...'}
-                    </TableCell>
-                  </TableRow>
                 )}
               </TableBody>
             </Table>
@@ -418,108 +363,53 @@ const Admin = ({ onLogout, adminToken }) => {
         </Box>
       )}
 
-      {/* Import/Export Tab */}
+      {/* CSV Import Tab */}
       {tabValue === 2 && (
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  ייבוא מוצרים מ-CSV
-                </Typography>
-                
-                <input
-                  accept=".csv"
-                  style={{ display: 'none' }}
-                  id="csv-file"
-                  type="file"
-                  onChange={handleFileSelect}
-                />
-                <label htmlFor="csv-file">
-                  <Button variant="outlined" component="span" startIcon={<UploadIcon />}>
-                    בחר קובץ CSV
-                  </Button>
-                </label>
-                
-                {selectedFile && (
-                  <Typography variant="body2" sx={{ mt: 1 }}>
-                    קובץ נבחר: {selectedFile.name}
-                  </Typography>
-                )}
+        <Box>
+          <CsvImport
+            onImportComplete={() => {
+              loadProducts();
+            }}
+          />
+        </Box>
+      )}
 
-                {csvHeaders.length > 0 && (
-                  <Accordion sx={{ mt: 2 }}>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      <Typography>מיפוי עמודות</Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <Grid container spacing={2}>
-                        {Object.keys(columnMapping).map((field) => (
-                          <Grid item xs={12} sm={6} key={field}>
-                            <FormControl fullWidth size="small">
-                              <InputLabel>{field}</InputLabel>
-                              <Select
-                                value={columnMapping[field]}
-                                onChange={(e) => setColumnMapping(prev => ({
-                                  ...prev,
-                                  [field]: e.target.value
-                                }))}
-                                label={field}
-                              >
-                                {csvHeaders.map((header) => (
-                                  <MenuItem key={header} value={header}>
-                                    {header}
-                                  </MenuItem>
-                                ))}
-                              </Select>
-                            </FormControl>
-                          </Grid>
-                        ))}
-                      </Grid>
-                    </AccordionDetails>
-                  </Accordion>
-                )}
+      {/* System Tab */}
+      {tabValue === 3 && (
+        <Box>
+          <Typography variant="h6" gutterBottom>
+            מערכת ומחשוב
+          </Typography>
 
-                <Button
-                  variant="contained"
-                  onClick={handleImportCSV}
-                  disabled={!selectedFile}
-                  sx={{ mt: 2, ml: 1 }}
-                >
-                  ייבוא
-                </Button>
-                <Button
-                  variant="outlined"
-                  onClick={handleFixImagesFromCsv}
-                  disabled={!selectedFile}
-                  sx={{ mt: 2, ml: 1 }}
-                >
-                  תקן תמונות
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
+          <SupabaseConnectionTest />
 
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  ייצוא מוצרים ל-CSV
+          <Box sx={{ mt: 3 }}>
+            <DatabaseTest />
+          </Box>
+
+          <Box sx={{ mt: 3 }}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                מידע מערכת
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                כאן תוכל לעקוב אחר מצב המערכת ולבצע פעולות תחזוקה.
+              </Typography>
+
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body1">
+                  <strong>סביבת עבודה:</strong> {process.env.NODE_ENV || 'development'}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  הורד את כל המוצרים כקובץ CSV
+                <Typography variant="body1">
+                  <strong>זמן בנייה:</strong> {new Date().toLocaleString('he-IL')}
                 </Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<DownloadIcon />}
-                  onClick={handleExportCSV}
-                >
-                  ייצוא CSV
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+                <Typography variant="body1">
+                  <strong>מצב Supabase:</strong> {process.env.REACT_APP_SUPABASE_URL ? 'מוגדר' : 'לא מוגדר'}
+                </Typography>
+              </Box>
+            </Paper>
+          </Box>
+        </Box>
       )}
 
       {/* Product Dialog */}
@@ -534,7 +424,7 @@ const Admin = ({ onLogout, adminToken }) => {
                 fullWidth
                 label="קוד אצווה (ref no)"
                 value={productForm.ref}
-                onChange={(e) => setProductForm({ ...productForm, ref: e.target.value })}
+                onChange={(e) => updateProductForm('ref', e.target.value)}
               />
             </Grid>
             <Grid item xs={6}>
@@ -542,13 +432,13 @@ const Admin = ({ onLogout, adminToken }) => {
                 fullWidth
                 label="שם מוצר"
                 value={productForm.productName}
-                onChange={(e) => setProductForm({ ...productForm, productName: e.target.value })}
+                onChange={(e) => updateProductForm('productName', e.target.value)}
               />
             </Grid>
             <Grid item xs={6}>
               <TextField
                 fullWidth
-                label="שם מוצר 2"
+                label="שם מוצר באנגלית"
                 value={productForm.productName2}
                 onChange={(e) => setProductForm({ ...productForm, productName2: e.target.value })}
               />
@@ -556,9 +446,10 @@ const Admin = ({ onLogout, adminToken }) => {
             <Grid item xs={6}>
               <TextField
                 fullWidth
-                label="קטגוריה"
-                value={productForm.line}
-                onChange={(e) => setProductForm({ ...productForm, line: e.target.value })}
+                label="סוג עור"
+                value={productForm.skin_type_he}
+                onChange={(e) => setProductForm({ ...productForm, skin_type_he: e.target.value })}
+                placeholder="עור יבש, עור רגיש, עור בוגר"
               />
             </Grid>
             <Grid item xs={6}>
@@ -581,21 +472,32 @@ const Admin = ({ onLogout, adminToken }) => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="הערה"
+                label="תיאור קצר"
                 multiline
                 rows={2}
-                value={productForm.notice}
-                onChange={(e) => setProductForm({ ...productForm, notice: e.target.value })}
+                value={productForm.short_description_he}
+                onChange={(e) => setProductForm({ ...productForm, short_description_he: e.target.value })}
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="תיאור"
+                label="תיאור מלא"
                 multiline
-                rows={3}
+                rows={4}
                 value={productForm.description}
                 onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                helperText="תומך בתגיות HTML כמו <p>, <ul>, <li>, <strong>"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="הערה"
+                multiline
+                rows={2}
+                value={productForm.notice}
+                onChange={(e) => setProductForm({ ...productForm, notice: e.target.value })}
               />
             </Grid>
             <Grid item xs={12}>
@@ -639,9 +541,16 @@ const Admin = ({ onLogout, adminToken }) => {
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setProductDialog(false)}>ביטול</Button>
-          <Button onClick={handleSaveProduct} variant="contained">
-            שמור
+          <Button onClick={() => setProductDialog(false)} disabled={loading}>
+            ביטול
+          </Button>
+          <Button 
+            onClick={handleSaveProduct} 
+            variant="contained" 
+            disabled={loading}
+            startIcon={loading ? <CircularProgress size={20} /> : null}
+          >
+            {loading ? 'שומר...' : 'שמור'}
           </Button>
         </DialogActions>
       </Dialog>

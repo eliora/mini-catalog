@@ -43,12 +43,22 @@ const ProductCard = ({
       >
         {product.mainPic ? (
           <img
-            src={`/api/img?u=${encodeURIComponent(product.mainPic)}`}
+            src={product.mainPic}
             alt={product.productName}
             loading="lazy"
+            crossOrigin="anonymous"
             onError={(e) => {
               console.warn('Image load failed:', product.mainPic);
-              e.currentTarget.src = 'https://via.placeholder.com/300x200/cccccc/666666?text=אין+תמונה';
+              // Try to load image directly without proxy
+              if (e.currentTarget.src !== product.mainPic) {
+                e.currentTarget.src = product.mainPic;
+              } else {
+                // If still failing, show placeholder
+                e.currentTarget.src = 'https://via.placeholder.com/300x200/cccccc/666666?text=אין+תמונה';
+              }
+            }}
+            onLoad={() => {
+              console.log('Image loaded successfully:', product.mainPic);
             }}
             style={{
               width: '100%',
@@ -147,7 +157,23 @@ const ProductCard = ({
               type="number"
               size="small"
               value={quantity}
-              onChange={(e) => onQuantityChange(product.ref, e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Allow empty string for typing, but convert to number
+                const numValue = value === '' ? 0 : parseInt(value, 10);
+                if (!isNaN(numValue) && numValue >= 0 && numValue <= 99) {
+                  onQuantityChange(product.ref, value === '' ? '0' : numValue.toString());
+                }
+              }}
+              onBlur={(e) => {
+                // Ensure valid value on blur
+                const value = parseInt(e.target.value, 10);
+                if (isNaN(value) || value < 0) {
+                  onQuantityChange(product.ref, '0');
+                } else if (value > 99) {
+                  onQuantityChange(product.ref, '99');
+                }
+              }}
               sx={{
                 width: 60,
                 '& .MuiOutlinedInput-root': { height: 32 },
@@ -160,7 +186,13 @@ const ProductCard = ({
                   },
                 },
               }}
-              inputProps={{ min: 0, max: 99, step: 1 }}
+              inputProps={{
+                min: 0,
+                max: 99,
+                step: 1,
+                inputMode: 'numeric',
+                pattern: '[0-9]*'
+              }}
             />
             <IconButton
               size="small"

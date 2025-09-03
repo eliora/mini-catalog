@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Accordion, AccordionSummary, AccordionDetails,
-  Grid, Typography, Chip, IconButton, Stack, Box, useTheme, useMediaQuery
+  Grid, Typography, Chip, IconButton, Stack, Box, TextField, useTheme, useMediaQuery
 } from '@mui/material';
 import { Add as AddIcon, Remove as RemoveIcon, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 
@@ -10,6 +10,7 @@ const ProductListItem = ({
   quantity,
   onIncrement,
   onDecrement,
+  onQuantityChange,
   onImageClick,
   shouldRenderContent,
   parseJsonField,
@@ -48,11 +49,20 @@ const ProductListItem = ({
         >
           {product.mainPic ? (
             <img
-              src={`/api/img?u=${encodeURIComponent(product.mainPic)}`}
+              src={product.mainPic}
               alt={product.productName}
               loading="lazy"
+              crossOrigin="anonymous"
               onError={(e) => {
-                e.currentTarget.src = 'https://via.placeholder.com/36x36/e0e0e0/757575?text=?';
+                console.warn('Image load failed:', product.mainPic);
+                if (e.currentTarget.src !== product.mainPic) {
+                  e.currentTarget.src = product.mainPic;
+                } else {
+                  e.currentTarget.src = 'https://via.placeholder.com/36x36/e0e0e0/757575?text=?';
+                }
+              }}
+              onLoad={() => {
+                console.log('Image loaded successfully:', product.mainPic);
               }}
               style={{ width: '100%', height: '100%', objectFit: 'contain' }}
             />
@@ -75,7 +85,7 @@ const ProductListItem = ({
               mb: 0.25,
             }}
           >
-            {product.size && `${product.size.replace(/\s*(jar|tube|dispenser|bottle|tub|pump|cream|lotion|serum|gel|mask|cleanser|toner|moisturizer|oil|balm|scrub|peeling|foam|mousse|spray|mist)\s*/gi, '').trim()} • `}{product.productName}
+            {product.productName}
             {product.productName2 && ` • ${product.productName2}`}
           </Typography>
           <Typography
@@ -92,56 +102,57 @@ const ProductListItem = ({
           </Typography>
         </Box>
       </Grid>
+      {/* Size (rightmost visually) */}
       <Grid item xs="auto">
-        <Stack
-          direction="row"
-          alignItems="center"
-          spacing={0}
-          onClick={(e) => e.stopPropagation()}
-          sx={{ bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ fontWeight: 500, whiteSpace: 'nowrap', mx: 1 }}
         >
-          <IconButton
-            size="small"
-            onClick={() => onDecrement(product)}
-            disabled={quantity === 0}
-            sx={{ width: 28, height: 28, borderRadius: '4px 0 0 4px' }}
-          >
+          {product.size ? product.size.replace(/\s*(jar|tube|dispenser|bottle|tub|pump|cream|lotion|serum|gel|mask|cleanser|toner|moisturizer|oil|balm|scrub|peeling|foam|mousse|spray|mist)\s*/gi, '').trim() : ''}
+        </Typography>
+      </Grid>
+      {/* Quantity controls (middle visually) */}
+      <Grid item xs="auto">
+        <Stack direction="row" alignItems="center" spacing={0} onClick={(e) => e.stopPropagation()}
+          sx={{ bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+          <IconButton size="small" onClick={() => onDecrement(product)} disabled={quantity === 0}
+            sx={{ width: 28, height: 28, borderRadius: '4px 0 0 4px' }}>
             <RemoveIcon fontSize="small" />
           </IconButton>
-          <Box
-            sx={{
-              minWidth: 28,
-              height: 28,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              bgcolor: quantity > 0 ? 'primary.light' : 'transparent',
-              color: quantity > 0 ? 'primary.contrastText' : 'text.secondary',
-              fontWeight: 600,
-              fontSize: '0.75rem',
-            }}
-          >
-            {quantity}
-          </Box>
-          <IconButton
+          <TextField
+            type="number"
             size="small"
-            onClick={() => onIncrement(product)}
-            sx={{ width: 28, height: 28, borderRadius: '0 4px 4px 0' }}
-          >
+            value={quantity}
+            onChange={(e) => {
+              const value = e.target.value;
+              const numValue = value === '' ? 0 : parseInt(value, 10);
+              if (!isNaN(numValue) && numValue >= 0 && numValue <= 99) {
+                onQuantityChange(product.ref, value === '' ? '0' : numValue.toString());
+              }
+            }}
+            onBlur={(e) => {
+              const value = parseInt(e.target.value, 10);
+              if (isNaN(value) || value < 0) {
+                onQuantityChange(product.ref, '0');
+              } else if (value > 99) {
+                onQuantityChange(product.ref, '99');
+              }
+            }}
+            sx={{ width: 54, '& .MuiOutlinedInput-root': { height: 28 }, '& input': { textAlign: 'center', fontSize: '0.75rem', p: 0 } }}
+            inputProps={{ min: 0, max: 99, step: 1, inputMode: 'numeric', pattern: '[0-9]*' }}
+          />
+          <IconButton size="small" onClick={() => onIncrement(product)} sx={{ width: 28, height: 28, borderRadius: '0 4px 4px 0' }}>
             <AddIcon fontSize="small" />
           </IconButton>
         </Stack>
       </Grid>
+      {/* Price (leftmost visually) */}
       <Grid item xs="auto">
         <Typography
           variant="subtitle2"
           color="primary"
-          sx={{
-            fontWeight: 700,
-            textAlign: 'center',
-            minWidth: 50,
-            ml: 1,
-          }}
+          sx={{ fontWeight: 700, textAlign: 'center', minWidth: 50, ml: 1 }}
         >
           ${product.unitPrice}
         </Typography>
@@ -192,21 +203,32 @@ const ProductListItem = ({
           >
             <RemoveIcon sx={{ fontSize: '0.75rem' }} />
           </IconButton>
-          <Box
-            sx={{
-              minWidth: 24,
-              height: 24,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              bgcolor: quantity > 0 ? 'primary.light' : 'transparent',
-              color: quantity > 0 ? 'primary.contrastText' : 'text.secondary',
-              fontWeight: 600,
-              fontSize: '0.7rem',
+          <TextField
+            type="number"
+            size="small"
+            value={quantity}
+            onChange={(e) => {
+              const value = e.target.value;
+              const numValue = value === '' ? 0 : parseInt(value, 10);
+              if (!isNaN(numValue) && numValue >= 0 && numValue <= 99) {
+                onQuantityChange(product.ref, value === '' ? '0' : numValue.toString());
+              }
             }}
-          >
-            {quantity}
-          </Box>
+            onBlur={(e) => {
+              const value = parseInt(e.target.value, 10);
+              if (isNaN(value) || value < 0) {
+                onQuantityChange(product.ref, '0');
+              } else if (value > 99) {
+                onQuantityChange(product.ref, '99');
+              }
+            }}
+            sx={{
+              width: 44,
+              '& .MuiOutlinedInput-root': { height: 24 },
+              '& input': { textAlign: 'center', fontSize: '0.7rem', p: 0 }
+            }}
+            inputProps={{ min: 0, max: 99, step: 1, inputMode: 'numeric', pattern: '[0-9]*' }}
+          />
           <IconButton
             size="small"
             onClick={() => onIncrement(product)}
@@ -295,9 +317,10 @@ const ProductListItem = ({
                 onClick={() => onImageClick(product.mainPic)}
               >
                 <img
-                  src={`/api/img?u=${encodeURIComponent(product.mainPic)}`}
+                  src={product.mainPic}
                   alt={product.productName}
                   loading="lazy"
+                  crossOrigin="anonymous"
                   onError={(e) => {
                     e.currentTarget.src = 'https://via.placeholder.com/120x120/e0e0e0/757575?text=אין+תמונה';
                   }}
@@ -350,9 +373,10 @@ const ProductListItem = ({
                     onClick={() => onImageClick(pic)}
                   >
                     <img
-                      src={`/api/img?u=${encodeURIComponent(pic)}`}
+                      src={pic}
                       alt={`${product.productName} ${idx + 1}`}
                       loading="lazy"
+                      crossOrigin="anonymous"
                       onError={(e) => {
                         e.currentTarget.src = 'https://via.placeholder.com/60x60/cccccc/666666?text=אין+תמונה';
                       }}

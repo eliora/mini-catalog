@@ -564,6 +564,7 @@ const Catalog = () => {
               quantity={getCurrentQuantity(product.ref)}
               onDecrement={handleDecrement}
               onIncrement={handleIncrement}
+              onQuantityChange={handleQuantityChange}
               onImageClick={handleZoom}
               shouldRenderContent={shouldRenderContent}
               parseJsonField={parseJsonField}
@@ -620,8 +621,9 @@ const Catalog = () => {
                     {selectedProduct.mainPic && (
                       <CardMedia
                         component="img"
-                        src={`/api/img?u=${encodeURIComponent(selectedProduct.mainPic)}`}
+                        src={selectedProduct.mainPic}
                         alt={selectedProduct.productName}
+                        crossOrigin="anonymous"
                         sx={{
                           width: isSmall ? 80 : 120,
                           height: isSmall ? 80 : 120,
@@ -631,8 +633,16 @@ const Catalog = () => {
                           cursor: 'pointer'
                         }}
                         onClick={() => handleZoom(selectedProduct.mainPic)}
-                        onError={(e) => { 
-                          e.currentTarget.src = 'https://via.placeholder.com/120x120/cccccc/666666?text=אין+תמונה'; 
+                        onError={(e) => {
+                          console.warn('Product image load failed:', selectedProduct.mainPic);
+                          if (e.currentTarget.src !== selectedProduct.mainPic) {
+                            e.currentTarget.src = selectedProduct.mainPic;
+                          } else {
+                            e.currentTarget.src = 'https://via.placeholder.com/120x120/cccccc/666666?text=אין+תמונה';
+                          }
+                        }}
+                        onLoad={() => {
+                          console.log('Product image loaded successfully:', selectedProduct.mainPic);
                         }}
                       />
                     )}
@@ -734,15 +744,24 @@ const Catalog = () => {
                           {parseJsonField(selectedProduct.pics).map((pic, idx) => (
                             <Grid item key={idx}>
                               <img
-                                src={`/api/img?u=${encodeURIComponent(pic)}`}
+                                src={pic}
                                 alt={`${selectedProduct.productName} ${idx + 1}`}
                                 loading="lazy"
-                                onError={(e) => { 
-                                  e.currentTarget.src = 'https://via.placeholder.com/100x100/cccccc/666666?text=אין+תמונה'; 
+                                crossOrigin="anonymous"
+                                onError={(e) => {
+                                  console.warn('Additional image load failed:', pic);
+                                  if (e.currentTarget.src !== pic) {
+                                    e.currentTarget.src = pic;
+                                  } else {
+                                    e.currentTarget.src = 'https://via.placeholder.com/100x100/cccccc/666666?text=אין+תמונה';
+                                  }
                                 }}
-                                style={{ 
-                                  width: 100, 
-                                  height: 100, 
+                                onLoad={() => {
+                                  console.log('Additional image loaded successfully:', pic);
+                                }}
+                                style={{
+                                  width: 100,
+                                  height: 100,
                                   objectFit: 'contain',
                                   borderRadius: 8,
                                   cursor: 'pointer',
@@ -779,12 +798,32 @@ const Catalog = () => {
                   type="number"
                   size="small"
                   value={getCurrentQuantity(selectedProduct.ref)}
-                  onChange={(e) => handleQuantityChange(selectedProduct.ref, e.target.value)}
-                  sx={{ 
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const numValue = value === '' ? 0 : parseInt(value, 10);
+                    if (!isNaN(numValue) && numValue >= 0 && numValue <= 99) {
+                      handleQuantityChange(selectedProduct.ref, value === '' ? '0' : numValue.toString());
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const value = parseInt(e.target.value, 10);
+                    if (isNaN(value) || value < 0) {
+                      handleQuantityChange(selectedProduct.ref, '0');
+                    } else if (value > 99) {
+                      handleQuantityChange(selectedProduct.ref, '99');
+                    }
+                  }}
+                  sx={{
                     width: 60,
                     '& input': { textAlign: 'center' }
                   }}
-                  inputProps={{ min: 0, max: 99, step: 1 }}
+                  inputProps={{
+                    min: 0,
+                    max: 99,
+                    step: 1,
+                    inputMode: 'numeric',
+                    pattern: '[0-9]*'
+                  }}
                 />
                 
                 <IconButton 

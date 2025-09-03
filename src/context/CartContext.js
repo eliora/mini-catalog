@@ -30,18 +30,18 @@ export function CartProvider({ children }) {
 
   // Debounce localStorage writes to improve performance
   const saveTimeoutRef = useRef(null);
-  
+
   useEffect(() => {
     // Clear existing timeout
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
-    
-    // Debounce localStorage write by 100ms to avoid blocking on rapid clicks
+
+    // Debounce localStorage write by 300ms to avoid blocking on rapid clicks
     saveTimeoutRef.current = setTimeout(() => {
       localStorage.setItem('cart', JSON.stringify(cart));
-    }, 100);
-    
+    }, 300);
+
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);

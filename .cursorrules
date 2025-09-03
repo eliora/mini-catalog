@@ -1,5 +1,18 @@
-1. dont give me missions. do it yourself.
-2. if your commands hangs, shift
-3. prefer native solution
-4. prefer to use common packages than writing yourself.
-5. make sure you dont leave old unused code.
+only react no node.js
+keep system errors in english
+Use React hooks efficiently and avoid class components unless necessary.
+Follow Material-UI (MUI) best practices: Use built-in components like Grid, Box, Typography, Button, etc., for layout and UI elements. Customize themes via ThemeProvider if needed, but keep custom styles minimal.
+For Supabase integration: Use the official Supabase JS client. Handle authentication with supabase.auth methods, and database operations with supabase.from().select(), insert(), etc. Always manage errors and loading states.
+Prioritize simplicity: Write concise, readable code. Avoid unnecessary abstractions or over-engineering. Use functional components with minimal props drilling; prefer Context API for global state if Redux is overkill.
+Do not reinvent the wheel: Leverage existing libraries like react-hook-form for forms, @mui/x-data-grid for tables if needed, but only add dependencies if essential. Stick to core React, MUI, and Supabase features first.
+Efficiency focus: Optimize renders with React.memo, useMemo, useCallback where performance matters (e.g., lists or computations). Keep API calls minimal; use real-time subscriptions from Supabase for updates instead of polling.
+Short code: Aim for brevity without sacrificing clarity. Combine related logic; e.g., co-locate state and effects in hooks.
+Maintain standard writing: Follow ESLint/Prettier conventions if set up. Use consistent naming (camelCase for variables/functions, PascalCase for components). Add JSDoc comments only for complex functions.
+Do not rewrite code: When editing, preserve existing logic and structure unless it's broken or inefficient. Refactor incrementally if improving.
+Keep old code: Retain working legacy code; integrate new features around it. Comment out obsolete sections instead of deleting.
+Error handling: Always include try-catch for async operations, display user-friendly messages via MUI Snackbar or Alert.
+Security: Never hardcode Supabase keys; use environment variables. Validate inputs on client and rely on Supabase RLS for server-side security.
+Testing: Encourage simple unit tests with React Testing Library for critical components like forms and auth flows.
+Responsiveness: Use MUI's responsive props (e.g., Grid xs/sm/md) to ensure mobile-friendly design without custom media queries.
+Accessibility: Follow MUI's a11y guidelines; add aria-labels where needed.
+Performance: Lazy-load components with React.lazy if the app grows; monitor bundle size.
