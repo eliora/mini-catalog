@@ -74,3 +74,7 @@ uploads/
 
 # CSV files (if you don't want to track them)
 *.csv
+
+# Database backups
+catalog-backup-*.db
+*.db.backup

@@ -1,6 +1,6 @@
-# Mini Catalog with SQLite Database
+# Mini Catalog with Supabase Database
 
-A complete catalog management system with SQLite database, CSV import/export, admin backend, and simplified checkout.
+A complete catalog management system with Supabase database, CSV import/export, admin backend, and simplified checkout.
 
 ## Features
 
@@ -16,19 +16,19 @@ A complete catalog management system with SQLite database, CSV import/export, ad
 - **Product Management**: Add, edit, and delete products
 - **CSV Import/Export**: Bulk import products from CSV, export to CSV
 - **Order Management**: View all orders with details
-- **Database Management**: Full SQLite database integration
+- **Database Management**: Full Supabase database integration
 
 ### 💾 **Database Features**
-- **SQLite Database**: Lightweight, file-based database
+- **Supabase Database**: Scalable, cloud-based PostgreSQL database with real-time features
 - **Automatic Setup**: Database and tables created automatically
-- **Data Persistence**: All data saved to local database file
+- **Data Persistence**: All data saved to cloud database
 - **Order History**: Complete order tracking
 
 ## Technology Stack
 
 - **Frontend**: React 18, Material-UI (MUI)
 - **Backend**: Node.js, Express.js
-- **Database**: SQLite3
+- **Database**: Supabase (PostgreSQL)
 - **File Upload**: Multer
 - **CSV Processing**: csv-parser
 
@@ -132,7 +132,7 @@ Your CSV should have these columns (or similar):
 ```
 mini-catalog/
 ├── server.js              # Express backend server
-├── catalog.db             # SQLite database (auto-created)
+├── supabase-setup.sql     # Database schema for Supabase
 ├── uploads/               # File upload directory
 ├── src/
 │   ├── components/
@@ -176,9 +176,9 @@ mini-catalog/
 - Customize colors, fonts, and layout
 
 ### Database
-- The SQLite database file (`catalog.db`) is created automatically
-- Backup this file to preserve your data
-- Can be opened with any SQLite browser
+- The Supabase database is configured using the provided SQL schema
+- Data is automatically backed up by Supabase
+- Access data through Supabase dashboard or API
 
 ## Troubleshooting
 

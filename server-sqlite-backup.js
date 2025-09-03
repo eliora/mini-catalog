@@ -1,4 +1,5 @@
 const express = require('express');
+const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const multer = require('multer');
 const csv = require('csv-parser');
@@ -6,35 +7,20 @@ const fs = require('fs');
 const path = require('path');
 const httpMod = require('http');
 const httpsMod = require('https');
-require('dotenv').config();
-
-// Import database service
-const DatabaseService = require('./src/services/database-node.js');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Admin credentials
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'qprffo';
+const ADMIN_USERNAME = 'admin';
+const ADMIN_PASSWORD = 'qprffo';
 
 // Simple session storage (in production, use proper session management)
 let adminSessionToken = null;
 
-// Initialize database service
-let db;
-try {
-  db = new DatabaseService();
-  console.log('Connected to Supabase database');
-} catch (error) {
-  console.error('Error connecting to Supabase:', error.message);
-  process.exit(1);
-}
-
 // Middleware
 app.use(cors());
 app.use(express.json());
-
 // Serve React build only if it exists (production). In dev, API only.
 const buildPath = path.join(__dirname, 'build');
 const hasBuild = fs.existsSync(path.join(buildPath, 'index.html'));
@@ -47,6 +33,50 @@ if (hasBuild) {
 
 // Configure multer for file uploads
 const upload = multer({ dest: 'uploads/' });
+
+// Initialize SQLite database
+const db = new sqlite3.Database('./catalog.db', (err) => {
+  if (err) {
+    console.error('Error opening database:', err.message);
+  } else {
+    console.log('Connected to SQLite database');
+    initializeDatabase();
+  }
+});
+
+// Initialize database tables
+function initializeDatabase() {
+  // Products table
+  db.run(`CREATE TABLE IF NOT EXISTS products (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ref TEXT UNIQUE,
+    productName TEXT,
+    productName2 TEXT,
+    line TEXT,
+    notice TEXT,
+    size TEXT,
+    unitPrice REAL,
+    productType TEXT,
+    mainPic TEXT,
+    pics TEXT,
+    description TEXT,
+    activeIngredients TEXT,
+    usageInstructions TEXT,
+    highlights TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+
+  // Orders table
+  db.run(`CREATE TABLE IF NOT EXISTS orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customerName TEXT NOT NULL,
+    total REAL NOT NULL,
+    items TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+
+  console.log('Database tables initialized');
+}
 
 // Authentication middleware
 const authenticateAdmin = (req, res, next) => {
@@ -79,36 +109,55 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 // Get all products
-app.get('/api/products', async (req, res) => {
+app.get('/api/products', (req, res) => {
   const { search, line } = req.query;
   console.log('[PRODUCTS] GET /api/products query:', req.query);
-  
-  try {
-    const products = await db.getProducts(search, line);
-    console.log('[PRODUCTS] Found products:', products.length);
-    res.json(products);
-  } catch (error) {
-    console.error('[PRODUCTS] Error:', error);
-    res.status(500).json({ error: error.message });
+  let query = 'SELECT * FROM products';
+  let params = [];
+
+  if (search || line) {
+    query += ' WHERE';
+    if (search) {
+      query += ' (ref LIKE ? OR productName LIKE ? OR productName2 LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    }
+    if (line) {
+      if (search) query += ' AND';
+      query += ' line = ?';
+      params.push(line);
+    }
   }
+
+  query += ' ORDER BY ref';
+
+  console.log('[PRODUCTS] SQL:', query, 'params:', params);
+  db.all(query, params, (err, rows) => {
+    if (err) {
+      console.error('[PRODUCTS] DB error:', err);
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    console.log('[PRODUCTS] rows:', Array.isArray(rows) ? rows.length : rows);
+    res.json(rows);
+  });
 });
 
 // Get product lines for filtering
-app.get('/api/product-lines', async (req, res) => {
+app.get('/api/product-lines', (req, res) => {
   console.log('[PRODUCT-LINES] GET /api/product-lines');
-  
-  try {
-    const lines = await db.getProductLines();
-    console.log('[PRODUCT-LINES] Found lines:', lines);
-    res.json(lines);
-  } catch (error) {
-    console.error('[PRODUCT-LINES] Error:', error);
-    res.status(500).json({ error: error.message });
-  }
+  db.all('SELECT DISTINCT line FROM products ORDER BY line', (err, rows) => {
+    if (err) {
+      console.error('[PRODUCT-LINES] DB error:', err);
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    console.log('[PRODUCT-LINES] rows:', rows);
+    res.json(rows.map(row => row.line));
+  });
 });
 
 // Create order
-app.post('/api/orders', async (req, res) => {
+app.post('/api/orders', (req, res) => {
   console.log('[ORDERS] POST /api/orders body:', req.body);
   const { customerName, total, items } = req.body;
   
@@ -128,32 +177,36 @@ app.post('/api/orders', async (req, res) => {
     return;
   }
 
-  try {
-    const order = await db.createOrder(customerName, total, items);
-    console.log('[ORDERS] Created order:', order.id);
-    res.json({ id: order.id, message: 'Order created successfully' });
-  } catch (error) {
-    console.error('[ORDERS] Error:', error);
-    res.status(500).json({ error: error.message });
-  }
+  const itemsJson = JSON.stringify(items);
+  
+  db.run('INSERT INTO orders (customerName, total, items) VALUES (?, ?, ?)', 
+    [customerName, total, itemsJson], function(err) {
+    if (err) {
+      console.error('[ORDERS] DB insert error:', err);
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    console.log('[ORDERS] Created id:', this.lastID);
+    res.json({ id: this.lastID, message: 'Order created successfully' });
+  });
 });
 
 // Get all orders (admin) - requires authentication
-app.get('/api/orders', authenticateAdmin, async (req, res) => {
+app.get('/api/orders', authenticateAdmin, (req, res) => {
   console.log('[ORDERS] GET /api/orders');
-  
-  try {
-    const orders = await db.getOrders();
-    console.log('[ORDERS] Found orders:', orders.length);
-    res.json(orders);
-  } catch (error) {
-    console.error('[ORDERS] Error:', error);
-    res.status(500).json({ error: error.message });
-  }
+  db.all('SELECT * FROM orders ORDER BY created_at DESC', (err, rows) => {
+    if (err) {
+      console.error('[ORDERS] DB error:', err);
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    console.log('[ORDERS] rows:', rows && rows.length);
+    res.json(rows);
+  });
 });
 
 // Update an order (admin)
-app.put('/api/orders/:id', authenticateAdmin, async (req, res) => {
+app.put('/api/orders/:id', authenticateAdmin, (req, res) => {
   const orderId = req.params.id;
   const { customerName, total, items } = req.body || {};
 
@@ -161,20 +214,25 @@ app.put('/api/orders/:id', authenticateAdmin, async (req, res) => {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  try {
-    const order = await db.updateOrder(orderId, customerName, total, items);
-    if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+  const itemsJson = JSON.stringify(items);
+  db.run(
+    'UPDATE orders SET customerName = ?, total = ?, items = ? WHERE id = ?',
+    [customerName, total, itemsJson, orderId],
+    function (err) {
+      if (err) {
+        console.error('[ORDERS] Update error:', err);
+        return res.status(500).json({ error: err.message });
+      }
+      if (this.changes === 0) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+      res.json({ success: true });
     }
-    res.json({ success: true });
-  } catch (error) {
-    console.error('[ORDERS] Update error:', error);
-    res.status(500).json({ error: error.message });
-  }
+  );
 });
 
 // Import products from CSV with column mapping
-app.post('/api/import-csv', upload.single('csvFile'), async (req, res) => {
+app.post('/api/import-csv', upload.single('csvFile'), (req, res) => {
   console.log('[IMPORT] POST /api/import-csv file:', req.file && req.file.originalname, 'mapping:', req.body && req.body.columnMapping);
   if (!req.file) {
     res.status(400).json({ error: 'No file uploaded' });
@@ -196,7 +254,6 @@ app.post('/api/import-csv', upload.single('csvFile'), async (req, res) => {
     mainPic: 'pic',
     pics: 'all_pics'
   };
-  
   let columnMapping = defaultColumnMapping;
   if (req.body && req.body.columnMapping) {
     try {
@@ -208,7 +265,6 @@ app.post('/api/import-csv', upload.single('csvFile'), async (req, res) => {
   }
 
   const results = [];
-  
   fs.createReadStream(req.file.path)
     .pipe(csv())
     .on('data', (data) => {
@@ -219,24 +275,46 @@ app.post('/api/import-csv', upload.single('csvFile'), async (req, res) => {
       });
       results.push(normalized);
     })
-    .on('end', async () => {
+    .on('end', () => {
       // Clean up uploaded file
       fs.unlinkSync(req.file.path);
 
-      try {
-        // Clear existing products
-        await db.clearAllProducts();
+      // Clear existing products
+      db.run('DELETE FROM products', (err) => {
+        if (err) {
+          console.error('[IMPORT] Clear products error:', err);
+          res.status(500).json({ error: err.message });
+          return;
+        }
 
-        // Process and insert new products
-        const processedProducts = [];
+        // Insert new products
+        const stmt = db.prepare(`INSERT INTO products 
+          (ref, productName, productName2, line, notice, size, unitPrice, productType, 
+           mainPic, pics, description, activeIngredients, usageInstructions, highlights) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+
+        let inserted = 0;
+        let errors = 0;
+        let processedCount = 0;
         const failed = [];
         const processedRefs = new Set();
+
+        const maybeFinish = () => {
+          if (processedCount === results.length) {
+            stmt.finalize();
+            res.json({
+              message: `Import completed. ${inserted} products imported, ${errors} errors.`,
+              imported: inserted,
+              errors,
+              failed
+            });
+          }
+        };
 
         const cleanUrl = (u) => {
           const s = String(u || '').trim();
           return s.startsWith('@') ? s.slice(1) : s;
         };
-        
         const toHttpUrlOrEmpty = (u) => {
           const s = cleanUrl(u);
           return /^https?:\/\//i.test(s) ? s : '';
@@ -257,10 +335,10 @@ app.post('/api/import-csv', upload.single('csvFile'), async (req, res) => {
             const activeIngredients = row[columnMapping.activeIngredients] || row.WirkungInhaltsstoffe_he || row.activeIngredients || '';
             const usageInstructions = row[columnMapping.usageInstructions] || row.Anwendung_he || row.usageInstructions || '';
             
-            // Images from CSV
+            // Images from CSV (fallback to placeholder if missing)
             const rawMainPic = row[columnMapping.mainPic] || row.pic || row.mainPic || '';
+
             const rawPics = row[columnMapping.pics] || row.all_pics || row.pics || '';
-            
             let picsArray = [];
             if (Array.isArray(rawPics)) {
               picsArray = rawPics;
@@ -270,33 +348,38 @@ app.post('/api/import-csv', upload.single('csvFile'), async (req, res) => {
                 .map(p => p.trim())
                 .filter(Boolean);
             }
-            
-            // Sanitize URLs
+            // Sanitize URLs (remove leading '@', trim)
             picsArray = picsArray.map(cleanUrl).filter(Boolean);
-            
-            // Choose mainPic
+            // Choose mainPic strictly from provided URLs (no placeholder)
             let mainPic = toHttpUrlOrEmpty(rawMainPic);
             if (!mainPic && picsArray.length) {
               const firstPic = toHttpUrlOrEmpty(picsArray[0]);
               if (firstPic) mainPic = firstPic;
             }
+            const pics = JSON.stringify(picsArray);
+            const highlights = row.highlights ? JSON.stringify(row.highlights.split(',').map(h => h.trim())) : '[]';
             
-            const highlights = row.highlights ? row.highlights.split(',').map(h => h.trim()) : [];
-            
-            // Skip if ref is empty or duplicate
+            // Skip if ref is empty
             if (!ref) {
+              errors++;
+              processedCount++;
               failed.push({ row: index + 1, ref: '', reason: 'Missing ref' });
+              maybeFinish();
               return;
             }
 
+            // Skip if duplicate within file
             if (processedRefs.has(ref)) {
+              errors++;
+              processedCount++;
               failed.push({ row: index + 1, ref, reason: 'Duplicate ref in file' });
+              maybeFinish();
               return;
             }
             
             processedRefs.add(ref);
             
-            processedProducts.push({
+            stmt.run([
               ref,
               productName,
               productName2,
@@ -306,35 +389,31 @@ app.post('/api/import-csv', upload.single('csvFile'), async (req, res) => {
               unitPrice,
               productType,
               mainPic,
-              pics: picsArray,
+              pics,
               description,
               activeIngredients,
               usageInstructions,
               highlights
+            ], (err) => {
+              if (err) {
+                console.error('[IMPORT] Insert row error:', err, 'ref:', ref);
+                errors++;
+                failed.push({ row: index + 1, ref, reason: err.message });
+              } else {
+                inserted++;
+              }
+              processedCount++;
+              maybeFinish();
             });
           } catch (error) {
             console.error('Error processing row:', error);
-            failed.push({ 
-              row: index + 1, 
-              ref: row && (row[columnMapping.ref] || row['ref no'] || row.ref) || '', 
-              reason: error.message || 'Parsing error' 
-            });
+            errors++;
+            processedCount++;
+            failed.push({ row: index + 1, ref: row && (row[columnMapping.ref] || row['ref no'] || row.ref) || '', reason: error.message || 'Parsing error' });
+            maybeFinish();
           }
         });
-
-        // Bulk insert products
-        const insertedProducts = await db.bulkInsertProducts(processedProducts);
-        
-        res.json({
-          message: `Import completed. ${insertedProducts.length} products imported, ${failed.length} errors.`,
-          imported: insertedProducts.length,
-          errors: failed.length,
-          failed
-        });
-      } catch (error) {
-        console.error('[IMPORT] Error:', error);
-        res.status(500).json({ error: error.message });
-      }
+      });
     });
 });
 
@@ -359,20 +438,23 @@ app.post('/api/csv-headers', upload.single('csvFile'), (req, res) => {
 });
 
 // Export products to CSV
-app.get('/api/export-csv', async (req, res) => {
+app.get('/api/export-csv', (req, res) => {
   console.log('[EXPORT] GET /api/export-csv');
-  
-  try {
-    const products = await db.getAllProductsForExport();
-    
+  db.all('SELECT * FROM products ORDER BY ref', (err, rows) => {
+    if (err) {
+      console.error('[EXPORT] DB error:', err);
+      res.status(500).json({ error: err.message });
+      return;
+    }
+
     // Convert to CSV format
     const csvHeader = 'ref,productName,productName2,line,notice,size,unitPrice,productType,mainPic,pics,description,activeIngredients,usageInstructions,highlights\n';
     
-    const csvData = products.map(product => {
-      const pics = Array.isArray(product.pics) ? product.pics.join(';') : '';
-      const highlights = Array.isArray(product.highlights) ? product.highlights.join(';') : '';
+    const csvData = rows.map(row => {
+      const pics = row.pics ? JSON.parse(row.pics).join(';') : '';
+      const highlights = row.highlights ? JSON.parse(row.highlights).join(';') : '';
       
-      return `"${product.ref}","${product.productName}","${product.productName2}","${product.line}","${product.notice}","${product.size}",${product.unitPrice},"${product.productType}","${product.mainPic}","${pics}","${product.description}","${product.activeIngredients}","${product.usageInstructions}","${highlights}"`;
+      return `"${row.ref}","${row.productName}","${row.productName2}","${row.line}","${row.notice}","${row.size}",${row.unitPrice},"${row.productType}","${row.mainPic}","${pics}","${row.description}","${row.activeIngredients}","${row.usageInstructions}","${highlights}"`;
     }).join('\n');
 
     const csvContent = csvHeader + csvData;
@@ -380,33 +462,30 @@ app.get('/api/export-csv', async (req, res) => {
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename=products_export.csv');
     res.send(csvContent);
-  } catch (error) {
-    console.error('[EXPORT] Error:', error);
-    res.status(500).json({ error: error.message });
-  }
+  });
 });
 
-// Admin utility: fix image URLs
-app.post('/api/admin/fix-images', authenticateAdmin, async (req, res) => {
-  try {
-    const products = await db.getProductsForImageFix();
-    
+// Admin utility: fix image URLs written previously with placeholders or wrong domain
+app.post('/api/admin/fix-images', authenticateAdmin, (req, res) => {
+  db.all('SELECT ref, mainPic, pics FROM products', (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
     const toHttp = (u) => {
       const s = String(u || '').trim();
       if (!s) return '';
       return /^https?:\/\//i.test(s) ? s : '';
     };
-    
     const needFix = [];
-    products.forEach((product) => {
-      const current = toHttp(product.mainPic);
-      const picsArr = Array.isArray(product.pics) ? product.pics : [];
+    rows.forEach((row) => {
+      const current = toHttp(row.mainPic);
+      let picsArr = [];
+      try { picsArr = Array.isArray(row.pics) ? row.pics : JSON.parse(row.pics || '[]'); } catch (_) {}
       const firstValid = picsArr.find(p => toHttp(p));
-      
       // Fix if no mainPic or it's placeholder domain while we have a valid pic URL
       const isPlaceholder = current.includes('via.placeholder.com');
       if ((!current && firstValid) || (isPlaceholder && firstValid)) {
-        needFix.push({ ref: product.ref, newPic: firstValid });
+        needFix.push({ ref: row.ref, newPic: firstValid });
       }
     });
 
@@ -415,79 +494,65 @@ app.post('/api/admin/fix-images', authenticateAdmin, async (req, res) => {
       return res.json({ updated, message: 'No images needed fixing' });
     }
 
-    // Update images
-    for (const { ref, newPic } of needFix) {
-      try {
-        await db.updateProductImage(ref, newPic);
-        updated++;
-      } catch (error) {
-        console.error('Error updating image for ref:', ref, error);
-      }
-    }
-
-    res.json({ updated, attempted: needFix.length });
-  } catch (error) {
-    console.error('[FIX-IMAGES] Error:', error);
-    res.status(500).json({ error: error.message });
-  }
+    const stmt = db.prepare('UPDATE products SET mainPic = ? WHERE ref = ?');
+    needFix.forEach(({ ref, newPic }, idx) => {
+      stmt.run([newPic, ref], (e) => {
+        if (!e) updated++;
+        if (idx === needFix.length - 1) {
+          stmt.finalize();
+          res.json({ updated, attempted: needFix.length });
+        }
+      });
+    });
+  });
 });
 
-// Admin: replace mainPic from CSV pic column by ref number
+// Admin: replace mainPic from CSV pic column by ref number, without touching other fields
 app.post('/api/admin/replace-pics-from-csv', authenticateAdmin, upload.single('csvFile'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
-  
   const defaultMapping = { ref: 'ref no', pic: 'pic' };
   let mapping = defaultMapping;
   if (req.body && req.body.columnMapping) {
-    try { 
-      mapping = JSON.parse(req.body.columnMapping); 
-    } catch (_) { 
-      mapping = defaultMapping; 
-    }
+    try { mapping = JSON.parse(req.body.columnMapping); } catch (_) { mapping = defaultMapping; }
   }
 
   const rows = [];
-  
   fs.createReadStream(req.file.path)
     .pipe(csv())
     .on('data', (data) => {
       const norm = {};
-      Object.keys(data || {}).forEach((k) => { 
-        norm[String(k || '').trim()] = data[k]; 
-      });
+      Object.keys(data || {}).forEach((k) => { norm[String(k || '').trim()] = data[k]; });
       rows.push(norm);
     })
-    .on('end', async () => {
+    .on('end', () => {
       fs.unlinkSync(req.file.path);
-      
       let updated = 0;
       let missing = 0;
-      
-      try {
-        for (const row of rows) {
-          const ref = (row[mapping.ref] || row['ref no'] || row.ref || '').toString().trim();
-          const pic = (row[mapping.pic] || row.pic || '').toString();
-          
-          if (!ref || !pic) {
-            missing++;
-            continue;
-          }
-          
-          try {
-            await db.updateProductImage(ref, pic);
-            updated++;
-          } catch (error) {
-            console.error('Error updating image for ref:', ref, error);
-          }
+      const stmt = db.prepare('UPDATE products SET mainPic = ? WHERE ref = ?');
+      let processed = 0;
+      const maybeDone = () => {
+        if (processed === rows.length) {
+          stmt.finalize();
+          res.json({ updated, missing });
         }
-        
-        res.json({ updated, missing });
-      } catch (error) {
-        console.error('[REPLACE-PICS] Error:', error);
-        res.status(500).json({ error: error.message });
-      }
+      };
+      if (rows.length === 0) return res.json({ updated, missing });
+      rows.forEach((r) => {
+        const ref = (r[mapping.ref] || r['ref no'] || r.ref || '').toString().trim();
+        const pic = (r[mapping.pic] || r.pic || '').toString();
+        if (!ref || !pic) {
+          missing++;
+          processed++;
+          return maybeDone();
+        }
+        stmt.run([pic, ref], (err) => {
+          if (!err && this && this.changes) updated++;
+          processed++;
+          maybeDone();
+        });
+      });
     });
 });
 
@@ -556,7 +621,7 @@ app.get('/api/img', (req, res) => {
 });
 
 // Add/Update product (admin) - requires authentication
-app.post('/api/products', authenticateAdmin, async (req, res) => {
+app.post('/api/products', authenticateAdmin, (req, res) => {
   const product = req.body;
   
   if (!product.ref || !product.productName) {
@@ -564,47 +629,47 @@ app.post('/api/products', authenticateAdmin, async (req, res) => {
     return;
   }
 
-  try {
-    // Normalize pics: accept array or delimited string
-    let pics = [];
-    if (Array.isArray(product.pics)) {
-      pics = product.pics;
-    } else if (typeof product.pics === 'string') {
-      pics = product.pics
-        .split(/\s*\|\s*|,|;|\n/)
-        .map(s => s.trim())
-        .filter(Boolean);
-    }
-    
-    const highlights = Array.isArray(product.highlights) ? product.highlights : [];
-    
-    // If mainPic not provided, use first pic from pics array
-    const mainPic = (product.mainPic && String(product.mainPic).trim()) || pics[0] || '';
-
-    const productData = {
-      ...product,
-      pics,
-      highlights,
-      mainPic
-    };
-
-    const savedProduct = await db.upsertProduct(productData);
-    res.json({ id: savedProduct.id, message: 'Product saved successfully' });
-  } catch (error) {
-    console.error('[PRODUCTS] Save error:', error);
-    res.status(500).json({ error: error.message });
+  // Normalize pics: accept array or delimited string
+  let pics = '[]';
+  if (Array.isArray(product.pics)) {
+    pics = JSON.stringify(product.pics);
+  } else if (typeof product.pics === 'string') {
+    const arr = product.pics
+      .split(/\s*\|\s*|,|;|\n/)
+      .map(s => s.trim())
+      .filter(Boolean);
+    pics = JSON.stringify(arr);
   }
+  const highlights = Array.isArray(product.highlights) ? JSON.stringify(product.highlights) : product.highlights || '[]';
+  // If mainPic not provided, use first pic from pics array
+  const parsedPics = pics ? JSON.parse(pics) : [];
+  const mainPic = (product.mainPic && String(product.mainPic).trim()) || parsedPics[0] || '';
+
+  db.run(`INSERT OR REPLACE INTO products 
+    (ref, productName, productName2, line, notice, size, unitPrice, productType, 
+     mainPic, pics, description, activeIngredients, usageInstructions, highlights) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+    [product.ref, product.productName, product.productName2, product.line, product.notice, 
+     product.size, product.unitPrice, product.productType, mainPic, pics, 
+     product.description, product.activeIngredients, product.usageInstructions, highlights], 
+    function(err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json({ id: this.lastID, message: 'Product saved successfully' });
+  });
 });
 
 // Delete product (admin) - requires authentication
-app.delete('/api/products/:ref', authenticateAdmin, async (req, res) => {
-  try {
-    await db.deleteProduct(req.params.ref);
+app.delete('/api/products/:ref', authenticateAdmin, (req, res) => {
+  db.run('DELETE FROM products WHERE ref = ?', [req.params.ref], function(err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
     res.json({ message: 'Product deleted successfully' });
-  } catch (error) {
-    console.error('[PRODUCTS] Delete error:', error);
-    res.status(500).json({ error: error.message });
-  }
+  });
 });
 
 // Serve React app
@@ -615,5 +680,5 @@ if (hasBuild) {
 }
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} with Supabase`);
+  console.log(`Server running on port ${PORT}`);
 });
