@@ -68,7 +68,7 @@ const CompanySettings = () => {
       setSaving(true);
       await saveCompanySettings(settings);
       // Refresh the global company context
-      refreshSettings();
+      await refreshSettings();
       setSnackbar({
         open: true,
         message: 'הגדרות החברה נשמרו בהצלחה',
@@ -76,9 +76,17 @@ const CompanySettings = () => {
       });
     } catch (error) {
       console.error('Error saving settings:', error);
+      let errorMessage = 'שגיאה בשמירת הגדרות החברה';
+      
+      if (error.message.includes('Missing Supabase') || error.message.includes('environment')) {
+        errorMessage = 'שגיאה: חסרות הגדרות Supabase. יש להגדיר קובץ .env.local';
+      } else if (error.message.includes('network') || error.message.includes('fetch')) {
+        errorMessage = 'שגיאת רשת: בדוק את החיבור לאינטרנט';
+      }
+      
       setSnackbar({
         open: true,
-        message: 'שגיאה בשמירת הגדרות החברה',
+        message: errorMessage,
         severity: 'error'
       });
     } finally {

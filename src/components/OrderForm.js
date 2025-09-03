@@ -40,7 +40,7 @@ import '../styles/print.css';
 
 const OrderForm = () => {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
-  const { settings: companySettings } = useCompany();
+  const { settings: companySettings, loading: companyLoading } = useCompany();
   const theme = useTheme();
   const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -251,15 +251,15 @@ const OrderForm = () => {
           <Box className="print-invoice-header" sx={{ p: 3, '@media print': { p: 0 } }}>
             <Box className="print-company-logo">
               <Typography className="print-company-name" variant="h5" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                {companySettings.companyName}
+                {companySettings?.companyName || 'קטלוג מוצרים'}
               </Typography>
               <Box className="print-company-details">
-                <Typography variant="caption" display="block">{companySettings.companyDescription}</Typography>
-                <Typography variant="caption" display="block">{companySettings.companyTagline}</Typography>
-                {companySettings.companyAddress && (
+                <Typography variant="caption" display="block">{companySettings?.companyDescription || 'מערכת ניהול הזמנות'}</Typography>
+                <Typography variant="caption" display="block">{companySettings?.companyTagline || 'אתר מקצועי למוצרי יופי'}</Typography>
+                {companySettings?.companyAddress && (
                   <Typography variant="caption" display="block">{companySettings.companyAddress}</Typography>
                 )}
-                {(companySettings.companyPhone || companySettings.companyEmail) && (
+                {(companySettings?.companyPhone || companySettings?.companyEmail) && (
                   <Typography variant="caption" display="block">
                     {companySettings.companyPhone && `טל: ${companySettings.companyPhone}`}
                     {companySettings.companyPhone && companySettings.companyEmail && ' | '}
@@ -449,7 +449,7 @@ const OrderForm = () => {
               </Typography>
             </Box>
             <Typography className="print-footer-disclaimer">
-              {companySettings.invoiceFooter}
+              {companySettings?.invoiceFooter || 'מסמך זה הופק באופן אוטומטי על ידי מערכת ניהול ההזמנות'}
             </Typography>
           </Box>
         </Paper>

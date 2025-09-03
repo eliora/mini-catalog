@@ -16,6 +16,12 @@ const DEFAULT_SETTINGS = {
  */
 export const getCompanySettings = async () => {
   try {
+    // Check if Supabase is configured
+    if (!supabase) {
+      console.warn('Supabase not configured, returning default settings');
+      return DEFAULT_SETTINGS;
+    }
+
     const { data, error } = await supabase
       .from('company_settings')
       .select('*')
@@ -26,7 +32,20 @@ export const getCompanySettings = async () => {
     }
 
     // If no settings exist, return defaults
-    return data || DEFAULT_SETTINGS;
+    if (!data) {
+      return DEFAULT_SETTINGS;
+    }
+
+    // Map database fields (snake_case) to React state (camelCase)
+    return {
+      companyName: data.company_name || DEFAULT_SETTINGS.companyName,
+      companyDescription: data.company_description || DEFAULT_SETTINGS.companyDescription,
+      companyTagline: data.company_tagline || DEFAULT_SETTINGS.companyTagline,
+      companyAddress: data.company_address || DEFAULT_SETTINGS.companyAddress,
+      companyPhone: data.company_phone || DEFAULT_SETTINGS.companyPhone,
+      companyEmail: data.company_email || DEFAULT_SETTINGS.companyEmail,
+      invoiceFooter: data.invoice_footer || DEFAULT_SETTINGS.invoiceFooter
+    };
   } catch (error) {
     console.error('Error fetching company settings:', error);
     // Return defaults on error
@@ -39,6 +58,11 @@ export const getCompanySettings = async () => {
  */
 export const saveCompanySettings = async (settings) => {
   try {
+    // Check if Supabase is configured
+    if (!supabase) {
+      throw new Error('Supabase is not configured. Please set up environment variables.');
+    }
+
     // First, try to get existing settings
     const { data: existing } = await supabase
       .from('company_settings')

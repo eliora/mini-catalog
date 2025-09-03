@@ -27,6 +27,7 @@ export const CompanyProvider = ({ children }) => {
     try {
       setLoading(true);
       const data = await getCompanySettings();
+      console.log('🏢 Company settings loaded:', data);
       setSettings(data);
     } catch (error) {
       console.error('Error loading company settings:', error);
@@ -36,8 +37,8 @@ export const CompanyProvider = ({ children }) => {
     }
   };
 
-  const refreshSettings = () => {
-    loadSettings();
+  const refreshSettings = async () => {
+    await loadSettings();
   };
 
   useEffect(() => {
