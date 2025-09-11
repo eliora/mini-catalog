@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Box,
   Alert,
+  Button,
   CircularProgress,
 } from '@mui/material';
 import { useCart } from '../context/CartContext';
@@ -20,7 +21,9 @@ const Catalog = () => {
   const { cart, addToCart, updateQuantity, removeFromCart } = useCart();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({ page: 1, hasMore: true, pageSize: 50 });
   
   const [imageZoom, setImageZoom] = useState({ open: false, src: '' });
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -37,36 +40,67 @@ const Catalog = () => {
   const mobileFilter = useMobileFilterDrawer();
   // eslint-disable-next-line no-unused-vars
 
-  const loadProducts = useCallback(async () => {
+  const loadProducts = useCallback(async (page = 1, append = false) => {
     try {
-      setLoading(true);
+      if (page === 1) {
+        setLoading(true);
+        setProducts([]);
+      } else {
+        setLoadingMore(true);
+      }
       setError(null);
       
-      console.log('🚀 Starting getProducts call...');
+      console.log(`🚀 Loading products page ${page}...`);
       console.log('🔍 Environment check:', {
         hasUrl: !!process.env.REACT_APP_SUPABASE_URL,
         hasKey: !!process.env.REACT_APP_SUPABASE_ANON_KEY,
         urlPreview: process.env.REACT_APP_SUPABASE_URL?.substring(0, 30) + '...'
       });
       
-      // Add timeout to prevent hanging
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Request timeout')), 10000)
-      );
+      // Products API now has built-in timeout and retry logic with pagination
+      const result = await getProducts('', '', page, pagination.pageSize);
+      console.log('✅ Products loaded:', result.products?.length, 'items');
+      console.log('📊 Pagination info:', result.pagination);
       
-      const data = await Promise.race([getProducts(), timeoutPromise]);
-      console.log('✅ Products loaded:', data?.length, 'items');
-      console.log('📊 First product sample:', data?.[0]);
-      setProducts(data);
+      if (append && page > 1) {
+        setProducts(prev => [...prev, ...result.products]);
+      } else {
+        setProducts(result.products);
+      }
+      
+      setPagination(prev => ({
+        ...prev,
+        page: result.pagination.page,
+        hasMore: result.pagination.hasMore
+      }));
     } catch (error) {
       console.error('❌ Error loading products:', error);
       console.error('❌ Error details:', error.message, error.stack);
-      const msg = (error && error.message) || error || 'שגיאת רשת';
-      setError('שגיאה בטעינת מוצרים: ' + msg);
+      
+      // Provide user-friendly error messages
+      let userMessage;
+      if (error.message?.includes('timeout')) {
+        userMessage = 'החיבור איטי מדי - אנא נסה שוב';
+      } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        userMessage = 'בעיית חיבור לאינטרנט - אנא בדוק את החיבור';
+      } else if (error.message?.includes('Supabase not configured')) {
+        userMessage = 'שגיאת הגדרות מערכת';
+      } else {
+        userMessage = error.message || 'שגיאה לא ידועה';
+      }
+      
+      setError('שגיאה בטעינת מוצרים: ' + userMessage);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  }, []);
+  }, [pagination.pageSize]);
+
+  const loadMoreProducts = useCallback(async () => {
+    if (!loadingMore && pagination.hasMore) {
+      await loadProducts(pagination.page + 1, true);
+    }
+  }, [loadProducts, loadingMore, pagination.hasMore, pagination.page]);
 
   const loadProductLines = useCallback(async () => {
     try {
@@ -271,7 +305,23 @@ const Catalog = () => {
     }
     
     return (
-      <Alert severity="error" sx={{ m: 2 }}>
+      <Alert 
+        severity="error" 
+        sx={{ m: 2 }}
+        action={
+          <Button 
+            color="inherit" 
+            size="small" 
+            onClick={() => {
+              setError(null);
+              loadProducts();
+            }}
+            sx={{ ml: 2 }}
+          >
+            נסה שוב
+          </Button>
+        }
+      >
         {error}
       </Alert>
     );

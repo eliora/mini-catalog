@@ -3,11 +3,12 @@ import {
   Accordion, AccordionSummary, AccordionDetails,
   Grid, Typography, Chip, IconButton, Stack, Box, TextField, useTheme, useMediaQuery
 } from '@mui/material';
-import { Add as AddIcon, Remove as RemoveIcon, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
+import { Add as AddIcon, Remove as RemoveIcon, ExpandMore as ExpandMoreIcon, Lock as LockIcon } from '@mui/icons-material';
 import { useCatalogMode } from '../hooks/useCatalogMode';
 import { useCompany } from '../context/CompanyContext';
 import { getProductDetails } from '../api/products';
 import ProductAccordionContent from './product/ProductAccordionContent';
+import usePricing from '../hooks/usePricing';
 
 const ProductListItem = ({
   product,
@@ -23,6 +24,10 @@ const ProductListItem = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { getPriceDisplayProps, shouldShowOrderFunctionality } = useCatalogMode();
   const { settings } = useCompany();
+  const { canViewPrices, formatPrice, shouldShowPricePlaceholder, getPricingMessage } = usePricing();
+  
+  // Get formatted price for this product
+  const priceInfo = canViewPrices ? formatPrice(product.ref) : null;
   
   // State for accordion data lazy loading
   const [accordionData, setAccordionData] = React.useState(null);
@@ -204,11 +209,31 @@ const ProductListItem = ({
                 <Stack spacing={1} alignItems="center">
                   {/* Price + Size */}
                   <Stack spacing={0.2} alignItems="center">
-                    {(product.unitPrice || product.unit_price) && (
-                      <Typography variant="subtitle1" color="primary" sx={{ fontWeight: 600, fontSize: '0.9rem' }}>
-                        ₪{product.unitPrice || product.unit_price}
-                      </Typography>
-                    )}
+                    {canViewPrices ? (
+                      priceInfo && (
+                        <Box>
+                          <Typography variant="subtitle1" color="primary" sx={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                            {priceInfo.display}
+                          </Typography>
+                          {priceInfo.isDiscounted && (
+                            <Typography 
+                              variant="caption" 
+                              color="text.secondary" 
+                              sx={{ textDecoration: 'line-through', fontSize: '0.7rem' }}
+                            >
+                              {priceInfo.original}
+                            </Typography>
+                          )}
+                        </Box>
+                      )
+                    ) : shouldShowPricePlaceholder() ? (
+                      <Stack direction="row" alignItems="center" spacing={0.3}>
+                        <LockIcon sx={{ fontSize: '0.8rem' }} color="action" />
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
+                          Login
+                        </Typography>
+                      </Stack>
+                    ) : null}
                     {product.size && (
                       <Typography 
                         variant="caption" 
@@ -397,11 +422,31 @@ const ProductListItem = ({
                 <Stack direction="row" spacing={2} alignItems="center">
                   {/* Price + Size */}
                   <Stack spacing={0.3} alignItems="center">
-                    {(product.unitPrice || product.unit_price) && (
-                      <Typography variant="h6" color="primary" sx={{ fontWeight: 600 }}>
-                        ₪{product.unitPrice || product.unit_price}
-                      </Typography>
-                    )}
+                    {canViewPrices ? (
+                      priceInfo && (
+                        <Box>
+                          <Typography variant="h6" color="primary" sx={{ fontWeight: 600 }}>
+                            {priceInfo.display}
+                          </Typography>
+                          {priceInfo.isDiscounted && (
+                            <Typography 
+                              variant="caption" 
+                              color="text.secondary" 
+                              sx={{ textDecoration: 'line-through' }}
+                            >
+                              {priceInfo.original}
+                            </Typography>
+                          )}
+                        </Box>
+                      )
+                    ) : shouldShowPricePlaceholder() ? (
+                      <Stack direction="row" alignItems="center" spacing={0.5}>
+                        <LockIcon fontSize="small" color="action" />
+                        <Typography variant="body2" color="text.secondary">
+                          {getPricingMessage()}
+                        </Typography>
+                      </Stack>
+                    ) : null}
                     {product.size && (
                       <Typography 
                         variant="caption" 

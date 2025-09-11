@@ -3,8 +3,9 @@ import {
   Card, CardMedia, CardContent, CardActions,
   Typography, Chip, IconButton, TextField, Stack, Box, useTheme, useMediaQuery
 } from '@mui/material';
-import { Add as AddIcon, Remove as RemoveIcon, Info as InfoIcon } from '@mui/icons-material';
+import { Add as AddIcon, Remove as RemoveIcon, Info as InfoIcon, Lock as LockIcon } from '@mui/icons-material';
 import OptimizedImage from './OptimizedImage';
+import usePricing from '../hooks/usePricing';
 
 const ProductCard = ({
   product,
@@ -17,6 +18,10 @@ const ProductCard = ({
 }) => {
   const theme = useTheme();
   const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
+  const { canViewPrices, formatPrice, shouldShowPricePlaceholder, getPricingMessage } = usePricing();
+  
+  // Get formatted price for this product
+  const priceInfo = canViewPrices ? formatPrice(product.ref) : null;
 
   return (
     <Card
@@ -102,9 +107,31 @@ const ProductCard = ({
             <Typography variant="body2" color="text.secondary">
               {product.size}
             </Typography>
-            <Typography variant={isSmall ? 'h6' : 'h5'} color="primary" sx={{ fontWeight: 600 }}>
-              {(product.unitPrice || product.unit_price) ? `₪${(product.unitPrice || product.unit_price)}` : ''}
-            </Typography>
+            {canViewPrices ? (
+              <Box>
+                {priceInfo && (
+                  <Typography variant={isSmall ? 'h6' : 'h5'} color="primary" sx={{ fontWeight: 600 }}>
+                    {priceInfo.display}
+                  </Typography>
+                )}
+                {priceInfo?.isDiscounted && (
+                  <Typography 
+                    variant="caption" 
+                    color="text.secondary" 
+                    sx={{ textDecoration: 'line-through', display: 'block' }}
+                  >
+                    {priceInfo.original}
+                  </Typography>
+                )}
+              </Box>
+            ) : shouldShowPricePlaceholder() ? (
+              <Stack direction="row" alignItems="center" spacing={0.5}>
+                <LockIcon fontSize="small" color="action" />
+                <Typography variant="caption" color="text.secondary">
+                  {getPricingMessage()}
+                </Typography>
+              </Stack>
+            ) : null}
           </Stack>
         </Stack>
       </CardContent>
@@ -114,7 +141,7 @@ const ProductCard = ({
             <IconButton
               size="small"
               onClick={() => onDecrement(product)}
-              disabled={quantity === 0}
+              disabled={quantity === 0 || !canViewPrices}
               sx={{ border: '1px solid', borderColor: 'divider', width: 32, height: 32 }}
             >
               <RemoveIcon fontSize="small" />
@@ -124,6 +151,7 @@ const ProductCard = ({
               size="small"
               value={quantity}
               onChange={(e) => {
+                if (!canViewPrices) return;
                 const value = e.target.value;
                 // Allow empty string for typing, but convert to number
                 const numValue = value === '' ? 0 : parseInt(value, 10);
@@ -132,6 +160,7 @@ const ProductCard = ({
                 }
               }}
               onBlur={(e) => {
+                if (!canViewPrices) return;
                 // Ensure valid value on blur
                 const value = parseInt(e.target.value, 10);
                 if (isNaN(value) || value < 0) {
@@ -140,6 +169,7 @@ const ProductCard = ({
                   onQuantityChange(product.ref, '99');
                 }
               }}
+              disabled={!canViewPrices}
               sx={{
                 width: 60,
                 '& .MuiOutlinedInput-root': { 
@@ -177,6 +207,7 @@ const ProductCard = ({
             <IconButton
               size="small"
               onClick={() => onIncrement(product)}
+              disabled={!canViewPrices}
               sx={{ border: '1px solid', borderColor: 'divider', width: 32, height: 32 }}
             >
               <AddIcon fontSize="small" />

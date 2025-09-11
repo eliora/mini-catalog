@@ -1,5 +1,15 @@
 import { supabase } from '../config/supabase';
 
+// Helper function to add timeout to any promise
+const withTimeout = (promise, timeoutMs = 8000, operation = 'Operation') => {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => 
+      setTimeout(() => reject(new Error(`${operation} timeout after ${timeoutMs}ms`)), timeoutMs)
+    )
+  ]);
+};
+
 // Default company settings
 const DEFAULT_SETTINGS = {
   companyName: 'Jean Darcel',
@@ -24,10 +34,14 @@ export const getCompanySettings = async () => {
       return DEFAULT_SETTINGS;
     }
 
-    const { data, error } = await supabase
-      .from('company_settings')
-      .select('*')
-      .maybeSingle();
+    const { data, error } = await withTimeout(
+      supabase
+        .from('settings')
+        .select('*')
+        .maybeSingle(),
+      5000,
+      'Load settings'
+    );
 
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
       throw error;
@@ -42,11 +56,11 @@ export const getCompanySettings = async () => {
     return {
       companyName: data.company_name || DEFAULT_SETTINGS.companyName,
       companyDescription: data.company_description || DEFAULT_SETTINGS.companyDescription,
-      companyTagline: data.company_tagline || DEFAULT_SETTINGS.companyTagline,
+      companyTagline: DEFAULT_SETTINGS.companyTagline, // Not stored in DB
       companyAddress: data.company_address || DEFAULT_SETTINGS.companyAddress,
       companyPhone: data.company_phone || DEFAULT_SETTINGS.companyPhone,
       companyEmail: data.company_email || DEFAULT_SETTINGS.companyEmail,
-      invoiceFooter: data.invoice_footer || DEFAULT_SETTINGS.invoiceFooter,
+      invoiceFooter: DEFAULT_SETTINGS.invoiceFooter, // Not stored in DB
       companyLogo: data.company_logo || DEFAULT_SETTINGS.companyLogo,
       taxRate: data.tax_rate || DEFAULT_SETTINGS.taxRate
     };
@@ -68,51 +82,61 @@ export const saveCompanySettings = async (settings) => {
     }
 
     // First, try to get existing settings
-    const { data: existing } = await supabase
-      .from('company_settings')
-      .select('id')
-      .maybeSingle();
+    const { data: existing } = await withTimeout(
+      supabase
+        .from('settings')
+        .select('id')
+        .maybeSingle(),
+      5000,
+      'Check existing settings'
+    );
 
     let result;
     
     if (existing) {
       // Update existing settings
-      result = await supabase
-        .from('company_settings')
-        .update({
-          company_name: settings.companyName,
-          company_description: settings.companyDescription,
-          company_tagline: settings.companyTagline,
-          company_address: settings.companyAddress,
-          company_phone: settings.companyPhone,
-          company_email: settings.companyEmail,
-          invoice_footer: settings.invoiceFooter,
-          company_logo: settings.companyLogo,
-          tax_rate: settings.taxRate,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', existing.id)
-        .select()
-        .single();
+      result = await withTimeout(
+        supabase
+          .from('settings')
+          .update({
+            company_name: settings.companyName,
+            company_description: settings.companyDescription,
+            company_address: settings.companyAddress,
+            company_phone: settings.companyPhone,
+            company_email: settings.companyEmail,
+            company_logo: settings.companyLogo,
+            tax_rate: settings.taxRate,
+            currency: 'ILS', // Default currency
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existing.id)
+          .select()
+          .single(),
+        8000,
+        'Update settings'
+      );
     } else {
       // Insert new settings
-      result = await supabase
-        .from('company_settings')
-        .insert({
-          company_name: settings.companyName,
-          company_description: settings.companyDescription,
-          company_tagline: settings.companyTagline,
-          company_address: settings.companyAddress,
-          company_phone: settings.companyPhone,
-          company_email: settings.companyEmail,
-          invoice_footer: settings.invoiceFooter,
-          company_logo: settings.companyLogo,
-          tax_rate: settings.taxRate,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+      result = await withTimeout(
+        supabase
+          .from('settings')
+          .insert({
+            company_name: settings.companyName,
+            company_description: settings.companyDescription,
+            company_address: settings.companyAddress,
+            company_phone: settings.companyPhone,
+            company_email: settings.companyEmail,
+            company_logo: settings.companyLogo,
+            tax_rate: settings.taxRate,
+            currency: 'ILS', // Default currency
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single(),
+        8000,
+        'Insert settings'
+      );
     }
 
     if (result.error) {
@@ -122,11 +146,11 @@ export const saveCompanySettings = async (settings) => {
     return {
       companyName: result.data.company_name,
       companyDescription: result.data.company_description,
-      companyTagline: result.data.company_tagline,
+      companyTagline: settings.companyTagline, // Return what was sent (not stored in DB)
       companyAddress: result.data.company_address,
       companyPhone: result.data.company_phone,
       companyEmail: result.data.company_email,
-      invoiceFooter: result.data.invoice_footer,
+      invoiceFooter: settings.invoiceFooter, // Return what was sent (not stored in DB)
       companyLogo: result.data.company_logo,
       taxRate: result.data.tax_rate
     };

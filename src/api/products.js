@@ -1,16 +1,48 @@
 import { supabase } from '../config/supabase';
 import { processImageUrl, processImageUrls } from '../utils/imageHelpers';
+import { getPrices } from './prices';
 // Mock data removed - using Supabase only
 
-export const getProducts = async (search = '', line = '') => {
+// Helper function to add timeout to any promise
+const withTimeout = (promise, timeoutMs = 10000, operation = 'Operation') => {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => 
+      setTimeout(() => reject(new Error(`${operation} timeout after ${timeoutMs}ms`)), timeoutMs)
+    )
+  ]);
+};
+
+// Helper function to retry operations
+const retryOperation = async (operation, maxRetries = 2, delay = 1000) => {
+  let lastError;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`🔄 Attempt ${attempt}/${maxRetries}`);
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      console.warn(`❌ Attempt ${attempt} failed:`, error.message);
+      
+      if (attempt < maxRetries) {
+        console.log(`⏳ Waiting ${delay}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 1.5; // Exponential backoff
+      }
+    }
+  }
+  
+  throw lastError;
+};
+
+export const getProducts = async (search = '', line = '', page = 1, pageSize = 50) => {
   try {
+    console.log('🔍 Loading products with timeout protection...');
     console.log('🔍 Checking Supabase config:', {
       url: process.env.REACT_APP_SUPABASE_URL ? 'SET' : 'MISSING',
       key: process.env.REACT_APP_SUPABASE_ANON_KEY ? 'SET' : 'MISSING'
     });
-
-    // Database should be working now, let's try to use it
-    console.log('🔄 Attempting to use database instead of mock data');
 
     // Check if Supabase is properly configured
     if (!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY) {
@@ -18,16 +50,16 @@ export const getProducts = async (search = '', line = '') => {
     }
 
     // Select ONLY essential fields for initial catalog display (super fast loading)
+    // NOTE: unit_price removed from products table - now in separate prices table
     // Database columns: ref, hebrew_name, header, short_description_he, description_he, 
     // skin_type_he, usage_instructions_he, active_ingredients_he, ingredients, french_name, 
-    // english_name, size, product_line, main_pic, pics, type, product_type, qty, unit_price
+    // english_name, size, product_line, main_pic, pics, type, product_type, qty
     let query = supabase.from('products').select(`
       ref,
       hebrew_name,
       english_name,
       short_description_he,
       main_pic,
-      unit_price,
       size,
       product_line,
       type,
@@ -44,9 +76,17 @@ export const getProducts = async (search = '', line = '') => {
       query = query.or(`product_line.ilike.%${line}%,skin_type_he.ilike.%${line}%`);
     }
     
-    query = query.order('ref').limit(500); // Get more to filter client-side
+    // Add pagination for lazy loading
+    const offset = (page - 1) * pageSize;
+    query = query.order('ref').range(offset, offset + pageSize - 1);
     
-    const { data, error } = await query;
+    // Execute query with timeout and retry protection
+    const { data, error } = await retryOperation(
+      () => withTimeout(query, 8000, 'Products query'),
+      3, // 3 attempts max
+      1000 // 1 second initial delay
+    );
+    
     if (error) throw error;
     
     // More permissive filtering - only exclude products explicitly marked as unavailable
@@ -61,19 +101,36 @@ export const getProducts = async (search = '', line = '') => {
         if (typeof qty === 'string' && qty.trim() === '') return false;
         return true;
       })
-      .slice(0, 300); // Increased limit for more products
+; // No need to slice - already limited by pagination
     
     console.log(`Products after filtering: ${filteredData.length} out of ${data.length}`);
     
+    // Get product refs for price lookup
+    const productRefs = filteredData.map(product => product.ref);
+    
+    // Fetch prices separately (only if user has permission) with timeout protection
+    let prices = {};
+    try {
+      prices = await retryOperation(
+        () => withTimeout(getPrices(productRefs), 5000, 'Prices query'),
+        2, // 2 attempts max for prices (less critical)
+        800 // 800ms initial delay
+      );
+      console.log(`✅ Prices loaded for ${Object.keys(prices).length} products`);
+    } catch (priceError) {
+      console.warn('⚠️ Failed to load prices, continuing without them:', priceError.message);
+      // Continue without prices - better to show products without prices than fail completely
+    }
+    
     // Transform database structure to component expected structure (basic fields only)
-    return filteredData.map(product => ({
+    const products = filteredData.map(product => ({
       ...product,
       // Map database fields to component expected fields
       ref: product.ref,
       productName: product.hebrew_name,
       productName2: product.english_name,
       mainPic: processImageUrl(product.main_pic),
-      unitPrice: product.unit_price || 0,
+      unitPrice: prices[product.ref]?.unitPrice || 0,
       size: product.size,
       line: product.product_line || product.skin_type_he,
       productLine: product.product_line,
@@ -83,7 +140,8 @@ export const getProducts = async (search = '', line = '') => {
       english_name: product.english_name,
       short_description_he: product.short_description_he,
       main_pic: product.main_pic,
-      unit_price: product.unit_price,
+      unit_price: prices[product.ref]?.unitPrice || 0,
+      price_data: prices[product.ref] || null, // Full price object for components that need it
       skin_type_he: product.skin_type_he,
       type: product.type,
       product_line: product.product_line,
@@ -91,6 +149,17 @@ export const getProducts = async (search = '', line = '') => {
       // Accordion data will be loaded separately when needed
       accordionDataLoaded: false
     }));
+
+    // Return pagination info along with products
+    return {
+      products,
+      pagination: {
+        page,
+        pageSize,
+        hasMore: filteredData.length === pageSize, // If we got full page, there might be more
+        total: filteredData.length
+      }
+    };
   } catch (error) {
     console.error('Error fetching products:', error);
     throw error;
@@ -180,7 +249,7 @@ export const saveProduct = async (productData) => {
       pics: Array.isArray(productData.pics) 
         ? productData.pics 
         : (typeof productData.pics === 'string' ? productData.pics.split(' | ').filter(Boolean) : []),
-      unit_price: parseFloat(productData.unitPrice) || 0,
+      // unit_price removed from products table - prices now handled separately
       size: productData.size,
       notice: productData.notice,
       product_type: productData.productType || 'Product',

@@ -9,16 +9,13 @@ import {
 } from 'react-router-dom';
 import { 
   ThemeProvider, 
-  createTheme, 
   CssBaseline, 
   Container, 
   Box,
   AppBar,
   Toolbar,
   Tabs,
-  Tab,
-  Badge,
-  Typography
+  Tab
 } from '@mui/material';
 import { CacheProvider } from '@emotion/react';
 import { createRtlCache, createDeepTheme } from './theme/deepTheme';
@@ -31,6 +28,9 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { useAuth } from './context/AuthContext';
 import { useCart } from './context/CartContext';
 import { useCompany } from './context/CompanyContext';
+import UserMenu from './components/auth/UserMenu';
+import useAdminAccess from './hooks/useAdminAccess';
+import AuthCallback from './components/auth/AuthCallback';
 
 // Import performance monitor for development only
 if (process.env.NODE_ENV === 'development') {
@@ -51,8 +51,12 @@ function AppInner() {
   const location = useLocation();
   const navigate = useNavigate();
   const { cart, getCartItemCount } = useCart();
-  const { isAdmin, token, logout } = useAuth();
+  const { isAdmin: legacyIsAdmin, token, logout } = useAuth();
   const { settings: companySettings } = useCompany();
+  const { isAdmin: supabaseIsAdmin } = useAdminAccess();
+  
+  // Use Supabase admin check, fallback to legacy for backwards compatibility
+  const isAdmin = supabaseIsAdmin || legacyIsAdmin;
 
   useEffect(() => {
     console.log('Cart updated:', cart);
@@ -198,10 +202,14 @@ function AppInner() {
                 />
               )}
             </Box>
+            
+            {/* User Menu */}
+            <UserMenu cartItemCount={getCartItemCount()} />
           </Toolbar>
         </AppBar>
 
         <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+          
           {/* Enhanced Deep Main Menu */}
           <Box sx={{ 
             display: 'flex', 
@@ -327,6 +335,7 @@ function AppInner() {
             <Route path="/admin" element={
               isAdmin ? <Admin onLogout={handleAdminLogout} adminToken={token} /> : <Navigate to="/catalog" replace />
             } />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="*" element={<Navigate to="/catalog" replace />} />
           </Routes>
         </Container>
