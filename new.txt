@@ -1,0 +1,5 @@
+in order to save spacing in desktop accordion view do the following:
+in accordion desktop view short_description_he start just under heb name close to it.
+add just on top hebname product_line
+add just under ref product_type
+add size to the right of price

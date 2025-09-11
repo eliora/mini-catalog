@@ -1,0 +1,15 @@
+1)  general
+-give tab in address names http://localhost:5000/?tab=0 like address/catalog address/orderform address/Admin
+-slim to be very slim blue line on top (MuiPaper-root MuiPaper-elevation MuiPaper-elevation4 MuiAppBar-root MuiAppBar-colorPrimary MuiAppBar-positionStatic css-hip9hq-MuiPaper-root-MuiAppBar-root)
+remove everything from it unless specified below
+-move the jean darcel to top center with logo. make it uploaded in admin.(its  near search now) - no logo on mobile
+-main menu ( catalog order form management) make it in the center under logo. managment panel link in blue line.
+-all buttons rtl symbol and text's order and spacing are fucked up. look for material ui docs
+
+
+2) order form after sumbit
+-too many rows, looks not nice make it look like in print layout.
+
+
+3) catalog
+-instead showing category (skin type) show short description

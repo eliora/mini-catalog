@@ -1,0 +1,78 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Fix MUI TextField text visibility issue */
+.MuiInputBase-input,
+.MuiOutlinedInput-input,
+.MuiInputBase-inputSizeSmall,
+.MuiInputBase-inputAdornedStart {
+  color: #000000 !important;
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #000000 !important;
+  text-shadow: none !important;
+}
+
+/* Target specific generated CSS class */
+.css-1ua80n0-MuiInputBase-input-MuiOutlinedInput-input {
+  color: #000000 !important;
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #000000 !important;
+  text-shadow: none !important;
+}
+
+/* Fix MUI Container alignment and padding issues */
+@media (min-width: 1200px) {
+  .css-4szgb8-MuiContainer-root,
+  .MuiContainer-maxWidthLg {
+    max-width: none !important;
+  }
+}
+
+/* Remove extra padding from main container */
+.MuiContainer-root {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+/* Ensure full width utilization */
+.catalog-container {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 8px !important;
+}
+
+/* Fix Grid spacing and alignment */
+.MuiGrid-container {
+  margin: 0 !important;
+  width: 100% !important;
+}
+
+.MuiGrid-item {
+  padding-left: 8px !important;
+  padding-top: 8px !important;
+}
+
+/* Ensure proper spacing for product grids */
+.catalog-container .MuiGrid-container {
+  margin-left: -8px !important;
+  margin-top: -8px !important;
+  width: calc(100% + 8px) !important;
+}
