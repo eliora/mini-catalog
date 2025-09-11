@@ -164,10 +164,10 @@ export const usePricing = () => {
     }
   }, [pricingInfo]);
 
-  // Initialize pricing access check
+  // Initialize pricing access check (only when auth state changes)
   useEffect(() => {
     checkPricingAccess();
-  }, [checkPricingAccess]);
+  }, [isAuthenticated, user]); // Only depend on auth state, not the function
 
   return {
     // Pricing access info

@@ -12,7 +12,7 @@ import ProductDisplay from './catalog/ProductDisplay';
 import ProductDetailsDialog from './catalog/ProductDetailsDialog';
 import ImageZoomDialog from './catalog/ImageZoomDialog';
 import FilterPanel, { useMobileFilterDrawer } from './catalog/FilterPanel';
-import { getProducts, getProductLines } from '../api/products';
+import { getProducts, getProductLines, getFilterOptions } from '../api/products';
 import { parseJsonField, shouldRenderContent } from '../utils/dataHelpers';
 import { getProductTypeDisplay } from '../utils/imageHelpers';
 import SupabaseError from './SupabaseError';
@@ -23,12 +23,12 @@ const Catalog = () => {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
-  const [pagination, setPagination] = useState({ page: 1, hasMore: true, pageSize: 50 });
+  const [pagination, setPagination] = useState({ page: 1, hasMore: true, pageSize: 15 }); // Reduced for faster initial load
   
   const [imageZoom, setImageZoom] = useState({ open: false, src: '' });
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [viewMode, setViewMode] = useState(() => {
-    return localStorage.getItem('catalogViewMode') || 'catalog';
+    return localStorage.getItem('catalogViewMode') || 'list';
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLine, setSelectedLine] = useState('');
@@ -50,17 +50,17 @@ const Catalog = () => {
       }
       setError(null);
       
-      console.log(`🚀 Loading products page ${page}...`);
-      console.log('🔍 Environment check:', {
-        hasUrl: !!process.env.REACT_APP_SUPABASE_URL,
-        hasKey: !!process.env.REACT_APP_SUPABASE_ANON_KEY,
-        urlPreview: process.env.REACT_APP_SUPABASE_URL?.substring(0, 30) + '...'
-      });
+      // Loading products with optimized server-side filtering
       
       // Products API now has built-in timeout and retry logic with pagination
-      const result = await getProducts('', '', page, pagination.pageSize);
-      console.log('✅ Products loaded:', result.products?.length, 'items');
-      console.log('📊 Pagination info:', result.pagination);
+      // Pass filters to server for database-level filtering (MUCH faster)
+      const filters = {
+        productType: selectedProductType,
+        skinType: selectedSkinType, 
+        type: selectedType
+      };
+      
+      const result = await getProducts(searchTerm, selectedLine, page, pagination.pageSize, filters);
       
       if (append && page > 1) {
         setProducts(prev => [...prev, ...result.products]);
@@ -94,7 +94,7 @@ const Catalog = () => {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [pagination.pageSize]);
+  }, [pagination.pageSize, searchTerm, selectedLine, selectedProductType, selectedSkinType, selectedType]);
 
   const loadMoreProducts = useCallback(async () => {
     if (!loadingMore && pagination.hasMore) {
@@ -117,114 +117,41 @@ const Catalog = () => {
     loadProductLines();
   }, [loadProducts, loadProductLines]);
 
-  // Filter products based on search and multiple filters
-  const filteredProducts = useMemo(() => {
-    let filtered = products;
-    console.log('🎯 Starting filter with:', { selectedLine, selectedProductType, selectedSkinType, selectedType });
+  // 🚀 PERFORMANCE OPTIMIZATION: No client-side filtering needed!
+  // All filtering now happens at database level for maximum performance
+  // Products from API are already filtered, so we can use them directly
+  const filteredProducts = products;
 
-    // Filter by product line/category (handle comma-separated values)
-    if (selectedLine) {
-      console.log('🔍 Filtering by line:', selectedLine);
-      filtered = filtered.filter(product => {
-        const productLine = product.productLine || '';
-        return productLine.split(',').map(item => item.trim()).includes(selectedLine);
-      });
-      console.log('📊 After line filter:', filtered.length, 'products');
-    }
+  // 🚀 PERFORMANCE OPTIMIZATION: Load filter options separately from products
+  const [filterOptions, setFilterOptions] = useState({
+    lines: [],
+    productTypes: [],
+    skinTypes: [],
+    types: []
+  });
 
-    // Filter by product type (handle comma-separated values)
-    if (selectedProductType) {
-      console.log('🔍 Filtering by productType:', selectedProductType);
-      filtered = filtered.filter(product => {
-        const productType1 = product.productType || '';
-        const productType2 = product.product_type || '';
-        const types1 = productType1.split(',').map(item => item.trim());
-        const types2 = productType2.split(',').map(item => item.trim());
-        return types1.includes(selectedProductType) || types2.includes(selectedProductType);
-      });
-      console.log('📊 After productType filter:', filtered.length, 'products');
-    }
-
-    // Filter by skin type (handle comma-separated values)
-    if (selectedSkinType) {
-      console.log('🔍 Filtering by skinType:', selectedSkinType);
-      filtered = filtered.filter(product => {
-        const skinType = product.skin_type_he || '';
-        return skinType.split(',').map(item => item.trim()).includes(selectedSkinType);
-      });
-      console.log('📊 After skinType filter:', filtered.length, 'products');
-    }
-
-    // Filter by type (handle comma-separated values)
-    if (selectedType) {
-      console.log('🔍 Filtering by type:', selectedType);
-      filtered = filtered.filter(product => {
-        const type = product.type || '';
-        return type.split(',').map(item => item.trim()).includes(selectedType);
-      });
-      console.log('📊 After type filter:', filtered.length, 'products');
-    }
-
-    // Filter by search term
-    if (searchTerm) {
-      const lowerCaseSearchTerm = searchTerm.toLowerCase();
-      filtered = filtered.filter(product =>
-        product.ref?.toLowerCase().includes(lowerCaseSearchTerm) ||
-        product.productName?.toLowerCase().includes(lowerCaseSearchTerm) ||
-        product.productName2?.toLowerCase().includes(lowerCaseSearchTerm)
-      );
-    }
-
-    console.log('✅ Final filtered products:', filtered.length);
-    return filtered;
-  }, [products, searchTerm, selectedLine, selectedProductType, selectedSkinType, selectedType]);
-
-  // Get unique values for filter options (handle comma-separated values)
-  const filterOptions = useMemo(() => {
-    console.log('🔍 Products for filtering:', products);
-    
-    // Extract and split comma-separated values
-    const lines = [...new Set(
-      products
-        .map(p => p.productLine)
-        .filter(Boolean)
-        .flatMap(line => line.split(',').map(item => item.trim()))
-        .filter(Boolean)
-    )];
-    
-    const productTypes = [...new Set(
-      products
-        .flatMap(p => [p.productType, p.product_type])
-        .filter(Boolean)
-        .flatMap(type => type.split(',').map(item => item.trim()))
-        .filter(Boolean)
-    )];
-    
-    const skinTypes = [...new Set(
-      products
-        .map(p => p.skin_type_he)
-        .filter(Boolean)
-        .flatMap(skinType => skinType.split(',').map(item => item.trim()))
-        .filter(Boolean)
-    )];
-    
-    const types = [...new Set(
-      products
-        .map(p => p.type)
-        .filter(Boolean)
-        .flatMap(type => type.split(',').map(item => item.trim()))
-        .filter(Boolean)
-    )];
-
-    console.log('📊 Filter options (after splitting):', { lines, productTypes, skinTypes, types });
-
-    return {
-      lines: lines.sort(),
-      productTypes: productTypes.sort(),
-      skinTypes: skinTypes.sort(),
-      types: types.sort()
+  // Load filter options once on component mount (much faster than processing all products)
+  useEffect(() => {
+    const loadFilterOptions = async () => {
+      try {
+        console.log('🔍 Loading filter options efficiently...');
+        const options = await getFilterOptions();
+        setFilterOptions(options);
+        console.log('✅ Filter options loaded:', options);
+      } catch (error) {
+        console.error('❌ Error loading filter options:', error);
+        // Fallback to empty options
+        setFilterOptions({
+          lines: [],
+          productTypes: [],
+          skinTypes: [],
+          types: []
+        });
+      }
     };
-  }, [products]);
+    
+    loadFilterOptions();
+  }, []);
 
   // Get current quantity for a product directly from the cart
   const getCurrentQuantity = useCallback((productRef) => {
@@ -410,6 +337,10 @@ const Catalog = () => {
         onImageClick={handleZoom}
         shouldRenderContent={shouldRenderContent}
         parseJsonField={parseJsonField}
+        loading={loading}
+        loadingMore={loadingMore}
+        hasMore={pagination.hasMore}
+        onLoadMore={loadMoreProducts}
       />
 
       <ProductDetailsDialog

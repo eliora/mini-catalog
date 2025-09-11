@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import { containsHtml } from '../../utils/dataHelpers';
+import { processImageUrl } from '../../utils/imageHelpers';
 
 const ProductAccordionContent = ({ product, accordionData, isLoadingDetails, shouldRenderContent, parseJsonField }) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -21,6 +22,16 @@ const ProductAccordionContent = ({ product, accordionData, isLoadingDetails, sho
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   if (!product) return null;
+
+  // Get optimized main image URL (360px for main display)
+  const getMainImageUrl = (url) => {
+    return processImageUrl(url, { width: 360, quality: 85, format: 'webp' });
+  };
+
+  // Get optimized thumbnail URL (72px for thumbnails)
+  const getThumbnailImageUrl = (url) => {
+    return processImageUrl(url, { width: 72, quality: 80, format: 'webp' });
+  };
 
   // Use accordion data if available, otherwise fall back to basic product data
   const productData = accordionData || product;
@@ -99,6 +110,20 @@ const ProductAccordionContent = ({ product, accordionData, isLoadingDetails, sho
                 אין תיאור זמין למוצר זה
               </Typography>
             )}
+
+            {/* Active Ingredients - moved under product description */}
+            {shouldRenderContent(productData.activeIngredients || productData.wirkunginhaltsstoffe_he || productData.active_ingredients_he) && (
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'primary.main' }}>
+                  רכיבים פעילים
+                </Typography>
+                {renderHtmlContent(
+                  productData.activeIngredients || 
+                  productData.wirkunginhaltsstoffe_he || 
+                  productData.active_ingredients_he
+                )}
+              </Box>
+            )}
           </Box>
         </Grid>
 
@@ -106,16 +131,13 @@ const ProductAccordionContent = ({ product, accordionData, isLoadingDetails, sho
         {!isMobile && (
           <Grid item xs={12} md={4}>
           <Box>
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'primary.main' }}>
-              גלריית תמונות
-            </Typography>
             {images.length > 0 ? (
               <Box>
-                {/* Main Image Display - Horizontal orientation */}
+                {/* Main Image Display - 360px for optimal viewing */}
                 <Box
                   sx={{
                     width: '100%',
-                    height: { xs: 160, md: 180 },
+                    height: 360, // Set to 360px
                     backgroundColor: 'grey.50',
                     borderRadius: 1,
                     mb: 1.5,
@@ -128,7 +150,7 @@ const ProductAccordionContent = ({ product, accordionData, isLoadingDetails, sho
                 >
                   <Box
                     component="img"
-                    src={images[selectedImageIndex]}
+                    src={getMainImageUrl(images[selectedImageIndex])}
                     alt={`${product.productName || product.hebrew_name} - תמונה ראשית`}
                     sx={{
                       maxWidth: '100%',
@@ -194,7 +216,7 @@ const ProductAccordionContent = ({ product, accordionData, isLoadingDetails, sho
                       >
                         <Box
                           component="img"
-                          src={image}
+                          src={getThumbnailImageUrl(image)}
                           alt={`תמונה ${index + 1}`}
                           sx={{
                             maxWidth: '100%',
@@ -218,20 +240,6 @@ const ProductAccordionContent = ({ product, accordionData, isLoadingDetails, sho
       </Grid>
 
       <Divider sx={{ mb: 3 }} />
-
-      {/* Row 2: Active Ingredients */}
-      {shouldRenderContent(productData.activeIngredients || productData.wirkunginhaltsstoffe_he || productData.active_ingredients_he) && (
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'primary.main' }}>
-            רכיבים פעילים
-          </Typography>
-          {renderHtmlContent(
-            productData.activeIngredients || 
-            productData.wirkunginhaltsstoffe_he || 
-            productData.active_ingredients_he
-          )}
-        </Box>
-      )}
 
       {/* Row 3: Mini Accordions */}
       <Stack spacing={2}>

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, Skeleton } from '@mui/material';
 import { ImageNotSupported as ImageIcon } from '@mui/icons-material';
+import { processImageUrl } from '../utils/imageHelpers';
 
 /**
  * OptimizedImage Component
@@ -33,10 +34,12 @@ const OptimizedImage = ({
   const [isIntersecting, setIsIntersecting] = useState(priority);
   const imgRef = useRef(null);
   const containerRef = useRef(null);
+  const observerRef = useRef(null);
+  const loadingAbortController = useRef(null);
 
 
 
-  // Intersection Observer for lazy loading
+  // Intersection Observer for lazy loading with proper cleanup
   useEffect(() => {
     if (priority) return; // Skip lazy loading for priority images
 
@@ -55,37 +58,80 @@ const OptimizedImage = ({
       }
     );
 
+    observerRef.current = observer;
     const currentContainer = containerRef.current;
     if (currentContainer) {
       observer.observe(currentContainer);
     }
 
     return () => {
-      if (currentContainer) {
-        observer.unobserve(currentContainer);
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
       }
     };
   }, [priority]);
 
-  // Simplified image loading - load original image directly
+  // Optimized image loading with transformations and cleanup
   useEffect(() => {
     if (!src || !isIntersecting) return;
 
+    // Cancel previous loading if exists
+    if (loadingAbortController.current) {
+      loadingAbortController.current.abort();
+    }
+
+    loadingAbortController.current = new AbortController();
     setLoadState('loading');
+
+    // Apply image transformations for optimized loading
+    const optimizedSrc = processImageUrl(src, {
+      width: Math.round(width),
+      quality: quality,
+      format: 'webp' // Use WebP for better compression
+    });
 
     const img = new Image();
     
-    img.onload = () => {
-      setCurrentSrc(src);
-      setLoadState('loaded');
+    const handleLoad = () => {
+      if (!loadingAbortController.current?.signal.aborted) {
+        setCurrentSrc(optimizedSrc);
+        setLoadState('loaded');
+      }
     };
     
-    img.onerror = () => {
-      setLoadState('error');
+    const handleError = () => {
+      if (!loadingAbortController.current?.signal.aborted) {
+        // Fallback to original image if optimized version fails
+        const fallbackImg = new Image();
+        fallbackImg.onload = () => {
+          if (!loadingAbortController.current?.signal.aborted) {
+            setCurrentSrc(src);
+            setLoadState('loaded');
+          }
+        };
+        fallbackImg.onerror = () => {
+          if (!loadingAbortController.current?.signal.aborted) {
+            setLoadState('error');
+          }
+        };
+        fallbackImg.src = src;
+      }
     };
-    
-    img.src = src;
-  }, [src, isIntersecting]);
+
+    img.onload = handleLoad;
+    img.onerror = handleError;
+    img.src = optimizedSrc;
+
+    return () => {
+      if (loadingAbortController.current) {
+        loadingAbortController.current.abort();
+      }
+      // Clean up image event listeners
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [src, isIntersecting, width, quality]);
 
   // Render placeholder/skeleton
   if (!isIntersecting || !src) {

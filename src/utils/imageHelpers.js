@@ -190,17 +190,88 @@ export const getImageAspectRatio = (url) => {
 /**
  * Process a single image URL for optimization
  */
-export const processImageUrl = (url) => {
+export const processImageUrl = (url, options = {}) => {
   if (!url) return '';
   
-  // If it's already a valid URL, return as is
+  // If it's already a valid URL, apply transformations if needed
   if (isValidImageUrl(url)) {
-    return url;
+    return applyImageTransformations(url, options);
   }
   
   // If it's a relative path, you might want to prepend a base URL
   // For now, just return the URL as is
   return url;
+};
+
+/**
+ * Apply ImageKit transformations to image URLs
+ * Based on ImageKit.io URL-based transformation API
+ * @param {string} url - The image URL
+ * @param {object} options - Transformation options
+ * @returns {string} - Transformed image URL
+ */
+export const applyImageTransformations = (url, options = {}) => {
+  if (!url || !isValidImageUrl(url)) return url;
+  
+  const { width, height, quality = 'auto', format = 'auto' } = options;
+  
+  // Check if URL is from ImageKit (contains ik.imagekit.io)
+  if (url.includes('ik.imagekit.io')) {
+    // For ImageKit URLs, insert transformations after domain
+    const transformations = [];
+    
+    if (width) transformations.push(`w-${width}`);
+    if (height) transformations.push(`h-${height}`);
+    if (quality !== 'auto') transformations.push(`q-${quality}`);
+    if (format !== 'auto') transformations.push(`f-${format}`);
+    
+    if (transformations.length > 0) {
+      const transformString = `/tr:${transformations.join(',')}`;
+      
+      // Insert transformation after the domain but before the path
+      const urlParts = url.split('/');
+      if (urlParts.length >= 4) {
+        // https://ik.imagekit.io/endpoint/path -> https://ik.imagekit.io/endpoint/tr:w-150/path
+        urlParts.splice(4, 0, transformString.substring(1)); // Remove leading /
+        return urlParts.join('/');
+      }
+    }
+  }
+  
+  // For other image services, return original URL
+  return url;
+};
+
+/**
+ * Get optimized thumbnail URL for accordion headers (80px width)
+ */
+export const getThumbnailUrl = (url) => {
+  return processImageUrl(url, { width: 80, quality: 80, format: 'webp' });
+};
+
+/**
+ * Get optimized main image URL for product display (360px width)
+ */
+export const getMainImageUrl = (url) => {
+  return processImageUrl(url, { width: 360, quality: 85, format: 'webp' });
+};
+
+/**
+ * Test function for image transformations (for debugging)
+ */
+export const testImageTransformations = () => {
+  const testUrl = 'https://ik.imagekit.io/demo/docs_images/examples/example_food_3.jpg';
+  const thumbnail = getThumbnailUrl(testUrl);
+  const mainImage = getMainImageUrl(testUrl);
+  
+  console.log('🧪 Image Transformation Test:');
+  console.log('Original:', testUrl);
+  console.log('Thumbnail (80px):', thumbnail);
+  console.log('Main Image (360px):', mainImage);
+  console.log('Expected thumbnail pattern: .../tr:w-80,q-80,f-webp/...');
+  console.log('Expected main pattern: .../tr:w-360,q-85,f-webp/...');
+  
+  return thumbnail.includes('tr:w-80,q-80,f-webp') && mainImage.includes('tr:w-360,q-85,f-webp');
 };
 
 /**

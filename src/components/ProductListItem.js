@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Accordion, AccordionSummary, AccordionDetails,
-  Grid, Typography, Chip, IconButton, Stack, Box, TextField, useTheme, useMediaQuery
+  Grid, Typography, Chip, IconButton, Stack, Box, TextField, useTheme, useMediaQuery, CircularProgress, Button
 } from '@mui/material';
 import { Add as AddIcon, Remove as RemoveIcon, ExpandMore as ExpandMoreIcon, Lock as LockIcon } from '@mui/icons-material';
 import { useCatalogMode } from '../hooks/useCatalogMode';
@@ -9,6 +9,7 @@ import { useCompany } from '../context/CompanyContext';
 import { getProductDetails } from '../api/products';
 import ProductAccordionContent from './product/ProductAccordionContent';
 import usePricing from '../hooks/usePricing';
+import { getThumbnailUrl } from '../utils/imageHelpers';
 
 const ProductListItem = ({
   product,
@@ -26,59 +27,65 @@ const ProductListItem = ({
   const { settings } = useCompany();
   const { canViewPrices, formatPrice, shouldShowPricePlaceholder, getPricingMessage } = usePricing();
   
+  // Lazy loading state for accordion content
+  const [expanded, setExpanded] = useState(false);
+  const [accordionData, setAccordionData] = useState(null);
+  const [loadingAccordion, setLoadingAccordion] = useState(false);
+  
+  // Ref for cleanup (REMOVED - causing false positives)
+  
   // Get formatted price for this product
   const priceInfo = canViewPrices ? formatPrice(product.ref) : null;
-  
-  // State for accordion data lazy loading
-  const [accordionData, setAccordionData] = React.useState(null);
-  const [isLoadingDetails, setIsLoadingDetails] = React.useState(false);
-  const unloadTimerRef = React.useRef(null);
-  
-  // Load detailed data when accordion is expanded, unload when closed (with delay)
-  const handleAccordionExpand = async (event, isExpanded) => {
-    console.log('🔍 Accordion expand triggered for product:', product.ref, 'isExpanded:', isExpanded);
-    if (isExpanded) {
-      // Clear any pending unload timer
-      if (unloadTimerRef.current) {
-        clearTimeout(unloadTimerRef.current);
-        unloadTimerRef.current = null;
-      }
-      
-      // Load data if not already loaded
-      if (!accordionData && !isLoadingDetails) {
-        console.log('🔄 Loading accordion details for product:', product.ref);
-        setIsLoadingDetails(true);
-        try {
-          const details = await getProductDetails(product.ref);
-          console.log('✅ Accordion details loaded for product:', product.ref, details);
-          setAccordionData(details);
-        } catch (error) {
-          console.error('❌ Failed to load product details for accordion:', error);
-        } finally {
-          setIsLoadingDetails(false);
-        }
-      } else {
-        console.log('ℹ️ Accordion data already loaded or loading in progress');
-      }
-    } else {
-      console.log('🔽 Accordion collapsed, setting unload timer for product:', product.ref);
-      // Set timer to unload data after 30 seconds to save memory
-      const timer = setTimeout(() => {
-        setAccordionData(null);
-        console.log('🗑️ Accordion data unloaded for product:', product.ref);
-      }, 30000);
-      unloadTimerRef.current = timer;
-    }
-  };
 
-  // Cleanup timer on unmount
-  React.useEffect(() => {
-    return () => {
-      if (unloadTimerRef.current) {
-        clearTimeout(unloadTimerRef.current);
+  // Cleanup on unmount (REMOVED - not needed)
+
+  // Handle accordion expansion with lazy loading and request cancellation
+  const handleAccordionChange = useCallback(async (event, isExpanded) => {
+    setExpanded(isExpanded);
+    
+    if (isExpanded && !accordionData && !loadingAccordion) {
+      setLoadingAccordion(true);
+      
+      // Add a maximum timeout for accordion loading
+      const timeoutId = setTimeout(() => {
+        console.warn(`⏰ Accordion loading timeout for product ${product.ref}`);
+        setAccordionData({ 
+          error: true, 
+          message: 'טעינה ארכה מדי - אנא נסה שוב' 
+        });
+        setLoadingAccordion(false);
+      }, 5000); // 5 second timeout
+      
+      try {
+        const details = await getProductDetails(product.ref);
+        
+        // Clear timeout if successful
+        clearTimeout(timeoutId);
+        
+        // Set accordion data
+        setAccordionData(details);
+      } catch (error) {
+        // Clear timeout on error
+        clearTimeout(timeoutId);
+        // Log and handle errors
+        console.error(`❌ Failed to load accordion details for ${product.ref}:`, error);
+        
+        // Provide user-friendly error messages
+        let userMessage;
+        if (error.message?.includes('timeout')) {
+          userMessage = 'החיבור איטי מדי - אנא נסה שוב';
+        } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+          userMessage = 'בעיית חיבור - בדוק את החיבור לאינטרנט';
+        } else {
+          userMessage = 'שגיאה בטעינת פרטי המוצר - אנא נסה שוב';
+        }
+        
+        setAccordionData({ error: true, message: userMessage });
+      } finally {
+        setLoadingAccordion(false);
       }
-    };
-  }, []); // Empty dependency array - cleanup on unmount only
+    }
+  }, [accordionData, loadingAccordion, product.ref]);
 
   // Display price based on catalog mode
   const priceDisplayProps = getPriceDisplayProps;
@@ -86,7 +93,8 @@ const ProductListItem = ({
   return (
     <Accordion
       elevation={1}
-      onChange={handleAccordionExpand}
+      expanded={expanded}
+      onChange={handleAccordionChange}
       sx={{
         '&:before': { display: 'none' },
         borderRadius: '12px !important',
@@ -125,15 +133,15 @@ const ProductListItem = ({
                 <Stack spacing={0.5} alignItems="center">
                   <Box
                     component="img"
-                    src={product.mainPic || product.main_pic}
+                    src={getThumbnailUrl(product.mainPic || product.main_pic)}
                     alt={product.productName || product.hebrew_name}
                     onClick={(e) => {
                       e.stopPropagation();
                       onImageClick && onImageClick(product.mainPic || product.main_pic);
                     }}
                     sx={{
-                      width: 50,
-                      height: 50,
+                      width: 80,
+                      height: 80,
                       objectFit: 'contain',
                       borderRadius: 1,
                       cursor: 'pointer',
@@ -337,15 +345,15 @@ const ProductListItem = ({
               <Grid item xs="auto">
                 <Box
                   component="img"
-                  src={product.mainPic || product.main_pic}
+                  src={getThumbnailUrl(product.mainPic || product.main_pic)}
                   alt={product.productName || product.hebrew_name}
                   onClick={(e) => {
                     e.stopPropagation();
                     onImageClick && onImageClick(product.mainPic || product.main_pic);
                   }}
                   sx={{
-                    width: 60,
-                    height: 60,
+                    width: 80,
+                    height: 80,
                     objectFit: 'contain',
                     borderRadius: 1,
                     cursor: 'pointer',
@@ -519,13 +527,42 @@ const ProductListItem = ({
       </AccordionSummary>
 
       <AccordionDetails sx={{ px: { xs: 1, md: 2 }, py: { xs: 1, md: 2 } }}>
-        <ProductAccordionContent
-          product={product}
-          accordionData={accordionData}
-          isLoadingDetails={isLoadingDetails}
-          shouldRenderContent={shouldRenderContent}
-          parseJsonField={parseJsonField}
-        />
+        {loadingAccordion ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
+            <CircularProgress size={24} sx={{ mr: 2 }} />
+            <Typography variant="body2" color="text.secondary">
+              טוען פרטי מוצר...
+            </Typography>
+          </Box>
+        ) : accordionData?.error ? (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="body2" color="error" sx={{ mb: 1 }}>
+              שגיאה בטעינת פרטי המוצר
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+              {accordionData.message}
+            </Typography>
+            <Button 
+              variant="outlined" 
+              size="small" 
+              onClick={() => {
+                setAccordionData(null);
+                handleAccordionChange(null, true);
+              }}
+              sx={{ mt: 1 }}
+            >
+              נסה שוב
+            </Button>
+          </Box>
+        ) : (
+          <ProductAccordionContent
+            product={product}
+            accordionData={accordionData}
+            isLoadingDetails={loadingAccordion}
+            shouldRenderContent={shouldRenderContent}
+            parseJsonField={parseJsonField}
+          />
+        )}
       </AccordionDetails>
     </Accordion>
   );

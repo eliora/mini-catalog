@@ -3,3 +3,14 @@ in accordion desktop view short_description_he start just under heb name close t
 add just on top hebname product_line
 add just under ref product_type
 add size to the right of price
+
+
+
+in accordion mobile view
+make compact spacing in accordion header
+make ref no chip to be under the pic and also smaller
+remove image gallery within accordion
+
+
+
+npx supabase link --project-ref erputcvhxxulxmldikfp

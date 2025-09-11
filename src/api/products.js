@@ -3,6 +3,16 @@ import { processImageUrl, processImageUrls } from '../utils/imageHelpers';
 import { getPrices } from './prices';
 // Mock data removed - using Supabase only
 
+// Request deduplication cache to prevent duplicate API calls
+const requestCache = new Map();
+const REQUEST_CACHE_TTL = 30000; // 30 seconds
+
+// Debug function to clear cache
+window.clearProductCache = () => {
+  requestCache.clear();
+  console.log('🧹 Product cache cleared');
+};
+
 // Helper function to add timeout to any promise
 const withTimeout = (promise, timeoutMs = 10000, operation = 'Operation') => {
   return Promise.race([
@@ -11,6 +21,38 @@ const withTimeout = (promise, timeoutMs = 10000, operation = 'Operation') => {
       setTimeout(() => reject(new Error(`${operation} timeout after ${timeoutMs}ms`)), timeoutMs)
     )
   ]);
+};
+
+// Request deduplication helper
+const getCacheKey = (operation, params) => {
+  return `${operation}:${JSON.stringify(params)}`;
+};
+
+const getCachedRequest = (cacheKey) => {
+  const cached = requestCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < REQUEST_CACHE_TTL) {
+    return cached.promise;
+  }
+  return null;
+};
+
+const setCachedRequest = (cacheKey, promise) => {
+  requestCache.set(cacheKey, {
+    promise,
+    timestamp: Date.now()
+  });
+  
+  // Clean up cache periodically
+  if (requestCache.size > 100) {
+    const now = Date.now();
+    for (const [key, value] of requestCache.entries()) {
+      if (now - value.timestamp > REQUEST_CACHE_TTL) {
+        requestCache.delete(key);
+      }
+    }
+  }
+  
+  return promise;
 };
 
 // Helper function to retry operations
@@ -36,7 +78,19 @@ const retryOperation = async (operation, maxRetries = 2, delay = 1000) => {
   throw lastError;
 };
 
-export const getProducts = async (search = '', line = '', page = 1, pageSize = 50) => {
+export const getProducts = async (search = '', line = '', page = 1, pageSize = 50, filters = {}) => {
+  // Check for cached request first
+  const cacheKey = getCacheKey('getProducts', { search, line, page, pageSize, filters });
+  const cachedRequest = getCachedRequest(cacheKey);
+  if (cachedRequest) {
+    return cachedRequest;
+  }
+
+  const requestPromise = getProductsInternal(search, line, page, pageSize, filters);
+  return setCachedRequest(cacheKey, requestPromise);
+};
+
+const getProductsInternal = async (search = '', line = '', page = 1, pageSize = 50, filters = {}) => {
   try {
     console.log('🔍 Loading products with timeout protection...');
     console.log('🔍 Checking Supabase config:', {
@@ -68,6 +122,7 @@ export const getProducts = async (search = '', line = '', page = 1, pageSize = 5
       qty
     `);
     
+    // Apply server-side filtering for maximum performance
     if (search) {
       query = query.or(`ref.ilike.%${search}%,hebrew_name.ilike.%${search}%,english_name.ilike.%${search}%`);
     }
@@ -76,18 +131,35 @@ export const getProducts = async (search = '', line = '', page = 1, pageSize = 5
       query = query.or(`product_line.ilike.%${line}%,skin_type_he.ilike.%${line}%`);
     }
     
+    // Apply additional filters at database level
+    const { productType, skinType, type } = filters;
+    
+    if (productType) {
+      query = query.or(`product_type.ilike.%${productType}%`);
+    }
+    
+    if (skinType) {
+      query = query.ilike('skin_type_he', `%${skinType}%`);
+    }
+    
+    if (type) {
+      query = query.ilike('type', `%${type}%`);
+    }
+    
     // Add pagination for lazy loading
     const offset = (page - 1) * pageSize;
     query = query.order('ref').range(offset, offset + pageSize - 1);
     
-    // Execute query with timeout and retry protection
+    // Execute query with timeout and retry protection (faster timeout for better UX)
     const { data, error } = await retryOperation(
-      () => withTimeout(query, 8000, 'Products query'),
-      3, // 3 attempts max
-      1000 // 1 second initial delay
+      () => withTimeout(query, 5000, 'Products query'), // Reduced from 8s to 5s
+      2, // Reduced from 3 to 2 attempts max
+      800 // Reduced initial delay
     );
     
     if (error) throw error;
+    
+    console.log(`Raw products from DB: ${data?.length || 0} (page ${page}, pageSize ${pageSize})`);
     
     // More permissive filtering - only exclude products explicitly marked as unavailable
     const filteredData = data
@@ -103,7 +175,7 @@ export const getProducts = async (search = '', line = '', page = 1, pageSize = 5
       })
 ; // No need to slice - already limited by pagination
     
-    console.log(`Products after filtering: ${filteredData.length} out of ${data.length}`);
+    console.log(`Products after filtering: ${filteredData.length} out of ${data?.length || 0}`);
     
     // Get product refs for price lookup
     const productRefs = filteredData.map(product => product.ref);
@@ -156,7 +228,7 @@ export const getProducts = async (search = '', line = '', page = 1, pageSize = 5
       pagination: {
         page,
         pageSize,
-        hasMore: filteredData.length === pageSize, // If we got full page, there might be more
+        hasMore: (data?.length || 0) === pageSize, // If we got full page from DB, there might be more
         total: filteredData.length
       }
     };
@@ -168,8 +240,37 @@ export const getProducts = async (search = '', line = '', page = 1, pageSize = 5
 
 // Get detailed accordion data for a specific product (loaded on demand)
 export const getProductDetails = async (productRef) => {
+  // TEMPORARILY DISABLE CACHING FOR DEBUGGING
+  return await getProductDetailsInternal(productRef);
+  
+  /* CACHING DISABLED FOR DEBUGGING
+  // Check for cached request first
+  const cacheKey = getCacheKey('getProductDetails', { productRef });
+  const cachedRequest = getCachedRequest(cacheKey);
+  if (cachedRequest) {
+    console.log('🎯 API: Returning cached result');
+    return cachedRequest;
+  }
+
+  // Create promise with error handling - only cache successful results
+  const requestPromise = getProductDetailsInternal(productRef)
+    .then(result => {
+      // Only cache successful results
+      setCachedRequest(cacheKey, Promise.resolve(result));
+      return result;
+    })
+    .catch(error => {
+      // Don't cache failed requests - remove from cache if it exists
+      requestCache.delete(cacheKey);
+      throw error;
+    });
+
+  return requestPromise;
+  */
+};
+
+const getProductDetailsInternal = async (productRef) => {
   try {
-    console.log('🔍 Loading product details for ref:', productRef);
     const { data, error } = await supabase
       .from('products')
       .select(`
@@ -186,8 +287,6 @@ export const getProductDetails = async (productRef) => {
       .single();
 
     if (error) throw error;
-
-    console.log('✅ Product details loaded successfully:', data);
     return {
       ref: data.ref,
       description: data.description_he,
@@ -205,6 +304,57 @@ export const getProductDetails = async (productRef) => {
     };
   } catch (error) {
     console.error('Error fetching product details:', error);
+    throw error;
+  }
+};
+
+// Get filter options efficiently without loading all products
+export const getFilterOptions = async () => {
+  try {
+    console.log('🔍 Loading filter options...');
+    
+    // Get unique values using SQL aggregation - much faster than client-side processing
+    const { data, error } = await supabase.rpc('get_filter_options');
+    
+    if (error) {
+      console.warn('RPC not available, falling back to manual query...');
+      // Fallback to manual query if RPC doesn't exist
+      const { data: products, error: fallbackError } = await supabase
+        .from('products')
+        .select('product_line, product_type, skin_type_he, type')
+        .not('product_line', 'is', null)
+        .not('product_type', 'is', null);
+        
+      if (fallbackError) throw fallbackError;
+      
+      // Process manually (still faster than loading all product data)
+      const lines = [...new Set(
+        products.flatMap(p => (p.product_line || '').split(',').map(item => item.trim())).filter(Boolean)
+      )];
+      
+      const productTypes = [...new Set(
+        products.flatMap(p => (p.product_type || '').split(',').map(item => item.trim())).filter(Boolean)
+      )];
+      
+      const skinTypes = [...new Set(
+        products.flatMap(p => (p.skin_type_he || '').split(',').map(item => item.trim())).filter(Boolean)
+      )];
+      
+      const types = [...new Set(
+        products.flatMap(p => (p.type || '').split(',').map(item => item.trim())).filter(Boolean)
+      )];
+      
+      return {
+        lines: lines.sort(),
+        productTypes: productTypes.sort(),
+        skinTypes: skinTypes.sort(),
+        types: types.sort()
+      };
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error loading filter options:', error);
     throw error;
   }
 };
