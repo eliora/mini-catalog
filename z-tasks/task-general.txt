@@ -1,0 +1,11 @@
+1)remove this:
+MuiTypography-root MuiTypography-body2 muirtl-deep-s0pvr6
+with lazy load it gives inaccurate facts
+2) make filter permanent in desktop view(no need to click)
+3)scan mui docs for better qty buttons, keep + [    ] - where manual number can be insterted. (createSvgIcon,double-digit centered Basic TextField)
+4)remove <p class="MuiTypography-root MuiTypography-body2 muirtl-deep-s0pvr6">Sign in to view prices</p> no need to alert them to sign in
+5) make sure admin,verified members see prices 
+show within accordion header after english name product info (Dividers)
+
+6) after refresh the admin become regular user and it stop loading it says accordion catalog with error שגיאה בטעינת מוצרים: החיבור איטי מדי - אנא נסה שוב
+please scan react docs/mui docs for this common problem. i think it happens when logging in. it always happen to me with you. its a repeating problem

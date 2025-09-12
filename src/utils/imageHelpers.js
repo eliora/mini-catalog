@@ -204,6 +204,16 @@ export const processImageUrl = (url, options = {}) => {
 };
 
 /**
+ * ImageKit configuration
+ */
+const IMAGEKIT_CONFIG = {
+  // ImageKit endpoint for minicatalog
+  endpoint: 'https://ik.imagekit.io/minicatalog',
+  // Always use ImageKit for all images
+  useForExternal: true,
+};
+
+/**
  * Apply ImageKit transformations to image URLs
  * Based on ImageKit.io URL-based transformation API
  * @param {string} url - The image URL
@@ -238,7 +248,32 @@ export const applyImageTransformations = (url, options = {}) => {
     }
   }
   
-  // For other image services, return original URL
+  // For external images, use ImageKit endpoint with raw filename
+  if (IMAGEKIT_CONFIG.endpoint && IMAGEKIT_CONFIG.useForExternal) {
+    const transformations = [];
+    
+    if (width) transformations.push(`w-${width}`);
+    if (height) transformations.push(`h-${height}`);
+    if (quality !== 'auto') transformations.push(`q-${quality}`);
+    if (format !== 'auto') transformations.push(`f-${format}`);
+    
+    // Extract filename from URL
+    const filename = url.split('/').pop().split('?')[0]; // Remove query params if any
+    
+    if (transformations.length > 0) {
+      const transformString = `tr:${transformations.join(',')}`;
+      return `${IMAGEKIT_CONFIG.endpoint}/${transformString}/${filename}`;
+    } else {
+      // No transformations, just use ImageKit endpoint with filename
+      return `${IMAGEKIT_CONFIG.endpoint}/${filename}`;
+    }
+  }
+  
+  // For development: Return original URL with console warning
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('⚠️ ImageKit: External image not optimized (no endpoint configured):', url.substring(0, 50) + '...');
+  }
+  
   return url;
 };
 
@@ -260,18 +295,31 @@ export const getMainImageUrl = (url) => {
  * Test function for image transformations (for debugging)
  */
 export const testImageTransformations = () => {
-  const testUrl = 'https://ik.imagekit.io/demo/docs_images/examples/example_food_3.jpg';
-  const thumbnail = getThumbnailUrl(testUrl);
-  const mainImage = getMainImageUrl(testUrl);
+  const testExternalUrl = 'https://www.jda.de/media/catalog/product/cache/818bc609d9795564472e4f094029978c/m/u/multibalance_gel_demaquillant_confort_200ml_verp_02_1_1.png';
+  const testImageKitUrl = 'https://ik.imagekit.io/demo/docs_images/examples/example_food_3.jpg';
+  
+  const externalThumbnail = getThumbnailUrl(testExternalUrl);
+  const externalMainImage = getMainImageUrl(testExternalUrl);
+  const imagekitThumbnail = getThumbnailUrl(testImageKitUrl);
+  const imagekitMainImage = getMainImageUrl(testImageKitUrl);
   
   console.log('🧪 Image Transformation Test:');
-  console.log('Original:', testUrl);
-  console.log('Thumbnail (80px):', thumbnail);
-  console.log('Main Image (360px):', mainImage);
-  console.log('Expected thumbnail pattern: .../tr:w-80,q-80,f-webp/...');
-  console.log('Expected main pattern: .../tr:w-360,q-85,f-webp/...');
+  console.log('');
+  console.log('EXTERNAL URL TEST:');
+  console.log('Original:', testExternalUrl);
+  console.log('Thumbnail (80px):', externalThumbnail);
+  console.log('Main Image (360px):', externalMainImage);
+  console.log('');
+  console.log('IMAGEKIT URL TEST:');
+  console.log('Original:', testImageKitUrl);
+  console.log('Thumbnail (80px):', imagekitThumbnail);
+  console.log('Main Image (360px):', imagekitMainImage);
+  console.log('');
+  console.log('Expected external pattern: https://ik.imagekit.io/minicatalog/tr:w-80,q-80,f-webp/filename.png');
+  console.log('Expected imagekit pattern: .../tr:w-80,q-80,f-webp/...');
   
-  return thumbnail.includes('tr:w-80,q-80,f-webp') && mainImage.includes('tr:w-360,q-85,f-webp');
+  return externalThumbnail.includes('ik.imagekit.io/minicatalog') && 
+         imagekitThumbnail.includes('tr:w-80,q-80,f-webp');
 };
 
 /**

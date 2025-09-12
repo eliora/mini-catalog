@@ -148,26 +148,20 @@ export const usePricing = () => {
     return !pricingInfo.canViewPrices && !pricingInfo.loading;
   }, [pricingInfo.canViewPrices, pricingInfo.loading]);
 
-  // Get pricing access message for users
+  // Get pricing access message for users - removed "Sign in" alerts per requirements
   const getPricingMessage = useCallback(() => {
     if (pricingInfo.loading) return 'Loading...';
     if (pricingInfo.error) return 'Error loading pricing info';
     if (pricingInfo.canViewPrices) return null;
     
-    switch (pricingInfo.role) {
-      case 'anonymous':
-        return 'Sign in to view prices';
-      case 'authenticated':
-        return 'Contact us for pricing access';
-      default:
-        return 'Pricing not available';
-    }
+    // Don't show any sign-in prompts per task requirements
+    return null;
   }, [pricingInfo]);
 
   // Initialize pricing access check (only when auth state changes)
   useEffect(() => {
     checkPricingAccess();
-  }, [isAuthenticated, user]); // Only depend on auth state, not the function
+  }, [isAuthenticated, user, checkPricingAccess]); // Include checkPricingAccess dependency
 
   return {
     // Pricing access info

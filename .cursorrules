@@ -1,20 +1,12 @@
-dont delete any file without permission. always confirm changed unless explicity ordered.
-check always MUi docs
-always prefer inline, non pop-up window, full width, compact view
-only react no node.js
-keep system errors in english
-Use React hooks efficiently and avoid class components unless necessary.
-Follow Material-UI (MUI) best practices: Use built-in components like Grid, Box, Typography, Button, etc., for layout and UI elements. Customize themes via ThemeProvider if needed, but keep custom styles minimal.
-For Supabase integration: Use the official Supabase JS client. Handle authentication with supabase.auth methods, and database operations with supabase.from().select(), insert(), etc. Always manage errors and loading states.
-Prioritize simplicity: Write concise, readable code. Avoid unnecessary abstractions or over-engineering. Use functional components with minimal props drilling; prefer Context API for global state if Redux is overkill.
-Do not reinvent the wheel: Leverage existing libraries like react-hook-form for forms, @mui/x-data-grid for tables if needed, but only add dependencies if essential. Stick to core React, MUI, and Supabase features first.
-Efficiency focus: Optimize renders with React.memo, useMemo, useCallback where performance matters (e.g., lists or computations). Keep API calls minimal; use real-time subscriptions from Supabase for updates instead of polling.
-Short code: Aim for brevity without sacrificing clarity. Combine related logic; e.g., co-locate state and effects in hooks.
-Maintain standard writing: Follow ESLint/Prettier conventions if set up. Use consistent naming (camelCase for variables/functions, PascalCase for components). Add JSDoc comments only for complex functions.
-Do not rewrite code: When editing, preserve existing logic and structure unless it's broken or inefficient. Refactor incrementally if improving.
-Keep old code: Retain working legacy code; integrate new features around it. Comment out obsolete sections instead of deleting.
-Error handling: Always include try-catch for async operations, display user-friendly messages via MUI Snackbar or Alert.
-Security: Never hardcode Supabase keys; use environment variables. Validate inputs on client and rely on Supabase RLS for server-side security.
-Testing: Encourage simple unit tests with React Testing Library for critical components like forms and auth flows.
-Responsiveness: Use MUI's responsive props (e.g., Grid xs/sm/md) to ensure mobile-friendly design without custom media queries.
-Performance: Lazy-load components with React.lazy if the app grows; monitor bundle size.
+ou are an expert React developer specializing in e-commerce apps. Follow these strict rules for all code generation and edits:
+
+Core Focus: Build reusable, compact components for e-commerce (e.g., ProductCard, CartItem). Prioritize full-width, inline layouts (no pop-ups). Use compact views with minimal spacing.
+Tech Stack: React only (no Node.js). Functional components with hooks (useState, useEffect, useCallback, useMemo). Avoid class components. Integrate Supabase JS client for auth (supabase.auth) and DB ops (supabase.from().select()/insert()). No other backends.
+MUI Best Practices: Stick to MUI v5+ docs (check https://mui.com/material-ui/ for components like Grid, Box, Typography, Button, Card). Use responsive props (xs/sm/md) for mobile-friendliness. Theme via ThemeProvider if needed, but minimize custom sx/styles—prefer theme vars. No custom media queries.
+Reusability & Efficiency: Make components reusable with minimal props (e.g., {product}). Use React.memo for optimization. Co-locate logic in custom hooks. Avoid props drilling; use Context for global state if simple. Optimize renders: useMemo/useCallback for lists/computations. Lazy-load with React.lazy if app scales.
+Simplicity & Brevity: Short, readable code. Combine logic (e.g., fetch + state in one effect). No over-engineering or unnecessary abstractions. Leverage libraries only if essential: react-hook-form for forms, @mui/x-data-grid for tables. Don't reinvent—use core React/MUI/Supabase.
+Supabase Handling: Follow Supabase docs (https://supabase.com/docs/guides/getting-started/quickstarts/reactjs for React setup; https://supabase.com/docs/guides/database/tables for DB structure).  Fetch via supabase.from('products').select('*'). Use real-time subscriptions over polling (e.g., supabase.channel().subscribe()). Manage loading/errors with states. Try-catch async ops; show user-friendly errors via MUI Alert/Snackbar (English only). Client validation + RLS reliance. Never hardcode keys, URLs, or table names—use env vars for connection; for dynamic configs (e.g., table names, limits), store in DB and fetch.
+Configurations in DB: Store app settings (e.g., theme colors, price limits, feature flags) in a dedicated 'settings' table (per Supabase tables guide: use jsonb for structured data, primary key uuid, public schema for non-sensitive). Fetch on app init via supabase.from('settings').select('*'), cache in Context/useMemo. Avoid any hardcoded values—e.g., no static limits in code; query DB for 'max_cart_items'. Use views for simplified client queries if joins needed.
+File/Change Rules: Never delete files without explicit permission. Confirm changes unless ordered. Preserve/keep old code; comment out obsolete parts. Refactor incrementally—don't rewrite working logic. 
+Error/Security/Testing: English system errors. Validate inputs client-side. No hardcoded keys or values. 
+General: ESLint/Prettier compliant (camelCase vars, PascalCase components). JSDoc only for complex funcs. No bundle bloat—monitor size.

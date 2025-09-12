@@ -21,15 +21,19 @@ import {
   Receipt as OrdersIcon,
   AccountCircle as AccountIcon,
   Login as LoginIcon,
-  PersonAdd as SignUpIcon
+  AdminPanelSettings as AdminIcon
 } from '@mui/icons-material';
 import { useSupabaseAuth } from '../../hooks/useSupabaseAuth';
 import usePricing from '../../hooks/usePricing';
+import useAdminAccess from '../../hooks/useAdminAccess';
 import AuthDialog from './AuthDialog';
+import { useNavigate } from 'react-router-dom';
 
 const UserMenu = ({ cartItemCount = 0 }) => {
   const { user, signOut, loading } = useSupabaseAuth();
   const { canViewPrices, tier } = usePricing();
+  const { isAdmin } = useAdminAccess();
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authDialogTab, setAuthDialogTab] = useState(0);
@@ -78,10 +82,6 @@ const UserMenu = ({ cartItemCount = 0 }) => {
     setAuthDialogOpen(true);
   };
 
-  const handleSignUpClick = () => {
-    setAuthDialogTab(1);
-    setAuthDialogOpen(true);
-  };
 
   const getUserDisplayName = () => {
     if (!user) return '';
@@ -114,31 +114,12 @@ const UserMenu = ({ cartItemCount = 0 }) => {
           </IconButton>
         </Tooltip>
 
-        {/* Sign In Button */}
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<LoginIcon />}
-          onClick={handleSignInClick}
-          sx={{
-            textTransform: 'none',
-            borderColor: 'rgba(255, 255, 255, 0.3)',
-            color: 'inherit',
-            '&:hover': {
-              borderColor: 'rgba(255, 255, 255, 0.7)',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-            }
-          }}
-        >
-          התחברות
-        </Button>
-
-        {/* Sign Up Button */}
+        {/* Single Login/Signup Button */}
         <Button
           variant="contained"
           size="small"
-          startIcon={<SignUpIcon />}
-          onClick={handleSignUpClick}
+          startIcon={<LoginIcon />}
+          onClick={handleSignInClick}
           sx={{
             textTransform: 'none',
             backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -148,7 +129,7 @@ const UserMenu = ({ cartItemCount = 0 }) => {
             }
           }}
         >
-          הרשמה
+          התחברות / הרשמה
         </Button>
 
         {/* Auth Dialog */}
@@ -281,6 +262,21 @@ const UserMenu = ({ cartItemCount = 0 }) => {
           </ListItemIcon>
           <ListItemText primary="הגדרות" />
         </MenuItem>
+
+        {/* Admin Panel - only visible to admins */}
+        {isAdmin && (
+          <>
+            <MenuItem onClick={() => {
+              handleMenuClose();
+              navigate('/admin');
+            }}>
+              <ListItemIcon>
+                <AdminIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="פאנל ניהול" />
+            </MenuItem>
+          </>
+        )}
 
         <Divider />
 

@@ -104,10 +104,10 @@ const getProductsInternal = async (search = '', line = '', page = 1, pageSize = 
     }
 
     // Select ONLY essential fields for initial catalog display (super fast loading)
-    // NOTE: unit_price removed from products table - now in separate prices table
+    // NOTE: unit_price temporarily kept for fallback until prices table is populated
     // Database columns: ref, hebrew_name, header, short_description_he, description_he, 
     // skin_type_he, usage_instructions_he, active_ingredients_he, ingredients, french_name, 
-    // english_name, size, product_line, main_pic, pics, type, product_type, qty
+    // english_name, size, product_line, main_pic, pics, type, product_type, qty, unit_price
     let query = supabase.from('products').select(`
       ref,
       hebrew_name,
@@ -119,7 +119,8 @@ const getProductsInternal = async (search = '', line = '', page = 1, pageSize = 
       type,
       product_type,
       skin_type_he,
-      qty
+      qty,
+      unit_price
     `);
     
     // Apply server-side filtering for maximum performance
@@ -202,7 +203,7 @@ const getProductsInternal = async (search = '', line = '', page = 1, pageSize = 
       productName: product.hebrew_name,
       productName2: product.english_name,
       mainPic: processImageUrl(product.main_pic),
-      unitPrice: prices[product.ref]?.unitPrice || 0,
+      unitPrice: prices[product.ref]?.unitPrice || product.unit_price || 0,
       size: product.size,
       line: product.product_line || product.skin_type_he,
       productLine: product.product_line,

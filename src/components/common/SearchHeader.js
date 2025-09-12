@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Box,
   TextField,
-  Typography,
   Chip,
   InputAdornment,
   IconButton,
@@ -86,12 +85,8 @@ const SearchHeader = ({
         flexWrap: 'wrap',
         gap: 2
       }}>
-        {/* Results Count */}
-        <Typography variant="body2" color="text.secondary">
-          {filteredCount !== undefined && (
-            <>נמצאו {filteredCount} {countLabel}</>
-          )}
-        </Typography>
+        {/* Results Count - Removed due to lazy loading inaccuracy */}
+        <div></div>
 
         {/* Active Filters */}
         {activeFilters && activeFilters.length > 0 && (
@@ -119,4 +114,4 @@ const SearchHeader = ({
   );
 };
 
-export default SearchHeader;
+export default React.memo(SearchHeader);

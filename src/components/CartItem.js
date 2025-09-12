@@ -3,10 +3,10 @@ import {
   Box, Typography, IconButton, Stack, useTheme, useMediaQuery, TextField
 } from '@mui/material';
 import { Remove as RemoveIcon, Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import useResponsiveConfig from './common/ResponsiveConfig';
 
 const CartItem = ({ item, onUpdateQuantity, onRemove, onUpdatePrice, isAdmin = false }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { isMobile, dimensions } = useResponsiveConfig();
 
   const renderMobileView = () => (
     <Box sx={{ width: '100%', minWidth: 0, overflow: 'hidden' }}>
@@ -280,7 +280,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove, onUpdatePrice, isAdmin = f
         border: '1px solid',
         borderColor: 'divider',
         p: 2,
-        minHeight: isMobile ? 56 : 48,
+        minHeight: dimensions.minHeight,
         cursor: 'default',
         overflow: 'hidden',
   

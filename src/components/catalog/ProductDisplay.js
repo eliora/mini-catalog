@@ -3,8 +3,6 @@ import {
   Box,
   Grid,
   Typography,
-  Alert,
-  Button,
   CircularProgress,
   Skeleton
 } from '@mui/material';
@@ -213,4 +211,4 @@ const ProductDisplay = ({
   );
 };
 
-export default ProductDisplay;
+export default React.memo(ProductDisplay);
