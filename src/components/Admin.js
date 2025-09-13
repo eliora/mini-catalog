@@ -38,7 +38,7 @@ import OrderDetails from './OrderDetails';
 // Import Bazaar Pro components
 import BazaarButton from './bazaar/BazaarButton';
 
-const Admin = ({ onLogout, adminToken }) => {
+const Admin = ({ onLogout }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);

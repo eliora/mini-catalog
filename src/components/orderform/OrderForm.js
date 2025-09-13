@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { createOrder, getOrderById } from '../../api/orders';
 import { getPrices } from '../../api/prices';
+import { getProducts } from '../../api/products';
 import { useCart } from '../../context/CartContext';
 import { useCompany } from '../../context/CompanyContext';
 import { useAuth } from '../../context/AuthContext';
@@ -15,15 +16,19 @@ import {
   Stack,
   useTheme,
   useMediaQuery,
-  Chip,
   TextField,
   Card,
   CardContent,
-  CardHeader,
-  CardActions,
   Fade,
-  Slide,
-  Zoom
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  IconButton
 } from '@mui/material';
 import {
   Table,
@@ -35,17 +40,12 @@ import {
 import {
   ShoppingCart as CartIcon,
   CheckCircle as CheckIcon,
-  Receipt as ReceiptIcon,
   Print as PrintIcon,
-  Person as PersonIcon,
   Add as AddIcon,
-  LocalMall as ShoppingBagIcon,
-  CreditCard as PaymentIcon,
-  Timeline as TrendingIcon
+  Edit as EditIcon,
+  Save as SaveIcon
 } from '@mui/icons-material';
 import BazaarButton from '../bazaar/BazaarButton';
-import { DashboardCard, OrderCard } from '../bazaar/BazaarCard';
-import CartItem from '../CartItem';
 import OrderCartItem from './OrderCartItem';
 import OrderSummary from './OrderSummary';
 import '../../styles/print.css';
@@ -56,7 +56,6 @@ const OrderForm = () => {
   const { settings: companySettings } = useCompany();
   const { isAdmin } = useAuth();
   const theme = useTheme();
-  const isSmall = useMediaQuery(theme.breakpoints.down('md'));
   const printRef = useRef(null);
 
   // const [checkoutDialog, setCheckoutDialog] = useState(false);
@@ -64,6 +63,14 @@ const OrderForm = () => {
   const [customerName, setCustomerName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSummary, setOrderSummary] = useState(null);
+  
+  // Admin features state
+  const [editMode, setEditMode] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [addItemDialog, setAddItemDialog] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState('');
+  const [customPrice, setCustomPrice] = useState('');
+  const [customQuantity, setCustomQuantity] = useState(1);
   // Load unit prices for items in cart from secure table (RLS-protected)
   useEffect(() => {
     const loadCartPrices = async () => {
@@ -88,49 +95,95 @@ const OrderForm = () => {
     loadCartPrices();
   }, [cart, updateItemPrice]);
 
-
-  // Revive order functionality
-  const reviveOrder = useCallback(async (orderId) => {
-    try {
-      const orderData = await getOrderById(orderId);
-      
-      if (!orderData) {
-        throw new Error('Order not found');
-      }
-
-      // Clear current cart first
-      clearCart();
-      
-      // Add order items back to cart
-      if (orderData.items && orderData.items.length > 0) {
-        orderData.items.forEach(item => {
-          addToCart({
-            ref: item.ref,
-            productName: item.productName,
-            productName2: item.productName2,
-            size: item.size,
-            unitPrice: item.unitPrice
-          }, item.quantity);
-        });
-        
-        // Set revived order ID for reference
-        setCustomerName(orderData.customerName || '');
-        
-        setSnackbar({
-          open: true,
-          message: `הזמנה #${orderData.orderId} הוחזרה לעריכה`,
-          severity: 'success'
-        });
-      }
-    } catch (error) {
-      console.error('Error reviving order:', error);
-      setSnackbar({
-        open: true,
-        message: 'שגיאה בטעינת ההזמנה',
-        severity: 'error'
-      });
+  // Load products for admin features
+  useEffect(() => {
+    if (isAdmin && editMode) {
+      loadProducts();
     }
-  }, [clearCart, addToCart]);
+  }, [isAdmin, editMode]);
+
+  const loadProducts = async () => {
+    try {
+      const productsData = await getProducts();
+      setProducts(productsData);
+    } catch (error) {
+      console.error('Error loading products:', error);
+    }
+  };
+
+  // Admin function: Handle price change for cart items
+  const handlePriceChange = (itemRef, newPrice) => {
+    updateItemPrice(itemRef, Number(newPrice) || 0);
+  };
+
+  // Admin function: Add custom item to cart
+  const handleAddCustomItem = () => {
+    if (!selectedProduct) return;
+
+    const product = products.find(p => p.ref === selectedProduct);
+    if (!product) return;
+
+    const customItem = {
+      ref: product.ref,
+      productName: product.productName,
+      productName2: product.productName2,
+      size: product.size,
+      unitPrice: Number(customPrice) || 0,
+      quantity: Number(customQuantity) || 1
+    };
+
+    addToCart(customItem, customItem.quantity);
+    
+    // Reset dialog
+    setSelectedProduct('');
+    setCustomPrice('');
+    setCustomQuantity(1);
+    setAddItemDialog(false);
+  };
+
+
+  // Revive order functionality (currently unused but available for future use)
+  // const reviveOrder = useCallback(async (orderId) => {
+  //   try {
+  //     const orderData = await getOrderById(orderId);
+  //     
+  //     if (!orderData) {
+  //       throw new Error('Order not found');
+  //     }
+  //
+  //     // Clear current cart first
+  //     clearCart();
+  //     
+  //     // Add order items back to cart
+  //     if (orderData.items && orderData.items.length > 0) {
+  //       orderData.items.forEach(item => {
+  //         addToCart({
+  //           ref: item.ref,
+  //           productName: item.productName,
+  //           productName2: item.productName2,
+  //           size: item.size,
+  //           unitPrice: item.unitPrice
+  //         }, item.quantity);
+  //       });
+  //       
+  //       // Set revived order ID for reference
+  //       setCustomerName(orderData.customerName || '');
+  //       
+  //       setSnackbar({
+  //         open: true,
+  //         message: `הזמנה #${orderData.orderId} הוחזרה לעריכה`,
+  //         severity: 'success'
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error('Error reviving order:', error);
+  //     setSnackbar({
+  //       open: true,
+  //       message: 'שגיאה בטעינת ההזמנה',
+  //       severity: 'error'
+  //     });
+  //   }
+  // }, [clearCart, addToCart]);
 
   // Calculate totals
   const subtotal = useMemo(() => {
@@ -472,6 +525,28 @@ const OrderForm = () => {
                   מחק
                 </Typography>
               </Box>
+              {isAdmin && (
+                <Box sx={{ minWidth: 100 }}>
+                  <Stack direction="row" spacing={1}>
+                    <IconButton
+                      size="small"
+                      onClick={() => setEditMode(!editMode)}
+                      color={editMode ? "primary" : "default"}
+                      title={editMode ? "סיום עריכה" : "עריכת מחירים"}
+                    >
+                      {editMode ? <SaveIcon /> : <EditIcon />}
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => setAddItemDialog(true)}
+                      color="primary"
+                      title="הוסף פריט מותאם"
+                    >
+                      <AddIcon />
+                    </IconButton>
+                  </Stack>
+                </Box>
+              )}
             </Stack>
           </Box>
 
@@ -497,6 +572,8 @@ const OrderForm = () => {
                   onRemove={removeFromCart}
                   onUpdatePrice={updateItemPrice}
                   isAdmin={isAdmin}
+                  editMode={editMode}
+                  onPriceChange={handlePriceChange}
                 />
               </Box>
             ))}
@@ -517,6 +594,63 @@ const OrderForm = () => {
           onSubmit={handleSubmitOrder}
         />
       </Grid>
+      )}
+
+      {/* Admin: Add Custom Item Dialog */}
+      {isAdmin && (
+        <Dialog open={addItemDialog} onClose={() => setAddItemDialog(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>הוסף פריט מותאם</DialogTitle>
+          <DialogContent>
+            <Stack spacing={3} sx={{ mt: 1 }}>
+              <FormControl fullWidth>
+                <InputLabel>בחר מוצר</InputLabel>
+                <Select
+                  value={selectedProduct}
+                  onChange={(e) => setSelectedProduct(e.target.value)}
+                  label="בחר מוצר"
+                >
+                  {products.map((product) => (
+                    <MenuItem key={product.ref} value={product.ref}>
+                      {product.ref} - {product.productName} {product.size && `(${product.size})`}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              
+              <TextField
+                label="מחיר מותאם"
+                type="number"
+                value={customPrice}
+                onChange={(e) => setCustomPrice(e.target.value)}
+                InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+                helperText="השאר ריק להשתמש במחיר ברירת המחדל"
+              />
+              
+              <TextField
+                label="כמות"
+                type="number"
+                value={customQuantity}
+                onChange={(e) => setCustomQuantity(Number(e.target.value))}
+                InputProps={{ inputProps: { min: 1 } }}
+              />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <BazaarButton 
+              variant="outlined" 
+              onClick={() => setAddItemDialog(false)}
+            >
+              ביטול
+            </BazaarButton>
+            <BazaarButton 
+              variant="contained" 
+              onClick={handleAddCustomItem} 
+              disabled={!selectedProduct}
+            >
+              הוסף לעגלה
+            </BazaarButton>
+          </DialogActions>
+        </Dialog>
       )}
 
       {/* Snackbar for notifications */}

@@ -27,7 +27,6 @@ import { useAuth } from './context/AuthContext';
 import { useCart } from './context/CartContext';
 import { useCompany } from './context/CompanyContext';
 import UserMenu from './components/auth/UserMenu';
-import useAdminAccess from './hooks/useAdminAccess';
 import AuthCallback from './components/auth/AuthCallback';
 import JDAHeader from './components/layout/JDAHeader';
 
@@ -50,12 +49,8 @@ function AppInner() {
   const location = useLocation();
   const navigate = useNavigate();
   const { cart, getCartItemCount } = useCart();
-  const { isAdmin: legacyIsAdmin, token, logout } = useAuth();
+  const { isAdmin, signOut } = useAuth();
   const { settings: companySettings } = useCompany();
-  const { isAdmin: supabaseIsAdmin } = useAdminAccess();
-  
-  // Use Supabase admin check, fallback to legacy for backwards compatibility
-  const isAdmin = supabaseIsAdmin || legacyIsAdmin;
 
   // Search state for header
   const [headerSearchTerm, setHeaderSearchTerm] = useState('');
@@ -79,7 +74,7 @@ function AppInner() {
 
 
   const handleAdminLogout = () => {
-    logout();
+    signOut();
     navigate('/catalog');
   };
 
@@ -130,7 +125,7 @@ function AppInner() {
             <Route path="/catalog" element={<CatalogClean />} />
             <Route path="/orderform" element={<OrderForm />} />
             <Route path="/admin" element={
-              isAdmin ? <Admin onLogout={handleAdminLogout} adminToken={token} /> : <Navigate to="/catalog" replace />
+              isAdmin ? <Admin onLogout={handleAdminLogout} /> : <Navigate to="/catalog" replace />
             } />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="*" element={<Navigate to="/catalog" replace />} />

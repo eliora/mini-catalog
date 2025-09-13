@@ -8,12 +8,16 @@ yarn-error.log*
 build/
 dist/
 
-# Environment variables
+# Environment variables (CRITICAL - DO NOT COMMIT)
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Backup environment files
+.env.backup
+.env.*.backup
 
 # Database files
 *.db

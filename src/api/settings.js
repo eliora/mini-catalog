@@ -38,7 +38,7 @@ export const getCompanySettings = async () => {
         .from('settings')
         .select('*')
         .maybeSingle(),
-      5000,
+      15000,
       'Load settings'
     );
 
@@ -86,7 +86,7 @@ export const saveCompanySettings = async (settings) => {
         .from('settings')
         .select('id')
         .maybeSingle(),
-      5000,
+      15000,
       'Check existing settings'
     );
 

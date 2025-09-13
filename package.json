@@ -29,7 +29,9 @@
     "start:no-browser": "set BROWSER=none&& react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "protect-env": "powershell -ExecutionPolicy Bypass -File ./scripts/protect-env.ps1",
+    "restore-env": "powershell -ExecutionPolicy Bypass -File ./scripts/restore-env.ps1"
   },
   "eslintConfig": {
     "extends": [

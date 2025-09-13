@@ -4,7 +4,8 @@ import {
   Typography,
   Stack,
   Chip,
-  IconButton
+  IconButton,
+  TextField
 } from '@mui/material';
 import {
   Delete as DeleteIcon
@@ -20,7 +21,9 @@ const OrderCartItem = ({
   onUpdateQuantity,
   onRemove,
   onUpdatePrice,
-  isAdmin = false
+  isAdmin = false,
+  editMode = false,
+  onPriceChange
 }) => {
   const handleQuantityChange = (newQuantity) => {
     if (newQuantity <= 0) {
@@ -81,15 +84,34 @@ const OrderCartItem = ({
 
         {/* Unit Price - Compact */}
         <Box sx={{ minWidth: 60, textAlign: 'center' }}>
-          <Typography 
-            variant="body2" 
-            sx={{ 
-              fontWeight: 500,
-              fontSize: '0.8rem'
-            }}
-          >
-            ₪{item.unitPrice.toFixed(2)}
-          </Typography>
+          {editMode && isAdmin ? (
+            <TextField
+              size="small"
+              type="number"
+              value={item.unitPrice}
+              onChange={(e) => onPriceChange && onPriceChange(item.ref, e.target.value)}
+              InputProps={{ 
+                inputProps: { min: 0, step: 0.01 },
+                sx: { fontSize: '0.8rem' }
+              }}
+              sx={{ 
+                width: 80,
+                '& .MuiOutlinedInput-root': {
+                  height: 32
+                }
+              }}
+            />
+          ) : (
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                fontWeight: 500,
+                fontSize: '0.8rem'
+              }}
+            >
+              ₪{item.unitPrice.toFixed(2)}
+            </Typography>
+          )}
         </Box>
 
         {/* Quantity Controls - Compact */}

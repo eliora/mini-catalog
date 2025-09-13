@@ -144,7 +144,7 @@ const getProductsInternal = async (search = '', line = '', page = 1, pageSize = 
     
     // Execute query with timeout and retry protection (faster timeout for better UX)
     const { data, error } = await retryOperation(
-      () => withTimeout(query, 5000, 'Products query'), // Reduced from 8s to 5s
+      () => withTimeout(query, 15000, 'Products query'), // Increased timeout for debugging
       2, // Reduced from 3 to 2 attempts max
       800 // Reduced initial delay
     );
@@ -176,7 +176,7 @@ const getProductsInternal = async (search = '', line = '', page = 1, pageSize = 
     let prices = {};
     try {
       prices = await retryOperation(
-        () => withTimeout(getPrices(productRefs), 5000, 'Prices query'),
+        () => withTimeout(getPrices(productRefs), 15000, 'Prices query'),
         2, // 2 attempts max for prices (less critical)
         800 // 800ms initial delay
       );

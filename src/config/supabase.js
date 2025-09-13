@@ -4,8 +4,20 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
+// Environment variables confirmed working
+
+// Validate environment variables before creating client
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('❌ Missing Supabase environment variables:');
+  console.error('URL:', supabaseUrl ? '✅ SET' : '❌ MISSING');
+  console.error('Key:', supabaseAnonKey ? '✅ SET' : '❌ MISSING');
+  throw new Error('Missing required Supabase environment variables');
+}
+
 // Create Supabase client - ONLY with environment variables
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Connection working properly
 
 // For admin operations on the server side
 export const createAdminClient = (serviceRoleKey) => {

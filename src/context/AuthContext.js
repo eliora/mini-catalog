@@ -1,71 +1,55 @@
 import React, { createContext, useCallback, useContext, useMemo, useState, useEffect } from 'react';
-import { login as adminLoginApi } from '../api/admin';
 import { useSupabaseAuth } from '../hooks/useSupabaseAuth';
+import { supabase } from '../config/supabase';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  // Legacy admin auth (keep for backwards compatibility)
-  const [token, setToken] = useState(() => {
-    try {
-      return localStorage.getItem('adminToken') || null;
-    } catch {
-      return null;
-    }
-  });
-  const [isAdmin, setIsAdmin] = useState(() => {
-    try {
-      return localStorage.getItem('isAdminLoggedIn') === 'true';
-    } catch {
-      return false;
-    }
-  });
-
-  // New Supabase auth
+  // Supabase auth
   const supabaseAuth = useSupabaseAuth();
+  
+  // User role and admin check (Supabase only)
+  const [userRole, setUserRole] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  // Persist legacy auth state to localStorage
+  // Check user role from Supabase when user changes
   useEffect(() => {
-    if (token) {
-      localStorage.setItem('adminToken', token);
-      localStorage.setItem('isAdminLoggedIn', 'true');
-    } else {
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('isAdminLoggedIn');
-    }
-  }, [token]);
+    const checkUserRole = async () => {
+      if (supabaseAuth.user) {
+        try {
+          const { data, error } = await supabase.from('users')
+            .select('user_role')
+            .eq('id', supabaseAuth.user.id)
+            .single();
+          
+          if (!error && data) {
+            setUserRole(data.user_role);
+            setIsAdmin(data.user_role === 'admin');
+          }
+        } catch (err) {
+          console.error('Error fetching user role:', err);
+          setIsAdmin(false);
+        }
+      } else {
+        setUserRole(null);
+        setIsAdmin(false);
+      }
+    };
 
-  // Legacy admin login (keep for backwards compatibility)
-  const login = useCallback(async (username, password) => {
-    try {
-      const data = await adminLoginApi(username, password);
-      setToken(data.token || null);
-      setIsAdmin(true);
-      return data;
-    } catch (error) {
-      setToken(null);
-      setIsAdmin(false);
-      throw error;
-    }
-  }, []);
+    checkUserRole();
+  }, [supabaseAuth.user]);
 
-  // Legacy logout
-  const logout = useCallback(() => {
-    setToken(null);
-    setIsAdmin(false);
-    // Also sign out from Supabase
+  // Sign out (Supabase only)
+  const signOut = useCallback(() => {
     supabaseAuth.signOut();
   }, [supabaseAuth]);
 
   const value = useMemo(() => ({
-    // Legacy auth (for admin panel compatibility)
-    token,
+    // Admin status (Supabase role-based)
     isAdmin,
-    login,
-    logout,
-    getToken: () => token,
+    userRole, // Current user role from database
     
-    // New Supabase auth
+    // Supabase auth
     user: supabaseAuth.user,
     isAuthenticated: supabaseAuth.isAuthenticated,
     isVerified: supabaseAuth.isVerified,
@@ -81,7 +65,7 @@ export function AuthProvider({ children }) {
     updatePassword: supabaseAuth.updatePassword,
     getUserProfile: supabaseAuth.getUserProfile,
     updateUserProfile: supabaseAuth.updateUserProfile,
-  }), [token, isAdmin, login, logout, supabaseAuth]);
+  }), [isAdmin, userRole, supabaseAuth]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
