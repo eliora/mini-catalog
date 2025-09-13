@@ -1,15 +1,15 @@
 /**
- * QuantityInput Component - Simplified Version
+ * QuantityInput Component
  * 
- * Compact quantity input with increment/decrement buttons.
- * Supports keyboard input, validation, and responsive sizing.
+ * Compact, modern quantity input with seamless increment/decrement buttons.
+ * Features elegant design with hover effects and proper accessibility.
  * 
  * Features:
- * - Plus/minus buttons with hover effects
+ * - Seamless unified container design
+ * - Plus/minus buttons with smooth animations
  * - Direct number input with validation
- * - Configurable min/max values
- * - Multiple size variants (small, medium, large)
- * - Disabled state support
+ * - Multiple size variants and styles
+ * - Proper accessibility support
  * - Auto-blur on invalid input
  * 
  * @param {number} value - Current quantity value
@@ -19,21 +19,21 @@
  * @param {number} min - Minimum allowed value
  * @param {number} max - Maximum allowed value
  * @param {string} size - Size variant (small, medium, large)
- * @param {string} variant - Style variant (outlined, filled)
+ * @param {string} variant - Style variant (outlined, contained, filled)
  * @param {boolean} disabled - Whether input is disabled
  */
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
+  Box,
   IconButton,
   TextField,
-  Stack,
-  useTheme
+  useTheme,
+  alpha
 } from '@mui/material';
 import { PlusIcon, MinusIcon } from './QuantityInputIcons';
-import { sizeConfig, getButtonStyles, getTextFieldStyles } from './QuantityInputConfig';
 
-const QuantityInputSimple = ({
+const QuantityInput = ({
   value = 0,
   onChange,
   onIncrement,
@@ -51,7 +51,121 @@ const QuantityInputSimple = ({
   const timeoutRef = useRef(null);
   const inputRef = useRef(null);
 
-  const config = sizeConfig[size];
+  // Size configurations - optimized for double-digit display
+  const sizeConfig = {
+    small: {
+      buttonSize: 32,
+      textFieldWidth: 50,
+      textFieldHeight: 32,
+      fontSize: '0.875rem',
+      iconSize: 18
+    },
+    medium: {
+      buttonSize: 40,
+      textFieldWidth: 60,
+      textFieldHeight: 40,
+      fontSize: '1rem',
+      iconSize: 20
+    },
+    large: {
+      buttonSize: 48,
+      textFieldWidth: 70,
+      textFieldHeight: 48,
+      fontSize: '1.125rem',
+      iconSize: 22
+    }
+  };
+
+  const config = sizeConfig[size] || sizeConfig.medium;
+
+  // Variant styles - modern and accessible
+  const getVariantStyles = () => {
+    switch (variant) {
+      case 'contained':
+        return {
+          button: {
+            backgroundColor: 'transparent',
+            color: theme.palette.primary.main,
+            border: 'none',
+            borderRadius: 0,
+            '&:hover': {
+              backgroundColor: alpha(theme.palette.primary.main, 0.08),
+            },
+            '&:disabled': {
+              color: theme.palette.action.disabled,
+            }
+          },
+          textField: {
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: theme.palette.background.paper,
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: theme.palette.primary.main,
+              }
+            }
+          }
+        };
+      case 'outlined':
+        return {
+          button: {
+            border: 'none',
+            backgroundColor: 'transparent',
+            color: theme.palette.text.primary,
+            borderRadius: 0,
+            '&:hover': {
+              backgroundColor: alpha(theme.palette.action.hover, 0.8),
+              color: theme.palette.primary.main,
+            },
+            '&:disabled': {
+              color: theme.palette.action.disabled,
+            }
+          },
+          textField: {
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                border: 'none',
+              },
+              '&:hover fieldset': {
+                border: 'none',
+              },
+              '&.Mui-focused fieldset': {
+                border: 'none',
+              },
+            }
+          }
+        };
+      case 'filled':
+        return {
+          button: {
+            backgroundColor: 'transparent',
+            color: theme.palette.text.primary,
+            border: 'none',
+            borderRadius: 0,
+            '&:hover': {
+              backgroundColor: alpha(theme.palette.primary.main, 0.08),
+              color: theme.palette.primary.main,
+            },
+            '&:disabled': {
+              color: theme.palette.action.disabled,
+            }
+          },
+          textField: {
+            '& .MuiFilledInput-root': {
+              backgroundColor: 'transparent',
+              '&:before, &:after': {
+                display: 'none',
+              },
+              '&:hover': {
+                backgroundColor: 'transparent',
+              }
+            }
+          }
+        };
+      default:
+        return {};
+    }
+  };
+
+  const styles = getVariantStyles();
 
   // Sync with external value changes
   useEffect(() => {
@@ -60,7 +174,7 @@ const QuantityInputSimple = ({
     }
   }, [value]);
 
-  // Handle input changes with validation
+  // Enhanced input validation with better UX
   const handleInputChange = (event) => {
     const inputValue = event.target.value;
     
@@ -135,17 +249,21 @@ const QuantityInputSimple = ({
     };
   }, []);
 
+  // Unified container design for seamless appearance
   return (
-    <Stack 
-      direction="row" 
-      alignItems="center" 
-      spacing={0}
+    <Box
       sx={{
+        display: 'flex',
+        alignItems: 'center',
         border: variant === 'outlined' ? '1px solid' : 'none',
         borderColor: theme.palette.divider,
         borderRadius: 1,
-        backgroundColor: variant === 'filled' ? theme.palette.action.hover : 'transparent',
+        backgroundColor: variant === 'filled' ? alpha(theme.palette.action.hover, 0.05) : 'transparent',
         overflow: 'hidden',
+        height: config.textFieldHeight,
+        '&:hover': {
+          borderColor: variant === 'outlined' ? theme.palette.primary.main : 'transparent',
+        },
         ...props.sx
       }}
       {...props}
@@ -156,16 +274,21 @@ const QuantityInputSimple = ({
         disabled={disabled || parseInt(localValue, 10) <= min}
         size={size}
         sx={{
-          ...getButtonStyles(theme, variant, disabled),
+          ...styles.button,
           width: config.buttonSize,
           height: config.buttonSize,
-          borderRadius: '4px 0 0 4px',
+          minWidth: config.buttonSize,
+          transition: 'all 0.15s ease-in-out',
+          '&:hover': {
+            transform: 'scale(1.1)',
+            ...styles.button?.['&:hover']
+          }
         }}
       >
         <MinusIcon sx={{ fontSize: config.iconSize }} />
       </IconButton>
 
-      {/* Number Input */}
+      {/* Number Input - seamlessly integrated */}
       <TextField
         ref={inputRef}
         type="number"
@@ -173,15 +296,49 @@ const QuantityInputSimple = ({
         onChange={handleInputChange}
         disabled={disabled}
         size={size}
+        variant={variant === 'filled' ? 'filled' : 'outlined'}
         inputProps={{
           min,
           max,
           step: 1,
           inputMode: 'numeric',
           pattern: '[0-9]*',
-          style: { textAlign: 'center' }
+          style: { 
+            textAlign: 'center',
+            fontSize: config.fontSize,
+            fontWeight: 600,
+            padding: 0
+          }
         }}
-        sx={getTextFieldStyles(theme, variant, size)}
+        sx={{
+          width: config.textFieldWidth,
+          '& .MuiOutlinedInput-root': {
+            height: config.textFieldHeight,
+            ...styles.textField?.['& .MuiOutlinedInput-root'],
+            '& input': {
+              padding: 0,
+              textAlign: 'center',
+              fontSize: config.fontSize,
+              fontWeight: 600,
+              MozAppearance: 'textfield',
+              '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button': {
+                WebkitAppearance: 'none',
+                margin: 0,
+              },
+            }
+          },
+          '& .MuiFilledInput-root': {
+            height: config.textFieldHeight,
+            ...styles.textField?.['& .MuiFilledInput-root'],
+            '& input': {
+              padding: 0,
+              textAlign: 'center',
+              fontSize: config.fontSize,
+              fontWeight: 600,
+            }
+          },
+          ...styles.textField
+        }}
       />
 
       {/* Increment Button */}
@@ -190,16 +347,21 @@ const QuantityInputSimple = ({
         disabled={disabled || parseInt(localValue, 10) >= max}
         size={size}
         sx={{
-          ...getButtonStyles(theme, variant, disabled),
+          ...styles.button,
           width: config.buttonSize,
           height: config.buttonSize,
-          borderRadius: '0 4px 4px 0',
+          minWidth: config.buttonSize,
+          transition: 'all 0.15s ease-in-out',
+          '&:hover': {
+            transform: 'scale(1.1)',
+            ...styles.button?.['&:hover']
+          }
         }}
       >
         <PlusIcon sx={{ fontSize: config.iconSize }} />
       </IconButton>
-    </Stack>
+    </Box>
   );
 };
 
-export default React.memo(QuantityInputSimple);
+export default React.memo(QuantityInput);
