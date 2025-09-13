@@ -163,7 +163,7 @@ export const useSupabaseAuth = () => {
   const signOut = useCallback(async () => {
     setLoading(true);
     try {
-      console.log('🔓 Supabase sign out initiated...');
+      
       
       // Create a timeout promise to prevent hanging
       const timeoutPromise = new Promise((_, reject) => 
@@ -176,13 +176,13 @@ export const useSupabaseAuth = () => {
       const { error } = await Promise.race([signOutPromise, timeoutPromise]);
       
       if (error) {
-        console.error('Supabase sign out error:', error);
+        
         // Don't throw - just clear local state and continue
       }
       
       // Always clear local state
       setUser(null);
-      console.log('✅ Supabase sign out completed');
+      
       
     } catch (error) {
       console.error('❌ Sign out error (will clear state anyway):', error);

@@ -56,7 +56,7 @@ const SupabaseConnectionTest = () => {
       });
 
     } catch (error) {
-      console.error('Supabase connection test failed:', error);
+      
       setConnectionStatus('disconnected');
       setConnectionDetails({
         error: error.message,

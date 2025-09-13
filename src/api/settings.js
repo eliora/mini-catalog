@@ -28,9 +28,8 @@ const DEFAULT_SETTINGS = {
  */
 export const getCompanySettings = async () => {
   try {
-    // Check if Supabase is configured
+    // If env is missing, return defaults (no noisy console logs)
     if (!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY) {
-      console.warn('⚠️ Supabase not configured, using default settings. Configure Supabase to save/load custom company settings.');
       return DEFAULT_SETTINGS;
     }
 

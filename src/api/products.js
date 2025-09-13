@@ -92,16 +92,7 @@ export const getProducts = async (search = '', line = '', page = 1, pageSize = 5
 
 const getProductsInternal = async (search = '', line = '', page = 1, pageSize = 50, filters = {}) => {
   try {
-    console.log('🔍 Loading products with timeout protection...');
-    console.log('🔍 Checking Supabase config:', {
-      url: process.env.REACT_APP_SUPABASE_URL ? 'SET' : 'MISSING',
-      key: process.env.REACT_APP_SUPABASE_ANON_KEY ? 'SET' : 'MISSING'
-    });
-
-    // Check if Supabase is properly configured
-    if (!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY) {
-      throw new Error('⚠️ Supabase not configured. Please set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY in your .env.local file. See SUPABASE_SETUP_GUIDE.md for instructions.');
-    }
+    // Load with timeout protection
 
     // Select ONLY essential fields for initial catalog display (super fast loading)
     // NOTE: unit_price temporarily kept for fallback until prices table is populated
