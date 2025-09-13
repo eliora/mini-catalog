@@ -47,6 +47,40 @@ const QuantityInput = ({
     setLocalValue(value?.toString() || '0');
   }, [value]);
 
+  // Reusable utilities  
+  const getCurrentValue = () => parseInt(localValue, 10) || 0;
+  const getRawValue = () => parseInt(localValue, 10); // For disabled checks - matches original
+  const updateValue = (newValue, callback) => {
+    setLocalValue(newValue.toString());
+    onChange?.(newValue);
+    callback?.();
+  };
+
+  // Common styling objects
+  const buttonStyle = {
+    width: config.buttonSize,
+    height: config.buttonSize,
+    border: 'none',
+    backgroundColor: 'transparent',
+    color: theme.palette.text.primary,
+    borderRadius: 0,
+    '&:hover': {
+      backgroundColor: alpha(theme.palette.primary.main, 0.08),
+    },
+    '&:disabled': {
+      color: theme.palette.action.disabled,
+    }
+  };
+
+  const iconStyle = {
+    fontSize: config.iconSize,
+    '& path': {
+      stroke: 'currentColor',
+      strokeWidth: 1.5,
+      fill: 'none'
+    }
+  };
+
   // Simple input handler
   const handleInputChange = (event) => {
     const newValue = event.target.value;
@@ -57,7 +91,7 @@ const QuantityInput = ({
 
   // Handle blur to validate and update
   const handleInputBlur = () => {
-    const numericValue = parseInt(localValue, 10) || min;
+    const numericValue = getCurrentValue() || min;
     const clampedValue = Math.max(min, Math.min(max, numericValue));
     setLocalValue(clampedValue.toString());
     onChange?.(clampedValue);
@@ -65,17 +99,13 @@ const QuantityInput = ({
 
   // Button handlers
   const handleDecrement = () => {
-    const newValue = Math.max((parseInt(localValue, 10) || 0) - 1, min);
-    setLocalValue(newValue.toString());
-    onChange?.(newValue);
-    onDecrement?.();
+    const newValue = Math.max(getCurrentValue() - 1, min);
+    updateValue(newValue, onDecrement);
   };
 
   const handleIncrement = () => {
-    const newValue = Math.min((parseInt(localValue, 10) || 0) + 1, max);
-    setLocalValue(newValue.toString());
-    onChange?.(newValue);
-    onIncrement?.();
+    const newValue = Math.min(getCurrentValue() + 1, max);
+    updateValue(newValue, onIncrement);
   };
 
   return (
@@ -101,32 +131,14 @@ const QuantityInput = ({
       {/* Minus Button */}
       <IconButton
         onClick={handleDecrement}
-        disabled={disabled || parseInt(localValue, 10) <= min}
+        disabled={disabled || getRawValue() <= min}
         sx={{
-          width: config.buttonSize,
-          height: config.buttonSize,
           borderRight: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-          border: 'none',
-          backgroundColor: 'transparent',
-          color: theme.palette.text.primary,
-          borderRadius: 0,
-          '&:hover': {
-            backgroundColor: alpha(theme.palette.primary.main, 0.08),
-          },
-          '&:disabled': {
-            color: theme.palette.action.disabled,
-          }
+          ...buttonStyle
         }}
         aria-label="Decrease quantity"
       >
-        <MinusIcon sx={{ 
-          fontSize: config.iconSize,
-          '& path': {
-            stroke: 'currentColor',
-            strokeWidth: 1.5,
-            fill: 'none'
-          }
-        }} />
+        <MinusIcon sx={iconStyle} />
       </IconButton>
 
       {/* Filled Number Input */}
@@ -165,11 +177,19 @@ const QuantityInput = ({
             '&.Mui-focused': {
               backgroundColor: alpha(theme.palette.primary.light, 0.08),
             },
-            '&:before, &:after': {
-              display: 'none'
+            '&:before': {
+              display: 'none', // Remove bottom border
+            },
+            '&:after': {
+              display: 'none', // Remove focus border
             }
           },
-          '& input[type="number"]::-webkit-outer-spin-button, & input[type="number"]::-webkit-inner-spin-button': {
+          // Hide number input spinners
+          '& input[type="number"]::-webkit-outer-spin-button': {
+            WebkitAppearance: 'none',
+            margin: 0,
+          },
+          '& input[type="number"]::-webkit-inner-spin-button': {
             WebkitAppearance: 'none',
             margin: 0,
           }
@@ -179,31 +199,11 @@ const QuantityInput = ({
       {/* Plus Button */}
       <IconButton
         onClick={handleIncrement}
-        disabled={disabled || parseInt(localValue, 10) >= max}
-        sx={{
-          width: config.buttonSize,
-          height: config.buttonSize,
-          border: 'none',
-          backgroundColor: 'transparent',
-          color: theme.palette.text.primary,
-          borderRadius: 0,
-          '&:hover': {
-            backgroundColor: alpha(theme.palette.primary.main, 0.08),
-          },
-          '&:disabled': {
-            color: theme.palette.action.disabled,
-          }
-        }}
+        disabled={disabled || getRawValue() >= max}
+        sx={buttonStyle}
         aria-label="Increase quantity"
       >
-        <PlusIcon sx={{ 
-          fontSize: config.iconSize,
-          '& path': {
-            stroke: 'currentColor',
-            strokeWidth: 1.5,
-            fill: 'none'
-          }
-        }} />
+        <PlusIcon sx={iconStyle} />
       </IconButton>
     </Stack>
   );
