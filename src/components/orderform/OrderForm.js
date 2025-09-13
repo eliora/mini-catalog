@@ -126,11 +126,11 @@ const OrderForm = () => {
             updateQuantity={updateQuantity}
             removeFromCart={removeFromCart}
             onPriceChange={handlePriceChange}
-            isAdmin={isAdmin}
+                  isAdmin={isAdmin}
             editMode={editMode}
             onToggleEditMode={() => setEditMode(!editMode)}
             onAddCustomItem={handleAddCustomItem}
-          />
+                />
         </Grid>
 
         {/* Order Summary Column */}

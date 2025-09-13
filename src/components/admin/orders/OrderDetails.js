@@ -27,15 +27,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
-import { updateOrder } from '../../api/orders';
-import { getProducts } from '../../api/products';
-import { useCompany } from '../../context/CompanyContext';
+import { updateOrder } from '../../../api/orders';
+import { getProducts } from '../../../api/products';
+import { useCompany } from '../../../context/CompanyContext';
 
 // Extracted components
 import OrderDetailsHeader from './OrderDetailsHeader';
 import OrderItemsTable from './OrderItemsTable';
 import OrderSummarySection from './OrderSummarySection';
-import AdminAddItemDialog from './AdminAddItemDialog';
+import AdminAddItemDialog from '../../orderform/AdminAddItemDialog';
 
 const OrderDetails = ({ 
   order, 

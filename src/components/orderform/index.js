@@ -18,8 +18,8 @@ export { default as OrderSuccessView } from './OrderSuccessView';
 export { default as AdminAddItemDialog } from './AdminAddItemDialog';
 export { default as InlineAddItemRow } from './InlineAddItemRow';
 
-// Utility components (used by OrderDetails)
-export { default as OrderSummarySection } from './OrderSummarySection';
-export { default as OrderDetailsHeader } from './OrderDetailsHeader';
-export { default as OrderItemsTable } from './OrderItemsTable';
-export { default as OrderDetails } from './OrderDetails';
+// Note: These components were moved to src/components/admin/orders/
+// - OrderDetails (admin order management interface)
+// - OrderDetailsHeader (admin order header with edit controls)  
+// - OrderItemsTable (admin order items table)
+// - OrderSummarySection (admin order financial summary)
