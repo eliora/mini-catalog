@@ -7,12 +7,9 @@ import {
   IconButton
 } from '@mui/material';
 import {
-  Delete as DeleteIcon,
-  Add as AddIcon,
-  Remove as RemoveIcon
+  Delete as DeleteIcon
 } from '@mui/icons-material';
 import QuantityInput from '../common/QuantityInput';
-import PriceDisplay from '../common/PriceDisplay';
 
 /**
  * Simplified cart item component for order form

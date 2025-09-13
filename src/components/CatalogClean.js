@@ -22,7 +22,7 @@ import SupabaseError from './SupabaseError';
 const CatalogClean = () => {
   // ===== CART & PRICING (EXTERNAL STATE) =====
   const { cart, addToCart, updateQuantity, removeFromCart } = useCart();
-  const { canViewPrices, loadPrices } = usePricing();
+  const { canViewPrices, prices } = usePricing();
   
   // ===== UI STATE (LOCAL ONLY) =====
   const [imageZoom, setImageZoom] = useState({ open: false, src: '' });
@@ -90,21 +90,9 @@ const CatalogClean = () => {
   }, []);
 
   // ===== LOAD PRICES FOR DISPLAYED PRODUCTS =====
-  useEffect(() => {
-    const loadPricesForProducts = async () => {
-      if (canViewPrices && products.length > 0) {
-        const productRefs = products.map(p => p.ref);
-        try {
-          await loadPrices(productRefs);
-          console.log('✅ Loaded prices for', productRefs.length, 'products');
-        } catch (priceError) {
-          console.warn('⚠️ Failed to load prices:', priceError.message);
-        }
-      }
-    };
-
-    loadPricesForProducts();
-  }, [products, canViewPrices, loadPrices]);
+  // Price loading is now handled per-product when accordions open (ProductListItem)
+  // ProductCard still gets prices from the prices state if available
+  // No bulk loading needed - prices load lazily on-demand
 
   // ===== HEADER SEARCH INTEGRATION =====
   useEffect(() => {
@@ -398,6 +386,8 @@ const CatalogClean = () => {
                 loadingMore={isFetchingNextPage}
                 hasMore={hasNextPage}
                 onLoadMore={handleLoadMore}
+                canViewPrices={canViewPrices}
+                productPrices={prices}
               />
             </SearchLoadingOverlay>
           )}

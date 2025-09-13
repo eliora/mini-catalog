@@ -1,11 +1,10 @@
-import React from 'react';
+﻿import React from 'react';
 import {
   Card, CardMedia, CardContent, CardActions,
-  Typography, Chip, IconButton, TextField, Stack, Box
+  Typography, Chip, IconButton, Stack, Box
 } from '@mui/material';
 import { Info as InfoIcon } from '@mui/icons-material';
 import OptimizedImage from './OptimizedImage';
-import usePricing from '../hooks/usePricing';
 import QuantityInput from './common/QuantityInput';
 import useResponsiveConfig from './common/ResponsiveConfig';
 
@@ -17,12 +16,10 @@ const ProductCard = ({
   onQuantityChange,
   onInfoClick,
   onImageClick,
+  canViewPrices = false,
+  productPrice = null
 }) => {
   const { dimensions, spacing, typography } = useResponsiveConfig();
-  const { canViewPrices, formatPrice } = usePricing();
-  
-  // Get formatted price for this product
-  const priceInfo = canViewPrices ? formatPrice(product.ref) : null;
 
   return (
     <Card
@@ -108,24 +105,11 @@ const ProductCard = ({
             <Typography variant="body2" color="text.secondary">
               {product.size}
             </Typography>
-            {canViewPrices ? (
-              <Box>
-                {priceInfo && (
-                  <Typography variant={typography.price} color="primary" sx={{ fontWeight: 600 }}>
-                    {priceInfo.display}
-                  </Typography>
-                )}
-                {priceInfo?.isDiscounted && (
-                  <Typography 
-                    variant="caption" 
-                    color="text.secondary" 
-                    sx={{ textDecoration: 'line-through', display: 'block' }}
-                  >
-                    {priceInfo.original}
-                  </Typography>
-                )}
-              </Box>
-            ) : null}
+            {canViewPrices && productPrice && (
+              <Typography variant={typography.price} color="primary" sx={{ fontWeight: 600 }}>
+                ‚×{Number(productPrice).toFixed(2)}
+              </Typography>
+            )}
           </Stack>
         </Stack>
       </CardContent>
@@ -160,3 +144,4 @@ const ProductCard = ({
 };
 
 export default React.memo(ProductCard);
+

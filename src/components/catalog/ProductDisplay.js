@@ -23,7 +23,9 @@ const ProductDisplay = ({
   loading = false,
   loadingMore = false,
   hasMore = false,
-  onLoadMore
+  onLoadMore,
+  canViewPrices = false,
+  productPrices = {}
 }) => {
   const loadMoreRef = useRef(null);
   const observerRef = useRef(null);
@@ -175,6 +177,8 @@ const ProductDisplay = ({
             onImageClick={onImageClick}
             shouldRenderContent={shouldRenderContent}
             parseJsonField={parseJsonField}
+            canViewPrices={canViewPrices}
+            productPrice={productPrices[product.ref]}
           />
         </Grid>
       ))}

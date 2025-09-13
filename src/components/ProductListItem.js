@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   Accordion, AccordionSummary, AccordionDetails,
-  Grid, Stack, Box, Typography, CircularProgress, Button
+  Grid, Stack, Box, Typography, Button
 } from '@mui/material';
 import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import { getProductDetails } from '../api/products';
@@ -9,6 +9,7 @@ import ProductAccordionContent from './product/ProductAccordionContent';
 import { AccordionContentSkeleton } from './common/SkeletonLoading';
 import QuantityInput from './common/QuantityInput';
 import PriceDisplay from './common/PriceDisplay';
+import { usePricing } from '../hooks/usePricing';
 import ProductImage from './common/ProductImage';
 import ProductInfo from './common/ProductInfo';
 import ProductRef from './common/ProductRef';
@@ -23,14 +24,18 @@ const ProductListItem = ({
   onQuantityChange,
   onImageClick,
   shouldRenderContent,
-  parseJsonField,
+  parseJsonField
 }) => {
   const { isMobile, dimensions, spacing, size, variants } = useResponsiveConfig();
+  const { canViewPrices, loadPrices, prices } = usePricing();
   
   // Accordion state
   const [expanded, setExpanded] = useState(false);
   const [accordionData, setAccordionData] = useState(null);
   const [loadingAccordion, setLoadingAccordion] = useState(false);
+  
+  // Get price for this product from the prices hook
+  const productPrice = prices[product.ref] || null;
 
   // Handle accordion expansion with lazy loading
   const handleAccordionChange = useCallback(async (event, isExpanded) => {
@@ -46,7 +51,13 @@ const ProductListItem = ({
       }, 5000);
       
         try {
-          const details = await getProductDetails(product.ref);
+          // Load both product details and prices concurrently
+          const [details] = await Promise.all([
+            getProductDetails(product.ref),
+            // Load price for this specific product when accordion opens
+            canViewPrices && !prices[product.ref] ? loadPrices([product.ref]) : Promise.resolve()
+          ]);
+          
         clearTimeout(timeoutId);
           setAccordionData(details);
         } catch (error) {
@@ -65,7 +76,7 @@ const ProductListItem = ({
         setLoadingAccordion(false);
       }
     }
-  }, [accordionData, loadingAccordion, product.ref]);
+  }, [accordionData, loadingAccordion, product.ref, canViewPrices, prices, loadPrices]);
 
   // Smart responsive price, size and quantity controls
   const PriceAndControls = ({ mobileLayout = false }) => {
@@ -81,7 +92,12 @@ const ProductListItem = ({
         alignItems="center"
       >
         <Stack spacing={spacing.fine} alignItems="center">
-          <PriceDisplay productRef={product.ref} screenType={screenType} align="center" />
+          <PriceDisplay 
+            price={productPrice} 
+            canViewPrices={canViewPrices} 
+            screenType={screenType} 
+            align="center" 
+          />
           <ProductSize product={product} size={size} />
         </Stack>
         
