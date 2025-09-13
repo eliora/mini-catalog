@@ -106,9 +106,15 @@ const QuantityInput = ({
           width: config.buttonSize,
           height: config.buttonSize,
           borderRight: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+          border: 'none',
+          backgroundColor: 'transparent',
+          color: theme.palette.text.primary,
           borderRadius: 0,
           '&:hover': {
             backgroundColor: alpha(theme.palette.primary.main, 0.08),
+          },
+          '&:disabled': {
+            color: theme.palette.action.disabled,
           }
         }}
         aria-label="Decrease quantity"
@@ -177,9 +183,15 @@ const QuantityInput = ({
         sx={{
           width: config.buttonSize,
           height: config.buttonSize,
+          border: 'none',
+          backgroundColor: 'transparent',
+          color: theme.palette.text.primary,
           borderRadius: 0,
           '&:hover': {
             backgroundColor: alpha(theme.palette.primary.main, 0.08),
+          },
+          '&:disabled': {
+            color: theme.palette.action.disabled,
           }
         }}
         aria-label="Increase quantity"
