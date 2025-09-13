@@ -37,19 +37,9 @@ import {
   Divider,
   Grid,
   Stack,
-  useTheme,
-  TextField,
   Card,
   CardContent,
   Fade,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   IconButton
 } from '@mui/material';
 import {
@@ -68,9 +58,8 @@ import {
   Save as SaveIcon
 } from '@mui/icons-material';
 import StyledButton from '../ui/StyledButton';
-import OrderCartItem from './OrderCartItem';
+import UnifiedCartItem from '../common/UnifiedCartItem';
 import OrderSummary from './OrderSummary';
-import OrderConfirmation from './OrderConfirmation';
 import AdminAddItemDialog from './AdminAddItemDialog';
 import '../../styles/print.css';
 
@@ -79,11 +68,9 @@ const OrderForm = () => {
   const { cart, removeFromCart, updateQuantity, clearCart, addToCart, updateItemPrice } = useCart();
   const { settings: companySettings } = useCompany();
   const { isAdmin } = useAuth(); // Determines admin UI visibility
-  const theme = useTheme();
   const printRef = useRef(null); // For print functionality
 
   // === CORE ORDER STATE ===
-  const [canViewPrices, setCanViewPrices] = useState(false); // RLS pricing access
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [customerName, setCustomerName] = useState(''); // Order customer info
   const [isSubmitting, setIsSubmitting] = useState(false); // Prevent double submissions
@@ -98,14 +85,12 @@ const OrderForm = () => {
   useEffect(() => {
     const loadCartPrices = async () => {
       if (!cart || cart.length === 0) {
-        setCanViewPrices(false);
         return;
       }
       const refs = Array.from(new Set(cart.map(i => String(i.ref)))).filter(Boolean);
       if (refs.length === 0) return;
       const pricesMap = await getPrices(refs);
       const hasAccess = pricesMap && Object.keys(pricesMap).length > 0;
-      setCanViewPrices(hasAccess);
       if (hasAccess) {
         refs.forEach(ref => {
           const p = pricesMap[ref];
@@ -585,14 +570,14 @@ const OrderForm = () => {
                   }
                 }}
               >
-                <OrderCartItem
+                <UnifiedCartItem
                   item={item}
                   onUpdateQuantity={updateQuantity}
                   onRemove={removeFromCart}
-                  onUpdatePrice={updateItemPrice}
+                  onPriceChange={handlePriceChange}
                   isAdmin={isAdmin}
                   editMode={editMode}
-                  onPriceChange={handlePriceChange}
+                  variant="compact"
                 />
               </Box>
             ))}

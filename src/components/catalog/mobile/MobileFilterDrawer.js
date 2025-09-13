@@ -27,7 +27,7 @@ import {
   Close as CloseIcon,
   ClearAll as ClearAllIcon
 } from '@mui/icons-material';
-import FilterSection from './FilterSection';
+import FilterSection from '../desktop/FilterSection';
 import { getProductTypeDisplay } from '../../utils/imageHelpers';
 
 const MobileFilterDrawer = ({

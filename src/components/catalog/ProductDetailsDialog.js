@@ -1,4 +1,47 @@
-import React, { useState } from 'react';
+/**
+ * ProductDetailsDialog Component - DESKTOP OPTIMIZED (Modal Dialog)
+ * 
+ * 🔧 COMPONENT PURPOSE: Full-featured product modal for detailed viewing
+ * 🖥️ DEVICE TARGET: Desktop/tablet optimized (large screens)
+ * 🎯 TRIGGER: User clicks "info" button on any product card/item
+ * 
+ * WHAT IT DOES:
+ * Full-screen modal dialog that displays comprehensive product information.
+ * This is the detailed product view that opens when users click "info" button on product cards.
+ * 
+ * USAGE CONTEXT:
+ * - Triggered from ProductCard or ProductListItem "info" button clicks
+ * - Used in ALL view modes (catalog cards, list, compact)
+ * - Opens as overlay modal dialog on top of catalog
+ * - Primary detailed product view for desktop users
+ * 
+ * RESPONSIVE BEHAVIOR:
+ * - Optimized for desktop/tablet (large screens)
+ * - Uses MUI Dialog with maxWidth="lg" for spacious layout
+ * - Two-column layout: Images left, Details right
+ * - Mobile: Still works but less optimal than accordion view
+ * 
+ * FEATURES:
+ * - Full image gallery with zoom functionality
+ * - Complete product specifications and descriptions
+ * - Quantity controls with increment/decrement
+ * - Price display and product codes
+ * - HTML content rendering for rich descriptions
+ * - Close button and ESC key support
+ * - Memoized for performance (renders frequently)
+ * 
+ * @param {Object} product - Product data
+ * @param {boolean} open - Dialog open state
+ * @param {Function} onClose - Close handler
+ * @param {number} currentQuantity - Current quantity in cart
+ * @param {Function} onDecrement - Quantity decrement handler
+ * @param {Function} onIncrement - Quantity increment handler
+ * @param {Function} onQuantityChange - Direct quantity change handler
+ * @param {Function} onImageClick - Image zoom click handler
+ * @param {Function} shouldRenderContent - Content validation function
+ */
+
+import React, { useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,24 +52,16 @@ import {
   IconButton,
   Grid,
   Chip,
-  Divider,
-  Card,
-  CardMedia,
-  TextField,
-  InputAdornment
+  Divider
 } from '@mui/material';
-import {
-  Close as CloseIcon,
-  Add as AddIcon,
-  Remove as RemoveIcon,
-  ZoomIn as ZoomInIcon,
-  Info as InfoIcon
-} from '@mui/icons-material';
-import { getPrimaryImage, getAllImages, getProductTypeDisplay } from '../../utils/imageHelpers';
+import { Close as CloseIcon, ZoomIn as ZoomInIcon } from '@mui/icons-material';
+import { getAllImages } from '../../utils/imageHelpers';
 import { formatPrice } from '../../utils/dataHelpers';
-import { containsHtml, extractTextFromHtml } from '../../utils/dataHelpers';
+import ImageGallery from './ImageGallery';
+import ContentRenderer from './ContentRenderer';
+import SimpleQuantityInput from './SimpleQuantityInput';
 
-const ProductDetailsDialog = ({
+const ProductDetailsDialog = React.memo(({
   product,
   open,
   onClose,
@@ -35,58 +70,13 @@ const ProductDetailsDialog = ({
   onIncrement,
   onQuantityChange,
   onImageClick,
-  shouldRenderContent,
-  parseJsonField
+  shouldRenderContent
 }) => {
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [quantityInput, setQuantityInput] = useState(currentQuantity.toString());
+  // Memoize expensive operations
+  const images = useMemo(() => getAllImages(product), [product]);
+  const productName = product?.productName || product?.hebrew_name || '';
 
   if (!product) return null;
-
-  const images = getAllImages(product);
-  const primaryImage = images.length > 0 ? images[selectedImageIndex] : getPrimaryImage(product);
-
-  const handleQuantityInputChange = (value) => {
-    setQuantityInput(value);
-    const numValue = parseInt(value, 10);
-    if (!isNaN(numValue) && numValue >= 0) {
-      onQuantityChange(numValue);
-    }
-  };
-
-  const handleIncrement = () => {
-    const newQuantity = currentQuantity + 1;
-    setQuantityInput(newQuantity.toString());
-    onIncrement();
-  };
-
-  const handleDecrement = () => {
-    if (currentQuantity > 0) {
-      const newQuantity = currentQuantity - 1;
-      setQuantityInput(newQuantity.toString());
-      onDecrement();
-    }
-  };
-
-  const renderDescription = (description) => {
-    if (!shouldRenderContent(description)) return null;
-    
-    if (containsHtml(description)) {
-      return (
-        <Typography 
-          variant="body2" 
-          sx={{ lineHeight: 1.6 }}
-          dangerouslySetInnerHTML={{ __html: description }}
-        />
-      );
-    }
-    
-    return (
-      <Typography variant="body2" sx={{ lineHeight: 1.6 }}>
-        {description}
-      </Typography>
-    );
-  };
 
   return (
     <Dialog
@@ -94,12 +84,7 @@ const ProductDetailsDialog = ({
       onClose={onClose}
       maxWidth="lg"
       fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 3,
-          maxHeight: '90vh'
-        }
-      }}
+      PaperProps={{ sx: { borderRadius: 3, maxHeight: '90vh' } }}
     >
       <DialogContent sx={{ p: 0 }}>
         <Box sx={{ position: 'relative' }}>
@@ -111,10 +96,7 @@ const ProductDetailsDialog = ({
               right: 8,
               top: 8,
               zIndex: 1,
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-              '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 1)',
-              }
+              bgcolor: 'rgba(255, 255, 255, 0.9)'
             }}
           >
             <CloseIcon />
@@ -123,83 +105,37 @@ const ProductDetailsDialog = ({
           <Grid container spacing={0} sx={{ minHeight: 400 }}>
             {/* Images Section */}
             <Grid item xs={12} md={6}>
-              <Box sx={{ p: 3, height: '100%' }}>
-                {/* Main Image */}
-                <Card sx={{ mb: 2, borderRadius: 2, overflow: 'hidden' }}>
-                  <Box sx={{ position: 'relative' }}>
-                    <CardMedia
-                      component="img"
-                      image={primaryImage}
-                      alt={product.productName || product.hebrew_name}
-                      sx={{
-                        width: '100%',
-                        height: 400,
-                        objectFit: 'contain',
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => onImageClick && onImageClick(primaryImage)}
-                    />
-                    {onImageClick && (
-                      <IconButton
-                        sx={{
-                          position: 'absolute',
-                          bottom: 8,
-                          right: 8,
-                          backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                          color: 'white',
-                          '&:hover': {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                          }
-                        }}
-                        onClick={() => onImageClick(primaryImage)}
-                      >
-                        <ZoomInIcon />
-                      </IconButton>
-                    )}
-                  </Box>
-                </Card>
-
-                {/* Thumbnail Images */}
-                {images.length > 1 && (
-                  <Box sx={{ display: 'flex', gap: 1, overflow: 'auto' }}>
-                    {images.map((image, index) => (
-                      <Card
-                        key={index}
-                        sx={{
-                          minWidth: 80,
-                          height: 80,
-                          cursor: 'pointer',
-                          border: selectedImageIndex === index ? 2 : 1,
-                          borderColor: selectedImageIndex === index ? 'primary.main' : 'divider',
-                          borderRadius: 1,
-                          overflow: 'hidden'
-                        }}
-                        onClick={() => setSelectedImageIndex(index)}
-                      >
-                        <CardMedia
-                          component="img"
-                          image={image}
-                          alt={`${product.productName || product.hebrew_name} ${index + 1}`}
-                          sx={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover'
-                          }}
-                        />
-                      </Card>
-                    ))}
-                  </Box>
+              <Box sx={{ p: 3 }}>
+                <ImageGallery
+                  images={images}
+                  productName={productName}
+                  onImageClick={onImageClick}
+                  mainHeight={400}
+                />
+                {onImageClick && images.length > 0 && (
+                  <IconButton
+                    sx={{
+                      position: 'absolute',
+                      bottom: 16,
+                      right: 16,
+                      bgcolor: 'rgba(0, 0, 0, 0.6)',
+                      color: 'white'
+                    }}
+                    onClick={() => onImageClick(images[0])}
+                  >
+                    <ZoomInIcon />
+                  </IconButton>
                 )}
               </Box>
             </Grid>
 
-            {/* Product Details Section */}
+            {/* Product Details */}
             <Grid item xs={12} md={6}>
-              <Box sx={{ p: 3, height: '100%', overflow: 'auto' }}>
-                {/* Product Title and Reference */}
+              <Box sx={{ p: 3, overflow: 'auto' }}>
+                {/* Header */}
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 700 }}>
-                    {product.productName || product.hebrew_name}
+                    {productName}
                   </Typography>
                   
                   {(product.productName2 || product.product_name) && (
@@ -208,12 +144,7 @@ const ProductDetailsDialog = ({
                     </Typography>
                   )}
 
-                  <Chip
-                    label={`קוד: ${product.ref}`}
-                    variant="outlined"
-                    size="small"
-                    sx={{ mb: 2 }}
-                  />
+                  <Chip label={`קוד: ${product.ref}`} variant="outlined" size="small" sx={{ mb: 2 }} />
                 </Box>
 
                 {/* Price */}
@@ -223,21 +154,17 @@ const ProductDetailsDialog = ({
                   </Typography>
                 )}
 
-                {/* Size */}
+                {/* Specs */}
                 {shouldRenderContent(product.size) && (
                   <Typography variant="body1" sx={{ mb: 1 }}>
                     <strong>גודל:</strong> {product.size}
                   </Typography>
                 )}
-
-                {/* Product Type */}
                 {shouldRenderContent(product.productType) && (
                   <Typography variant="body1" sx={{ mb: 1 }}>
                     <strong>סוג מוצר:</strong> {product.productType}
                   </Typography>
                 )}
-
-                {/* Skin Type */}
                 {shouldRenderContent(product.skin_type_he) && (
                   <Typography variant="body1" sx={{ mb: 2 }}>
                     <strong>מתאים לסוג עור:</strong> {product.skin_type_he}
@@ -246,53 +173,49 @@ const ProductDetailsDialog = ({
 
                 <Divider sx={{ my: 2 }} />
 
-                {/* Short Description */}
+                {/* Descriptions */}
                 {shouldRenderContent(product.short_description_he) && (
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                       תיאור קצר
                     </Typography>
-                    {renderDescription(product.short_description_he)}
+                    <ContentRenderer content={product.short_description_he} shouldRenderContent={shouldRenderContent} />
                   </Box>
                 )}
 
-                {/* Full Description */}
                 {shouldRenderContent(product.description || product.description_he) && (
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                       תיאור מלא
                     </Typography>
-                    {renderDescription(product.description || product.description_he)}
+                    <ContentRenderer content={product.description || product.description_he} shouldRenderContent={shouldRenderContent} />
                   </Box>
                 )}
 
-                {/* Active Ingredients */}
                 {shouldRenderContent(product.activeIngredients || product.wirkunginhaltsstoffe_he) && (
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                       רכיבים פעילים
                     </Typography>
-                    {renderDescription(product.activeIngredients || product.wirkunginhaltsstoffe_he)}
+                    <ContentRenderer content={product.activeIngredients || product.wirkunginhaltsstoffe_he} shouldRenderContent={shouldRenderContent} />
                   </Box>
                 )}
 
-                {/* Usage Instructions */}
                 {shouldRenderContent(product.usageInstructions || product.anwendung_he) && (
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                       הוראות שימוש
                     </Typography>
-                    {renderDescription(product.usageInstructions || product.anwendung_he)}
+                    <ContentRenderer content={product.usageInstructions || product.anwendung_he} shouldRenderContent={shouldRenderContent} />
                   </Box>
                 )}
 
-                {/* Notice */}
                 {shouldRenderContent(product.notice) && (
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                       הערות
                     </Typography>
-                    {renderDescription(product.notice)}
+                    <ContentRenderer content={product.notice} shouldRenderContent={shouldRenderContent} />
                   </Box>
                 )}
               </Box>
@@ -307,63 +230,20 @@ const ProductDetailsDialog = ({
           <Typography variant="body1" sx={{ fontWeight: 600 }}>
             כמות:
           </Typography>
-          
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton
-              onClick={handleDecrement}
-              disabled={currentQuantity <= 0}
-              size="small"
-              sx={{
-                backgroundColor: 'action.hover',
-                '&:hover': {
-                  backgroundColor: 'action.selected',
-                }
-              }}
-            >
-              <RemoveIcon />
-            </IconButton>
-
-            <TextField
-              value={quantityInput}
-              onChange={(e) => handleQuantityInputChange(e.target.value)}
-              size="small"
-              sx={{
-                width: 80,
-                '& input': {
-                  textAlign: 'center'
-                }
-              }}
-              inputProps={{
-                min: 0,
-                max: 99
-              }}
-            />
-
-            <IconButton
-              onClick={handleIncrement}
-              size="small"
-              sx={{
-                backgroundColor: 'action.hover',
-                '&:hover': {
-                  backgroundColor: 'action.selected',
-                }
-              }}
-            >
-              <AddIcon />
-            </IconButton>
-          </Box>
+          <SimpleQuantityInput
+            value={currentQuantity}
+            onIncrement={onIncrement}
+            onDecrement={onDecrement}
+            onChange={onQuantityChange}
+          />
         </Box>
 
-        <Button
-          variant="contained"
-          onClick={onClose}
-          size="large"
-        >
+        <Button variant="contained" onClick={onClose} size="large">
           סגור
         </Button>
       </DialogActions>
     </Dialog>
   );
-};
+});
 
 export default ProductDetailsDialog;

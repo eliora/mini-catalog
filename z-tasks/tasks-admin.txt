@@ -2,17 +2,27 @@
 ADMIN PANEL
 
 1) endpoints: make within admin_panel full endpoints
-admin/clinets, admin/settings admin/orders, etc
+admin/clients, admin/settings admin/orders, etc
+
 2) admin/clients: within clients add ability to edit clients with the following: name,address,phone number,roles.
-3) admin/setttings
+3) admin/setttings:
+
 a.redesign admin/settings - its look really bad. also make it compact
- b.when i upload logo it says it competed but doesnt really save it.
- 4) admin/products it says "אין מוצרים במערכת" 'while there are. fix it. add ability to edit/view product with all fields. include sort of every field. make it very compact. add ability to edit fields within the table without opening. add ability in the sort fuction to hide columns for easier viewing
+b.when i upload logo it says it competed but doesnt really save it.
+ 
+ 4) admin/products: 
+it says "אין מוצרים במערכת" 'while there are. fix it. add ability to edit/view product with all fields. include sort of every field. make it very compact. add ability to edit fields within the table without opening. add ability in the sort fuction to hide columns for easier viewing
 make the products db values in column editable mui table with a custom Toolbar.  use the TableSortLabel component to help style column headings.
 
-two login button within
-<div class="MuiBox-root muirtl-deep-axw7ok"><button class="MuiButtonBase-root MuiIconButton-root MuiIconButton-colorInherit MuiIconButton-sizeMedium muirtl-deep-1deacqj" tabindex="0" type="button" aria-label="עגלת קניות"><span class="MuiBadge-root muirtl-deep-1rzb3uu"><svg class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium muirtl-deep-vubbuv" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="ShoppingCartIcon"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2M1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2"></path></svg><span class="MuiBadge-badge MuiBadge-standard MuiBadge-invisible MuiBadge-anchorOriginTopRight MuiBadge-anchorOriginTopRightRectangular MuiBadge-overlapRectangular MuiBadge-colorError muirtl-deep-14gfej6">0</span></span><span class="MuiTouchRipple-root muirtl-deep-w0pj6f"></span></button><button class="MuiButtonBase-root MuiButton-root MuiButton-outlined MuiButton-outlinedPrimary MuiButton-sizeSmall MuiButton-outlinedSizeSmall MuiButton-colorPrimary MuiButton-root MuiButton-outlined MuiButton-outlinedPrimary MuiButton-sizeSmall MuiButton-outlinedSizeSmall MuiButton-colorPrimary muirtl-deep-g2ejn7" tabindex="0" type="button"><span class="MuiButton-icon MuiButton-startIcon MuiButton-iconSizeSmall muirtl-deep-16rzsu1"><svg class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium muirtl-deep-vubbuv" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="LoginIcon"><path d="M11 7 9.6 8.4l2.6 2.6H2v2h10.2l-2.6 2.6L11 17l5-5zm9 12h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-8v2h8z"></path></svg></span>התחברות<span class="MuiTouchRipple-root muirtl-deep-w0pj6f"></span></button><button class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeSmall MuiButton-containedSizeSmall MuiButton-colorPrimary MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeSmall MuiButton-containedSizeSmall MuiButton-colorPrimary muirtl-deep-5pldy2" tabindex="0" type="button"><span class="MuiButton-icon MuiButton-startIcon MuiButton-iconSizeSmall muirtl-deep-16rzsu1"><svg class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium muirtl-deep-vubbuv" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="PersonAddIcon"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4m-9-2V7H4v3H1v2h3v3h2v-3h3v-2zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4"></path></svg></span>הרשמה<span class="MuiTouchRipple-root muirtl-deep-w0pj6f"></span></button></div>
-make one
 
-also need to remove MuiButtonBase-root MuiTab-root MuiTab-labelIcon MuiTab-textColorPrimary muirtl-deep-1tu3e1m
-admin should be accessed though account panel, the admin option is visible to admins there 
+5) admin/orders
+A.make use of componeets from orderform as much as possible
+B.add option to edit order by reviving it and editing it in order form. keep it attached to the order so only saved it needed.
+C.make sql editor to fix orders.db table
+
+6) admin/users
+A. allow name client changing from dashboard
+
+
+
+

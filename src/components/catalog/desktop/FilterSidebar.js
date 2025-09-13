@@ -14,7 +14,7 @@ import {
   Clear as ClearIcon,
   Close as CloseIcon
 } from '@mui/icons-material';
-import FilterPanel from './FilterPanel';
+import FilterPanel from '../FilterPanel';
 
 /**
  * Left sidebar containing all filters (except search)
@@ -50,26 +50,22 @@ const FilterSidebar = ({
     onTypesChange([]);
   };
 
-  // Sidebar content
+  // Sidebar content - simplified structure
   const sidebarContent = (
     <Box sx={{ 
-      width: '100%',
-      minWidth: 0,
       display: 'flex', 
       flexDirection: 'column',
-      maxHeight: { xs: '100vh', md: '100vh' },
+      maxHeight: '100vh',
       overflow: 'hidden'
     }}>
-      {/* Sidebar Header */}
-      <Box sx={{ 
-        p: 2, 
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      {/* Header with filter count */}
+      <Stack 
+        direction="row" 
+        alignItems="center" 
+        justifyContent="space-between"
+        sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}
+      >
+        <Stack direction="row" alignItems="center" spacing={1}>
           <FilterIcon color="primary" />
           <Typography variant="h6" fontWeight="bold">
             מסננים
@@ -79,22 +75,21 @@ const FilterSidebar = ({
               label={activeFiltersCount} 
               color="primary" 
               size="small"
-              sx={{ minWidth: 24, height: 20, '& .MuiChip-label': { px: 1 } }}
+              sx={{ minWidth: 24, height: 20 }}
             />
           )}
-        </Box>
+        </Stack>
 
-        {/* Mobile close button */}
         {isMobile && (
           <IconButton onClick={onMobileToggle} size="small">
             <CloseIcon />
           </IconButton>
         )}
-      </Box>
+      </Stack>
 
-      {/* Clear All Button */}
+      {/* Clear all - simplified */}
       {activeFiltersCount > 0 && (
-        <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
           <Chip
             label="נקה הכל"
             onClick={handleClearAll}
@@ -103,18 +98,11 @@ const FilterSidebar = ({
             color="secondary"
             variant="outlined"
             size="small"
-            sx={{ 
-              borderRadius: '16px',
-              '&:hover': {
-                backgroundColor: 'secondary.light',
-                color: 'secondary.contrastText'
-              }
-            }}
           />
         </Box>
       )}
 
-      {/* Filter Panel Content */}
+      {/* Filter content */}
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
         <FilterPanel
           filterOptions={filterOptions}
@@ -127,13 +115,10 @@ const FilterSidebar = ({
           onSkinTypesChange={onSkinTypesChange}
           onTypesChange={onTypesChange}
           open={true}
-          mobileDrawerOpen={false} // Not used in sidebar mode
-          onMobileDrawerToggle={() => {}} // Not used in sidebar mode
           disabled={disabled}
-          sidebarMode={true} // Tell FilterPanel it's in sidebar mode
+          sidebarMode={true}
         />
       </Box>
-
     </Box>
   );
 
@@ -160,7 +145,7 @@ const FilterSidebar = ({
     );
   }
 
-  // Desktop: Sticky sidebar that floats while scrolling
+  // Desktop: Sticky sidebar - simplified
   return (
     <Box
       sx={{
@@ -169,25 +154,15 @@ const FilterSidebar = ({
         position: 'sticky',
         top: 0,
         alignSelf: 'flex-start',
-        height: 'fit-content',
-        maxHeight: '100vh'
+        maxHeight: '100vh',
+        border: 1,
+        borderColor: 'divider',
+        borderRadius: 1,
+        bgcolor: 'background.paper',
+        overflow: 'hidden'
       }}
     >
-      <Box
-        sx={{
-          width: 300,
-          minWidth: 300,
-          maxWidth: 300,
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 1,
-          bgcolor: 'background.paper',
-          overflow: 'hidden',
-          maxHeight: '100vh'
-        }}
-      >
-        {sidebarContent}
-      </Box>
+      {sidebarContent}
     </Box>
   );
 };

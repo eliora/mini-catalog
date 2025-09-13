@@ -30,14 +30,7 @@ import { useCompany } from './context/CompanyContext';
 import AuthCallback from './components/auth/AuthCallback';
 import JDAHeader from './components/layout/JDAHeader';
 
-// Import performance monitor for development only
-if (process.env.NODE_ENV === 'development') {
-  try {
-    require('./utils/imagePerformance');
-  } catch (error) {
-    console.warn('Image performance monitor failed to load:', error);
-  }
-}
+// Image performance utilities removed - can be added back if needed
 
 // Create RTL cache and deep theme
 const rtlCache = createRtlCache();
@@ -61,7 +54,7 @@ function AppInner() {
 
   // Update document title based on company settings
   useEffect(() => {
-    const companyName = companySettings?.companyName || 'קטלוג מוצרים';
+    const companyName = companySettings?.companyName || 'פורטל לקוסמטיקאיות';
     const companyDescription = companySettings?.companyDescription;
     
     if (companyDescription) {

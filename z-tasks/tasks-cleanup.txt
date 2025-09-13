@@ -2,22 +2,21 @@ Task: Clean and refactor the codebase for efficiency.
 
 Steps:
 
-Move all unused files to temp/unused/ and log them in cleanup.md.
+1.Move all unused files to temp/unused/ and log them in cleanup.md.
 
-Document every change (file name + what/why) in cleanup.md. add comments to files
+2.Document every change (file name + what/why) in cleanup.md. add comments to files
 
+3. Delete dead code & merge duplicates into shared utils/hooks.
 
-Delete dead code & merge duplicates into shared utils/hooks.
+4. Organize components/ into subfolders by type.
 
-Organize components/ into subfolders by type.
+5. Refactor to maximize component reuse.
 
-Refactor to maximize component reuse.
+6. Split any file > 350 lines.
 
-Split any file > 350 lines.
+7. Review every file — no skipping. super important!!!!
 
-Review every file — no skipping. super important!!!!
-
-Run linter & test app — no broken imports or UI issues.
+8. Run linter & test app — no broken imports or UI issues.
 
 
 

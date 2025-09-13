@@ -1,8 +1,2 @@
-1) i am able to enter only one digit and if i want another i have click and write another one
-
-3) search: when i write for example ref no within seacrch it reload the page, then everything like disspeaer for a second. very annoying
-
-for skin type,product type, type make it look like chip stack with dividers, allow multiple choices, make choice visibly as chosen
-every type differnet color/ area , but all within one line.
-
-for product same but different row
+price in order form, both price per unit and sum of each row only visible to auth users of prices.db
+price is seen in accordion header 

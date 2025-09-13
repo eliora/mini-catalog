@@ -1,15 +1,53 @@
-import React, { useEffect, useRef, useCallback } from 'react';
-import {
-  Box,
-  Grid,
-  Typography,
-  CircularProgress,
-  Skeleton
-} from '@mui/material';
-import ProductCard from '../ProductCard';
-import ProductListItem from '../ProductListItem';
+/**
+ * ProductDisplay Component - UNIVERSAL RENDERER (Mobile + Desktop)
+ * 
+ * 🔧 COMPONENT PURPOSE: Main product rendering engine for all view modes
+ * 🌐 DEVICE TARGET: Universal - handles mobile, tablet, desktop
+ * 🎯 TRIGGER: Always active - core display component of catalog
+ * 
+ * WHAT IT DOES:
+ * Main product rendering engine that handles all product display modes and layouts.
+ * This is the core component that renders the product grid/list and manages infinite scrolling.
+ * 
+ * USAGE CONTEXT:
+ * - Used by CatalogClean as the main product display area
+ * - Renders products in multiple view modes: catalog (cards), list, compact
+ * - Handles infinite scrolling with Intersection Observer
+ * - Manages loading states and empty states
+ * - Central hub for all product rendering logic
+ * 
+ * VIEW MODES:
+ * 1. CATALOG (default): Grid of ProductCard components - optimized for desktop
+ * 2. LIST: Vertical list of ProductListItem with accordions - good for mobile
+ * 3. COMPACT: Same as list but more condensed layout
+ * 
+ * RESPONSIVE BEHAVIOR:
+ * - Catalog view: Responsive grid (xs=12, sm=6, md=4, lg=3)
+ * - List/Compact: Full-width items stacked vertically
+ * - Uses ProductRenderer component for unified rendering logic
+ * - Skeleton loading adapts to current view mode
+ * 
+ * FEATURES:
+ * - Infinite scroll with Intersection Observer (300px trigger distance)
+ * - Loading skeletons for initial load and "load more"
+ * - Empty state handling with helpful messages
+ * - Memoized view mode checks for performance
+ * - Unified product prop passing via ProductRenderer
+ * - Proper cleanup of observers and refs
+ * 
+ * PERFORMANCE OPTIMIZATIONS:
+ * - React.memo prevents unnecessary re-renders
+ * - useMemo for expensive view mode calculations
+ * - Reusable LoadingIndicator and ProductRenderer components
+ * - Efficient infinite scroll implementation
+ */
 
-const ProductDisplay = ({
+import React, { useEffect, useRef, useCallback, useMemo } from 'react';
+import { Box, Grid } from '@mui/material';
+import LoadingIndicator from './LoadingIndicator';
+import ProductRenderer from './ProductRenderer';
+
+const ProductDisplay = React.memo(({
   products,
   viewMode = 'catalog',
   getCurrentQuantity,
@@ -29,6 +67,10 @@ const ProductDisplay = ({
 }) => {
   const loadMoreRef = useRef(null);
   const observerRef = useRef(null);
+
+  // Memoize view mode checks
+  const isCardView = useMemo(() => viewMode === 'catalog', [viewMode]);
+  const isListView = useMemo(() => viewMode === 'list' || viewMode === 'compact', [viewMode]);
 
   // Intersection Observer for infinite scroll with proper cleanup
   const handleObserver = useCallback((entries) => {
@@ -65,99 +107,42 @@ const ProductDisplay = ({
     };
   }, [handleObserver]);
 
-  // Loading skeleton component
-  const ProductSkeleton = ({ isCard = true }) => (
-    isCard ? (
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <Box sx={{ p: 2 }}>
-          <Skeleton variant="rectangular" height={200} sx={{ mb: 2 }} />
-          <Skeleton variant="text" sx={{ mb: 1 }} />
-          <Skeleton variant="text" width="60%" sx={{ mb: 1 }} />
-          <Skeleton variant="text" width="40%" />
-        </Box>
-      </Grid>
-    ) : (
-      <Grid item xs={12}>
-        <Box sx={{ display: 'flex', p: 2, gap: 2 }}>
-          <Skeleton variant="rectangular" width={80} height={80} />
-          <Box sx={{ flex: 1 }}>
-            <Skeleton variant="text" sx={{ mb: 1 }} />
-            <Skeleton variant="text" width="70%" sx={{ mb: 1 }} />
-            <Skeleton variant="text" width="50%" />
-          </Box>
-        </Box>
-      </Grid>
-    )
-  );
   // Show loading skeletons on initial load
   if (loading && (!products || products.length === 0)) {
-    const isCardView = viewMode === 'catalog';
-    return (
-      <Grid container spacing={isCardView ? 2 : 0}>
-        {Array.from({ length: 8 }).map((_, index) => (
-          <ProductSkeleton key={index} isCard={isCardView} />
-        ))}
-      </Grid>
-    );
+    return <LoadingIndicator type="skeleton" isCardView={isCardView} />;
   }
 
   if (!products || products.length === 0) {
-    return (
-      <Box sx={{ textAlign: 'center', py: 8 }}>
-        <Typography variant="h6" color="text.secondary" gutterBottom>
-          לא נמצאו מוצרים
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          נסה לשנות את מונחי החיפוש או המסננים
-        </Typography>
-      </Box>
-    );
+    return <LoadingIndicator type="empty" />;
   }
 
-  if (viewMode === 'list' || viewMode === 'compact') {
+  if (isListView) {
     return (
       <Box>
         {products.map((product) => (
-          <ProductListItem
+          <ProductRenderer
             key={product.ref}
             product={product}
-            quantity={getCurrentQuantity(product.ref)}
-            onDecrement={() => onDecrement(product)}
-            onIncrement={() => onIncrement(product)}
-            onQuantityChange={(value) => onQuantityChange(product.ref, value)}
-            onProductInfoClick={() => onProductInfoClick(product)}
+            viewMode={viewMode}
+            getCurrentQuantity={getCurrentQuantity}
+            onDecrement={onDecrement}
+            onIncrement={onIncrement}
+            onQuantityChange={onQuantityChange}
+            onProductInfoClick={onProductInfoClick}
             onImageClick={onImageClick}
             shouldRenderContent={shouldRenderContent}
             parseJsonField={parseJsonField}
+            canViewPrices={canViewPrices}
+            productPrices={productPrices}
           />
         ))}
         
-        {/* Single loading/trigger element for infinite scroll */}
-        <div 
-          ref={loadMoreRef} 
-          style={{ 
-            height: loadingMore ? 60 : 20,
-            backgroundColor: hasMore ? 'rgba(0,0,0,0.05)' : 'transparent',
-            margin: '10px 0',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: loadingMore ? 'row' : 'row'
-          }}
-        >
-          {loadingMore ? (
-            <>
-              <CircularProgress size={20} />
-              <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                טוען מוצרים נוספים...
-              </Typography>
-            </>
-          ) : hasMore ? (
-            <Typography variant="caption" color="text.secondary">
-              גלול למטה לעוד מוצרים
-            </Typography>
-          ) : null}
-        </div>
+        <LoadingIndicator 
+          type="infinite-scroll" 
+          loadingMore={loadingMore} 
+          hasMore={hasMore} 
+          loadMoreRef={loadMoreRef} 
+        />
       </Box>
     );
   }
@@ -166,53 +151,33 @@ const ProductDisplay = ({
   return (
     <Grid container spacing={2} className="catalog-container">
       {products.map((product) => (
-        <Grid item xs={12} sm={6} md={4} lg={3} key={product.ref}>
-          <ProductCard
-            product={product}
-            quantity={getCurrentQuantity(product.ref)}
-            onDecrement={() => onDecrement(product)}
-            onIncrement={() => onIncrement(product)}
-            onQuantityChange={(value) => onQuantityChange(product.ref, value)}
-            onProductInfoClick={() => onProductInfoClick(product)}
-            onImageClick={onImageClick}
-            shouldRenderContent={shouldRenderContent}
-            parseJsonField={parseJsonField}
-            canViewPrices={canViewPrices}
-            productPrice={productPrices[product.ref]}
-          />
-        </Grid>
+        <ProductRenderer
+          key={product.ref}
+          product={product}
+          viewMode={viewMode}
+          getCurrentQuantity={getCurrentQuantity}
+          onDecrement={onDecrement}
+          onIncrement={onIncrement}
+          onQuantityChange={onQuantityChange}
+          onProductInfoClick={onProductInfoClick}
+          onImageClick={onImageClick}
+          shouldRenderContent={shouldRenderContent}
+          parseJsonField={parseJsonField}
+          canViewPrices={canViewPrices}
+          productPrices={productPrices}
+        />
       ))}
       
-      {/* Single loading/trigger element for infinite scroll */}
       <Grid item xs={12}>
-        <div 
-          ref={loadMoreRef} 
-          style={{ 
-            height: loadingMore ? 60 : 20,
-            backgroundColor: hasMore ? 'rgba(0,0,0,0.05)' : 'transparent',
-            margin: '10px 0',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: loadingMore ? 'row' : 'row'
-          }}
-        >
-          {loadingMore ? (
-            <>
-              <CircularProgress size={20} />
-              <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                טוען מוצרים נוספים...
-              </Typography>
-            </>
-          ) : hasMore ? (
-            <Typography variant="caption" color="text.secondary">
-              גלול למטה לעוד מוצרים
-            </Typography>
-          ) : null}
-        </div>
+        <LoadingIndicator 
+          type="infinite-scroll" 
+          loadingMore={loadingMore} 
+          hasMore={hasMore} 
+          loadMoreRef={loadMoreRef} 
+        />
       </Grid>
     </Grid>
   );
-};
+});
 
-export default React.memo(ProductDisplay);
+export default ProductDisplay;

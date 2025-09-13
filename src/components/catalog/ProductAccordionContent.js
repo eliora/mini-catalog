@@ -1,26 +1,40 @@
 /**
- * ProductAccordionContent Component
+ * ProductAccordionContent Component - RESPONSIVE (Mobile + Desktop)
  * 
- * Displays detailed product information in an accordion layout within the catalog.
- * Handles image galleries, product specifications, descriptions, and related metadata.
+ * 🔧 COMPONENT PURPOSE: Detailed product view for LIST/COMPACT modes
+ * 📱 DEVICE TARGET: Mobile-first, but works on desktop
+ * 🎯 TRIGGER: User clicks to expand product in list view
  * 
- * Features:
- * - Image gallery with thumbnail navigation
- * - Responsive design (mobile/desktop layouts)
- * - Product specifications display
- * - HTML content parsing for descriptions
- * - Lazy loading optimized images
+ * WHAT IT DOES:
+ * Displays detailed product information inside accordion/expandable sections within the catalog.
+ * This is the content that appears when users click to expand a product in LIST VIEW.
  * 
- * Used by ProductListItem component in catalog accordion displays.
+ * USAGE CONTEXT:
+ * - Used by ProductListItem component when user expands product details
+ * - Appears in LIST/COMPACT view modes (not card view)
+ * - Shows inside accordion panels for space-efficient detailed product info
+ * - Loads additional product data via API when expanded
+ * 
+ * RESPONSIVE BEHAVIOR:
+ * - Desktop: Shows description + image gallery side-by-side in 2 columns
+ * - Mobile: Shows description only (images hidden to save space)
+ * - Uses useMediaQuery to detect mobile vs desktop
+ * 
+ * FEATURES:
+ * - Image gallery with thumbnail navigation (desktop only)
+ * - Product descriptions with HTML content parsing
+ * - Active ingredients section
+ * - Mini-accordions for usage instructions and ingredients
+ * - Lazy loading optimized images via ImageGallery component
+ * - Memoized for performance (renders hundreds of times)
  * 
  * @param {Object} product - Main product data
  * @param {Object} accordionData - Additional product details from API
  * @param {boolean} isLoadingDetails - Loading state for additional details
  * @param {boolean} shouldRenderContent - Whether to render content (for performance)
- * @param {Function} parseJsonField - Utility to parse JSON fields safely
  */
 
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -34,75 +48,40 @@ import {
   useMediaQuery
 } from '@mui/material';
 import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
-import { containsHtml } from '../../utils/dataHelpers';
-import { processImageUrl } from '../../utils/imageHelpers';
+import ImageGallery from './ImageGallery';
+import ContentRenderer from './ContentRenderer';
 
-const ProductAccordionContent = ({ product, accordionData, isLoadingDetails, shouldRenderContent, parseJsonField }) => {
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+const ProductAccordionContent = React.memo(({ product, accordionData, isLoadingDetails, shouldRenderContent }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
-  if (!product) return null;
-
-  // Get optimized main image URL (360px for main display)
-  const getMainImageUrl = (url) => {
-    return processImageUrl(url, { width: 360, quality: 85, format: 'webp' });
-  };
-
-  // Get optimized thumbnail URL (72px for thumbnails)
-  const getThumbnailImageUrl = (url) => {
-    return processImageUrl(url, { width: 72, quality: 80, format: 'webp' });
-  };
-
   // Use accordion data if available, otherwise fall back to basic product data
   const productData = accordionData || product;
+  const productName = product?.productName || product?.hebrew_name || '';
 
-  const renderHtmlContent = (content) => {
-    if (!shouldRenderContent(content)) return null;
+  // Memoize image gallery creation - must be before early return
+  const images = useMemo(() => {
+    if (!product) return [];
     
-    if (containsHtml(content)) {
-      return (
-        <Typography 
-          variant="body2" 
-          sx={{ 
-            lineHeight: 1.6,
-            '& p': { mb: 1 },
-            '& ul': { mb: 1, pl: 2 },
-            '& li': { mb: 0.5 }
-          }}
-          dangerouslySetInnerHTML={{ __html: content }}
-        />
-      );
-    }
-    
-    return (
-      <Typography variant="body2" sx={{ lineHeight: 1.6 }}>
-        {content}
-      </Typography>
-    );
-  };
-
-  // Get images for gallery
-  const getImageGallery = () => {
-    const images = [];
+    const imageList = [];
     
     // Add main image
     if (product.mainPic || product.main_pic) {
-      images.push(product.mainPic || product.main_pic);
+      imageList.push(product.mainPic || product.main_pic);
     }
     
     // Add additional images from pics field
-    if (productData.pics) {
+    if (productData?.pics) {
       const additionalPics = Array.isArray(productData.pics) 
         ? productData.pics 
         : productData.pics.split(' | ').filter(Boolean);
-      images.push(...additionalPics);
+      imageList.push(...additionalPics);
     }
     
-    return [...new Set(images)]; // Remove duplicates
-  };
+    return [...new Set(imageList)]; // Remove duplicates
+  }, [productData?.pics, product]);
 
-  const images = getImageGallery();
+  if (!product) return null;
 
   if (isLoadingDetails) {
     return (
@@ -124,138 +103,39 @@ const ProductAccordionContent = ({ product, accordionData, isLoadingDetails, sho
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'primary.main' }}>
               תיאור המוצר
             </Typography>
-            {shouldRenderContent(productData.description || productData.description_he) ? (
-              renderHtmlContent(productData.description || productData.description_he)
-            ) : (
-              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                אין תיאור זמין למוצר זה
-              </Typography>
-            )}
+            <ContentRenderer 
+              content={productData.description || productData.description_he} 
+              shouldRenderContent={shouldRenderContent}
+              fallback={
+                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                  אין תיאור זמין למוצר זה
+                </Typography>
+              }
+            />
 
-            {/* Active Ingredients - moved under product description */}
+            {/* Active Ingredients */}
             {shouldRenderContent(productData.activeIngredients || productData.wirkunginhaltsstoffe_he || productData.active_ingredients_he) && (
               <Box sx={{ mt: 3 }}>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'primary.main' }}>
                   רכיבים פעילים
                 </Typography>
-                {renderHtmlContent(
-                  productData.activeIngredients || 
-                  productData.wirkunginhaltsstoffe_he || 
-                  productData.active_ingredients_he
-                )}
+                <ContentRenderer 
+                  content={productData.activeIngredients || productData.wirkunginhaltsstoffe_he || productData.active_ingredients_he}
+                  shouldRenderContent={shouldRenderContent}
+                />
               </Box>
             )}
           </Box>
         </Grid>
 
         {/* Column 2: Image Gallery - Desktop only */}
-        {!isMobile && (
+        {!isMobile && images.length > 0 && (
           <Grid item xs={12} md={4}>
-          <Box>
-            {images.length > 0 ? (
-              <Box>
-                {/* Main Image Display - 360px for optimal viewing */}
-                <Box
-                  sx={{
-                    width: '100%',
-                    height: 360, // Set to 360px
-                    backgroundColor: 'grey.50',
-                    borderRadius: 1,
-                    mb: 1.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    overflow: 'hidden',
-                    position: 'relative'
-                  }}
-                >
-                  <Box
-                    component="img"
-                    src={getMainImageUrl(images[selectedImageIndex])}
-                    alt={`${product.productName || product.hebrew_name} - תמונה ראשית`}
-                    sx={{
-                      maxWidth: '100%',
-                      maxHeight: '100%',
-                      objectFit: 'contain',
-                      transition: 'all 0.3s ease',
-                      cursor: images.length > 1 ? 'pointer' : 'default'
-                    }}
-                    onClick={() => {
-                      if (images.length > 1) {
-                        setSelectedImageIndex((prev) => (prev + 1) % images.length);
-                      }
-                    }}
-                  />
-                </Box>
-                
-                {/* Compact Horizontal Thumbnails - Only show if more than 1 image */}
-                {images.length > 1 && (
-                  <Box 
-                    sx={{ 
-                      display: 'flex',
-                      gap: 0.5,
-                      overflowX: 'auto',
-                      pb: 0.5,
-                      '&::-webkit-scrollbar': {
-                        height: 4,
-                      },
-                      '&::-webkit-scrollbar-track': {
-                        backgroundColor: 'grey.100',
-                        borderRadius: 2,
-                      },
-                      '&::-webkit-scrollbar-thumb': {
-                        backgroundColor: 'grey.400',
-                        borderRadius: 2,
-                      }
-                    }}
-                  >
-                    {images.map((image, index) => (
-                      <Box
-                        key={index}
-                        sx={{
-                          minWidth: 72,
-                          width: 72,
-                          height: 72,
-                          backgroundColor: 'grey.50',
-                          borderRadius: 0.5,
-                          overflow: 'hidden',
-                          cursor: 'pointer',
-                          opacity: selectedImageIndex === index ? 1 : 0.7,
-                          border: selectedImageIndex === index ? 2 : 1,
-                          borderColor: selectedImageIndex === index ? 'primary.main' : 'grey.200',
-                          transition: 'all 0.2s ease',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          '&:hover': {
-                            opacity: 1,
-                            borderColor: 'primary.main',
-                            transform: 'scale(1.05)'
-                          }
-                        }}
-                        onClick={() => setSelectedImageIndex(index)}
-                      >
-                        <Box
-                          component="img"
-                          src={getThumbnailImageUrl(image)}
-                          alt={`תמונה ${index + 1}`}
-                          sx={{
-                            maxWidth: '100%',
-                            maxHeight: '100%',
-                            objectFit: 'contain'
-                          }}
-                        />
-                      </Box>
-                    ))}
-                  </Box>
-                )}
-              </Box>
-            ) : (
-              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                אין תמונות זמינות
-              </Typography>
-            )}
-          </Box>
+            <ImageGallery
+              images={images}
+              productName={productName}
+              mainHeight={360}
+            />
           </Grid>
         )}
       </Grid>
@@ -273,11 +153,10 @@ const ProductAccordionContent = ({ product, accordionData, isLoadingDetails, sho
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
-              {renderHtmlContent(
-                productData.usageInstructions || 
-                productData.anwendung_he || 
-                productData.usage_instructions_he
-              )}
+              <ContentRenderer 
+                content={productData.usageInstructions || productData.anwendung_he || productData.usage_instructions_he}
+                shouldRenderContent={shouldRenderContent}
+              />
             </AccordionDetails>
           </Accordion>
         )}
@@ -291,13 +170,13 @@ const ProductAccordionContent = ({ product, accordionData, isLoadingDetails, sho
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
-              {renderHtmlContent(productData.ingredients)}
+              <ContentRenderer content={productData.ingredients} shouldRenderContent={shouldRenderContent} />
             </AccordionDetails>
           </Accordion>
         )}
       </Stack>
     </Box>
   );
-};
+});
 
 export default ProductAccordionContent;
