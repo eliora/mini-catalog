@@ -1,37 +1,24 @@
-/**
- * QuantityInput Component
- * 
- * Compact, modern quantity input with seamless increment/decrement buttons.
- * Features elegant design with hover effects and proper accessibility.
- * 
- * Features:
- * - Seamless unified container design
- * - Plus/minus buttons with smooth animations
- * - Direct number input with validation
- * - Multiple size variants and styles
- * - Proper accessibility support
- * - Auto-blur on invalid input
- * 
- * @param {number} value - Current quantity value
- * @param {Function} onChange - Callback for value changes
- * @param {Function} onIncrement - Callback for increment button
- * @param {Function} onDecrement - Callback for decrement button
- * @param {number} min - Minimum allowed value
- * @param {number} max - Maximum allowed value
- * @param {string} size - Size variant (small, medium, large)
- * @param {string} variant - Style variant (outlined, contained, filled)
- * @param {boolean} disabled - Whether input is disabled
- */
-
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Box,
   IconButton,
   TextField,
+  Stack,
   useTheme,
   alpha
 } from '@mui/material';
-import { PlusIcon, MinusIcon } from './QuantityInputIcons';
+import { createSvgIcon } from '@mui/material/utils';
+
+// Custom Plus Icon using proper SVG path
+const PlusIcon = createSvgIcon(
+  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />,
+  'Plus'
+);
+
+// Custom Minus Icon using proper SVG path  
+const MinusIcon = createSvgIcon(
+  <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />,
+  'Minus'
+);
 
 const QuantityInput = ({
   value = 0,
@@ -112,8 +99,7 @@ const QuantityInput = ({
             color: theme.palette.text.primary,
             borderRadius: 0,
             '&:hover': {
-              backgroundColor: alpha(theme.palette.action.hover, 0.8),
-              color: theme.palette.primary.main,
+              backgroundColor: alpha(theme.palette.primary.main, 0.08),
             },
             '&:disabled': {
               color: theme.palette.action.disabled,
@@ -121,23 +107,17 @@ const QuantityInput = ({
           },
           textField: {
             '& .MuiOutlinedInput-root': {
-              '& fieldset': {
-                border: 'none',
-              },
-              '&:hover fieldset': {
-                border: 'none',
-              },
-              '&.Mui-focused fieldset': {
-                border: 'none',
-              },
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: theme.palette.primary.main,
+              }
             }
           }
         };
-      case 'filled':
+      case 'minimal':
         return {
           button: {
             backgroundColor: 'transparent',
-            color: theme.palette.text.primary,
+            color: theme.palette.text.secondary,
             border: 'none',
             borderRadius: 0,
             '&:hover': {
@@ -149,96 +129,145 @@ const QuantityInput = ({
             }
           },
           textField: {
-            '& .MuiFilledInput-root': {
-              backgroundColor: 'transparent',
-              '&:before, &:after': {
-                display: 'none',
+            '& .MuiOutlinedInput-root': {
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: alpha(theme.palette.grey[500], 0.3),
               },
-              '&:hover': {
-                backgroundColor: 'transparent',
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: theme.palette.primary.main,
               }
             }
           }
         };
       default:
-        return {};
+        return getVariantStyles().outlined;
     }
   };
 
   const styles = getVariantStyles();
 
-  // Sync with external value changes
+  const handleInputChange = (event) => {
+    const newValue = event.target.value;
+    
+    // Mark as typing and clear any existing timeout
+    isTypingRef.current = true;
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    // Allow empty string for user to clear and retype
+    if (newValue === '') {
+      setLocalValue('');
+      // Debounce the onChange call
+      timeoutRef.current = setTimeout(() => {
+        onChange?.(0);
+        isTypingRef.current = false;
+      }, 500);
+      return;
+    }
+
+    // Only allow numeric input
+    if (/^\d+$/.test(newValue)) {
+      const numericValue = parseInt(newValue, 10);
+      
+      // Always update local value for immediate visual feedback
+      setLocalValue(newValue);
+      
+      // Debounce the onChange call to prevent rapid parent updates
+      timeoutRef.current = setTimeout(() => {
+        if (numericValue >= min && numericValue <= max) {
+          onChange?.(numericValue);
+        } else if (numericValue > max) {
+          // Cap at max value
+          setLocalValue(max.toString());
+          onChange?.(max);
+        } else if (numericValue < min) {
+          // Set to min value
+          setLocalValue(min.toString());
+          onChange?.(min);
+        }
+        isTypingRef.current = false;
+      }, 300);
+    }
+  };
+
+  const handleInputBlur = () => {
+    // Clear any pending timeouts and execute immediately
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    isTypingRef.current = false;
+    
+    // Handle final value validation
+    if (localValue === '') {
+      const resetValue = Math.max(value || min, min);
+      setLocalValue(resetValue.toString());
+      onChange?.(resetValue);
+    } else {
+      const numericValue = parseInt(localValue, 10);
+      if (numericValue >= min && numericValue <= max) {
+        onChange?.(numericValue);
+      } else if (numericValue > max) {
+        setLocalValue(max.toString());
+        onChange?.(max);
+      } else if (numericValue < min) {
+        setLocalValue(min.toString());
+        onChange?.(min);
+      }
+    }
+  };
+
+  const handleKeyDown = (event) => {
+    // Prevent page scroll on arrow keys and other navigation keys
+    if (['ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'].includes(event.key)) {
+      event.preventDefault();
+    }
+    
+    // Handle Enter key to blur the input
+    if (event.key === 'Enter') {
+      event.target.blur();
+    }
+  };
+
+  const handleFocus = (event) => {
+    isTypingRef.current = true;
+    // Don't auto-select text to allow multi-digit typing
+    // Remove scroll manipulation as it may cause jumping
+  };
+
+  const handleDecrement = () => {
+    const currentValue = parseInt(localValue, 10) || 0;
+    const newValue = Math.max(currentValue - 1, min);
+    setLocalValue(newValue.toString());
+    
+    // Call onChange for direct quantity updates, OR onDecrement for custom logic
+    if (onChange) {
+      onChange(newValue);
+    } else {
+      onDecrement?.();
+    }
+  };
+
+  const handleIncrement = () => {
+    const currentValue = parseInt(localValue, 10) || 0;
+    const newValue = Math.min(currentValue + 1, max);
+    setLocalValue(newValue.toString());
+    
+    // Call onChange for direct quantity updates, OR onIncrement for custom logic  
+    if (onChange) {
+      onChange(newValue);
+    } else {
+      onIncrement?.();
+    }
+  };
+
+  // Update local value when prop changes, but only if user isn't currently typing
   useEffect(() => {
     if (!isTypingRef.current) {
       setLocalValue(value?.toString() || '0');
     }
   }, [value]);
-
-  // Enhanced input validation with better UX
-  const handleInputChange = (event) => {
-    const inputValue = event.target.value;
-    
-    // Allow empty string for temporary state while typing
-    if (inputValue === '') {
-      setLocalValue('');
-      isTypingRef.current = true;
-      
-      // Clear any existing timeout
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      
-      // Set timeout to validate after user stops typing
-      timeoutRef.current = setTimeout(() => {
-        const finalValue = Math.max(min, 0);
-        setLocalValue(finalValue.toString());
-        onChange?.(finalValue);
-        isTypingRef.current = false;
-      }, 1000);
-      
-      return;
-    }
-
-    // Parse and validate numeric input
-    const numericValue = parseInt(inputValue, 10);
-    
-    if (!isNaN(numericValue)) {
-      const clampedValue = Math.max(min, Math.min(max, numericValue));
-      setLocalValue(clampedValue.toString());
-      onChange?.(clampedValue);
-      
-      // If value was clamped, show feedback by auto-blur
-      if (clampedValue !== numericValue) {
-        setTimeout(() => inputRef.current?.blur(), 100);
-      }
-    }
-    
-    isTypingRef.current = true;
-    
-    // Clear typing flag after delay
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => {
-      isTypingRef.current = false;
-    }, 500);
-  };
-
-  const handleIncrement = () => {
-    if (disabled) return;
-    const newValue = Math.min(max, (parseInt(localValue, 10) || 0) + 1);
-    setLocalValue(newValue.toString());
-    onIncrement?.();
-    onChange?.(newValue);
-  };
-
-  const handleDecrement = () => {
-    if (disabled) return;
-    const newValue = Math.max(min, (parseInt(localValue, 10) || 0) - 1);
-    setLocalValue(newValue.toString());
-    onDecrement?.();
-    onChange?.(newValue);
-  };
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -249,118 +278,128 @@ const QuantityInput = ({
     };
   }, []);
 
-  // Unified container design for seamless appearance
   return (
-    <Box
+    <Stack 
+      direction="row" 
+      alignItems="center" 
+      spacing={0}
       sx={{
-        display: 'flex',
-        alignItems: 'center',
-        border: variant === 'outlined' ? '1px solid' : 'none',
-        borderColor: theme.palette.divider,
-        borderRadius: 1,
-        backgroundColor: variant === 'filled' ? alpha(theme.palette.action.hover, 0.05) : 'transparent',
+        display: 'inline-flex',
+        borderRadius: '8px',
         overflow: 'hidden',
-        height: config.textFieldHeight,
+        border: `2px solid ${theme.palette.divider}`,
         '&:hover': {
-          borderColor: variant === 'outlined' ? theme.palette.primary.main : 'transparent',
+          borderColor: theme.palette.primary.main,
+        },
+        '&:focus-within': {
+          borderColor: theme.palette.primary.main,
         },
         ...props.sx
       }}
       {...props}
     >
-      {/* Decrement Button */}
+      {/* Minus Button */}
       <IconButton
         onClick={handleDecrement}
         disabled={disabled || parseInt(localValue, 10) <= min}
-        size={size}
         sx={{
-          ...styles.button,
           width: config.buttonSize,
           height: config.buttonSize,
-          minWidth: config.buttonSize,
-          transition: 'all 0.15s ease-in-out',
-          '&:hover': {
-            transform: 'scale(1.1)',
-            ...styles.button?.['&:hover']
-          }
+          borderRight: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+          ...styles.button,
         }}
+        aria-label="Decrease quantity"
       >
-        <MinusIcon sx={{ fontSize: config.iconSize }} />
+        <MinusIcon sx={{ 
+          fontSize: config.iconSize,
+          '& path': {
+            stroke: 'currentColor',
+            strokeWidth: 1.5,
+            fill: 'none'
+          }
+        }} />
       </IconButton>
 
-      {/* Number Input - seamlessly integrated */}
+      {/* Filled Number Input - Centered for double-digit display */}
       <TextField
         ref={inputRef}
-        type="number"
         value={localValue}
         onChange={handleInputChange}
+        onBlur={handleInputBlur}
+        onKeyDown={handleKeyDown}
+        onFocus={handleFocus}
         disabled={disabled}
-        size={size}
-        variant={variant === 'filled' ? 'filled' : 'outlined'}
-        inputProps={{
+        type="number"
+        variant="filled"
+          inputProps={{
           min,
           max,
-          step: 1,
-          inputMode: 'numeric',
-          pattern: '[0-9]*',
-          style: { 
+          'aria-label': 'Quantity',
+          onWheel: (e) => e.preventDefault(), // Prevent scroll wheel changes
+          style: {
             textAlign: 'center',
             fontSize: config.fontSize,
             fontWeight: 600,
-            padding: 0
+            padding: '8px 4px',
+            MozAppearance: 'textfield', // Hide spinner in Firefox
           }
         }}
         sx={{
           width: config.textFieldWidth,
-          '& .MuiOutlinedInput-root': {
-            height: config.textFieldHeight,
-            ...styles.textField?.['& .MuiOutlinedInput-root'],
-            '& input': {
-              padding: 0,
-              textAlign: 'center',
-              fontSize: config.fontSize,
-              fontWeight: 600,
-              MozAppearance: 'textfield',
-              '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button': {
-                WebkitAppearance: 'none',
-                margin: 0,
-              },
-            }
-          },
+          borderLeft: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+          borderRight: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
           '& .MuiFilledInput-root': {
             height: config.textFieldHeight,
-            ...styles.textField?.['& .MuiFilledInput-root'],
-            '& input': {
-              padding: 0,
-              textAlign: 'center',
-              fontSize: config.fontSize,
-              fontWeight: 600,
+            borderRadius: 0,
+            backgroundColor: 'transparent',
+            border: 'none',
+            '&:hover': {
+              backgroundColor: alpha(theme.palette.primary.main, 0.04),
+            },
+            '&.Mui-focused': {
+              backgroundColor: alpha(theme.palette.primary.light, 0.08),
+            },
+            '&:before': {
+              display: 'none', // Remove bottom border
+            },
+            '&:after': {
+              display: 'none', // Remove focus border
             }
+          },
+          // Hide number input spinners
+          '& input[type="number"]::-webkit-outer-spin-button': {
+            WebkitAppearance: 'none',
+            margin: 0,
+          },
+          '& input[type="number"]::-webkit-inner-spin-button': {
+            WebkitAppearance: 'none',
+            margin: 0,
           },
           ...styles.textField
         }}
       />
 
-      {/* Increment Button */}
+      {/* Plus Button */}
       <IconButton
         onClick={handleIncrement}
         disabled={disabled || parseInt(localValue, 10) >= max}
-        size={size}
         sx={{
-          ...styles.button,
           width: config.buttonSize,
           height: config.buttonSize,
-          minWidth: config.buttonSize,
-          transition: 'all 0.15s ease-in-out',
-          '&:hover': {
-            transform: 'scale(1.1)',
-            ...styles.button?.['&:hover']
-          }
+          ...styles.button,
         }}
+        aria-label="Increase quantity"
       >
-        <PlusIcon sx={{ fontSize: config.iconSize }} />
+        <PlusIcon sx={{ 
+          fontSize: config.iconSize,
+          '& path': {
+            stroke: 'currentColor',
+            strokeWidth: 1.5,
+            fill: 'none'
+          }
+        }} />
       </IconButton>
-    </Box>
+    </Stack>
   );
 };
 
