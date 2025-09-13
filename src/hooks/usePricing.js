@@ -1,76 +1,22 @@
 /**
  * Custom hook for managing pricing access and display
- * Handles role-based pricing visibility for verified members
+ * Show prices to authenticated users - Supabase RLS handles actual permissions
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { getPrices } from '../api/prices';
 import { useAuth } from '../context/AuthContext';
 
 export const usePricing = () => {
-  const { user, isAuthenticated, getUserProfile } = useAuth();
-  const [pricingInfo, setPricingInfo] = useState({
-    canViewPrices: false,
-    role: 'anonymous',
-    tier: null,
-    loading: true,
-    error: null
-  });
-
+  const { user } = useAuth();
   const [prices, setPrices] = useState({});
   const [pricesLoading, setPricesLoading] = useState(false);
 
-  // Check user's pricing permissions
-  const checkPricingAccess = useCallback(async () => {
-    try {
-      setPricingInfo(prev => ({ ...prev, loading: true, error: null }));
-      
-      if (!isAuthenticated || !user) {
-        setPricingInfo({
-          canViewPrices: false,
-          role: 'anonymous',
-          tier: null,
-          loading: false,
-          error: null
-        });
-        return false;
-      }
-
-      // Get user profile to check role
-      const profile = await getUserProfile();
-      const userRole = profile?.user_role || 'standard';
-      
-      const canView = userRole === 'admin' || userRole === 'verified_member';
-      
-      setPricingInfo({
-        canViewPrices: canView,
-        role: isAuthenticated ? 'authenticated' : 'anonymous',
-        tier: userRole === 'admin' ? 'admin' : (userRole === 'verified_member' ? 'verified_member' : null),
-        loading: false,
-        error: null
-      });
-      
-      return canView;
-    } catch (error) {
-      console.error('Error checking pricing access:', error);
-      setPricingInfo({
-        canViewPrices: false,
-        role: 'unknown',
-        tier: null,
-        loading: false,
-        error: error.message
-      });
-      return false;
-    }
-  }, [isAuthenticated, user, getUserProfile]);
+  // Show prices to any authenticated user - let Supabase RLS handle actual permissions
+  const canViewPrices = !!user;
 
   // Load prices for specific products
   const loadPrices = useCallback(async (productRefs) => {
-    if (!pricingInfo.canViewPrices) {
-      console.info('User cannot view prices - skipping price load');
-      return {};
-    }
-
     try {
       setPricesLoading(true);
       const newPrices = await getPrices(productRefs);
@@ -82,21 +28,18 @@ export const usePricing = () => {
     } finally {
       setPricesLoading(false);
     }
-  }, [pricingInfo.canViewPrices]);
+  }, []);
 
   // Get price for a specific product
   const getProductPrice = useCallback((productRef) => {
-    if (!pricingInfo.canViewPrices) {
-      return null;
-    }
     return prices[productRef] || null;
-  }, [prices, pricingInfo.canViewPrices]);
+  }, [prices]);
 
   // Format price for display
   const formatPrice = useCallback((productRef, options = {}) => {
     const price = getProductPrice(productRef);
     if (!price) {
-      return pricingInfo.canViewPrices ? 'Price not available' : 'Login to view prices';
+      return canViewPrices ? 'Price not available' : 'Login to view prices';
     }
 
     const {
@@ -141,50 +84,34 @@ export const usePricing = () => {
       isDiscounted: false,
       currency: currency
     };
-  }, [getProductPrice, pricingInfo.canViewPrices]);
+  }, [getProductPrice, canViewPrices]);
 
   // Check if user should see price placeholder
   const shouldShowPricePlaceholder = useCallback(() => {
-    return !pricingInfo.canViewPrices && !pricingInfo.loading;
-  }, [pricingInfo.canViewPrices, pricingInfo.loading]);
+    return !canViewPrices;
+  }, [canViewPrices]);
 
-  // Get pricing access message for users - removed "Sign in" alerts per requirements
+  // Get pricing access message for users
   const getPricingMessage = useCallback(() => {
-    if (pricingInfo.loading) return 'Loading...';
-    if (pricingInfo.error) return 'Error loading pricing info';
-    if (pricingInfo.canViewPrices) return null;
-    
+    if (canViewPrices) return null;
     // Don't show any sign-in prompts per task requirements
     return null;
-  }, [pricingInfo]);
-
-  // Initialize pricing access check (only when auth state changes)
-  useEffect(() => {
-    checkPricingAccess();
-  }, [isAuthenticated, user, checkPricingAccess]); // Include checkPricingAccess dependency
+  }, [canViewPrices]);
 
   return {
-    // Pricing access info
-    canViewPrices: pricingInfo.canViewPrices,
-    role: pricingInfo.role,
-    tier: pricingInfo.tier,
-    loading: pricingInfo.loading,
-    error: pricingInfo.error,
+    // Show prices to authenticated users - Supabase RLS handles actual permissions
+    canViewPrices, // True if user is authenticated
     
     // Prices data
     prices,
     pricesLoading,
     
     // Functions
-    checkPricingAccess,
     loadPrices,
     getProductPrice,
     formatPrice,
     shouldShowPricePlaceholder,
-    getPricingMessage,
-    
-    // Utilities
-    refreshAccess: checkPricingAccess
+    getPricingMessage
   };
 };
 

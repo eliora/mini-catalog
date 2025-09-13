@@ -8,36 +8,73 @@ export const useSupabaseAuth = () => {
 
   // Initialize auth state
   useEffect(() => {
-    // Get initial session
     console.log('🚀 Initializing auth state...');
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error('❌ Error getting session:', error);
-      } else {
-        console.log('📱 Initial session:', session?.user ? `User: ${session.user.email}` : 'No session');
+    
+    let mounted = true;
+    
+    const initializeAuth = async () => {
+      try {
+        console.log('🔍 Getting initial session...');
+        
+        // Get initial session - this should work now with proper timeout handling
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return; // Component unmounted, don't update state
+        
+        if (error) {
+          console.error('❌ Error getting initial session:', error);
+          setUser(null);
+        } else {
+          console.log('📱 Initial session:', session?.user ? `User: ${session.user.email}` : 'No session found');
+          setUser(session?.user ?? null);
+          
+          // If we have a user, ensure their profile exists
+          if (session?.user) {
+            await createOrUpdateUserProfile(session.user);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Auth initialization error:', error);
+        if (mounted) setUser(null);
+      } finally {
+        if (mounted) {
+          setInitializing(false);
+          setLoading(false);
+          console.log('✅ Auth initialization completed');
+        }
       }
-      setUser(session?.user ?? null);
-      setInitializing(false);
-      setLoading(false);
-    });
+    };
 
-    // Listen for auth changes
+    initializeAuth();
+
+    // Listen for auth changes - this is the key part for session persistence
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('🔄 Auth state changed:', event, session?.user ? `User: ${session.user.email}` : 'No user');
       
+      if (!mounted) return; // Component unmounted, don't update state
+      
+      // Update user state synchronously (as recommended by Supabase docs)
       setUser(session?.user ?? null);
       setLoading(false);
 
-      // Handle sign up confirmation
+      // Handle async operations outside the listener
       if (event === 'SIGNED_IN' && session?.user) {
         // User signed in, create/update user profile
-        await createOrUpdateUserProfile(session.user);
+        createOrUpdateUserProfile(session.user).catch(console.error);
+      }
+      
+      if (event === 'SIGNED_OUT') {
+        console.log('👋 User signed out, clearing state');
+        // Clear any additional state here if needed
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Create or update user profile in our users table
@@ -131,6 +168,10 @@ export const useSupabaseAuth = () => {
 
       if (error) throw error;
 
+      console.log('✅ Sign in successful, auth state change will update user');
+      
+      // Don't manually set user - let onAuthStateChange handle it
+      // This ensures proper session persistence
       return data;
     } catch (error) {
       console.error('Sign in error:', error);

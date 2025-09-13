@@ -68,7 +68,7 @@ const ProductListItem = ({
 }) => {
   // ===== CONFIGURATION HOOKS =====
   const { isMobile, dimensions, spacing, size, variants } = useResponsiveConfig();
-  const { canViewPrices, loadPrices, prices } = usePricing();
+  const { canViewPrices, loadPrices, prices, pricesLoading } = usePricing();
   
   // ===== ACCORDION STATE =====
   const [expanded, setExpanded] = useState(false);
@@ -78,6 +78,15 @@ const ProductListItem = ({
   // ===== COMPUTED VALUES =====
   // Get price for this product from the prices hook
   const productPrice = prices[product.ref] || null;
+
+  // ===== PRICE LOADING EFFECT =====
+  // Load price when component mounts if user can view prices
+  React.useEffect(() => {
+    if (canViewPrices && !productPrice && product.ref) {
+      console.log('🔄 Loading price for product:', product.ref);
+      loadPrices([product.ref]).catch(console.error);
+    }
+  }, [canViewPrices, productPrice, product.ref, loadPrices]);
 
   // ===== ACCORDION EXPANSION HANDLER =====
   // Handle accordion expansion with lazy loading of detailed product information
@@ -144,7 +153,8 @@ const ProductListItem = ({
             price={productPrice} 
             canViewPrices={canViewPrices} 
             screenType={screenType} 
-            align="center" 
+            align="center"
+            loading={pricesLoading && !productPrice} 
           />
           <ProductSize product={product} size={size} />
         </Stack>

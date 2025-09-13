@@ -12,7 +12,8 @@ import {
   CssBaseline, 
   Box,
   Container,
-  CircularProgress
+  CircularProgress,
+  Typography
 } from '@mui/material';
 import { CacheProvider } from '@emotion/react';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -106,12 +107,17 @@ function AppInner() {
             <Box 
               sx={{ 
                 display: 'flex', 
+                flexDirection: 'column',
                 justifyContent: 'center', 
                 alignItems: 'center', 
-                height: '100vh' 
+                height: '100vh',
+                gap: 2
               }}
             >
               <CircularProgress />
+              <Typography variant="body2" color="text.secondary">
+                טוען מערכת...
+              </Typography>
             </Box>
           </div>
         </ThemeProvider>

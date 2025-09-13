@@ -36,6 +36,7 @@ import {
   Delete as DeleteIcon
 } from '@mui/icons-material';
 import QuantityInput from './QuantityInput';
+import { useAuth } from '../../context/AuthContext';
 
 const UnifiedCartItem = ({
   item,
@@ -48,6 +49,10 @@ const UnifiedCartItem = ({
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { user } = useAuth();
+  
+  // Check if user can view prices (authenticated users)
+  const canViewPrices = !!user;
 
   const handleQuantityChange = useCallback((newQuantity) => {
     if (newQuantity <= 0) {
@@ -126,30 +131,36 @@ const UnifiedCartItem = ({
 
           {/* Unit Price */}
           <Box sx={{ minWidth: 60, textAlign: 'center', ml: 1 }}>
-            {editMode && isAdmin ? (
-              <TextField
-                size="small"
-                type="number"
-                value={item.unitPrice}
-                onChange={handlePriceChange}
-                InputProps={{ 
-                  inputProps: { min: 0, step: 0.01 },
-                  sx: { fontSize: '0.8rem' }
-                }}
-                sx={{ 
-                  width: 80,
-                  '& .MuiOutlinedInput-root': { height: 32 }
-                }}
-              />
+            {canViewPrices ? (
+              editMode && isAdmin ? (
+                <TextField
+                  size="small"
+                  type="number"
+                  value={item.unitPrice}
+                  onChange={handlePriceChange}
+                  InputProps={{ 
+                    inputProps: { min: 0, step: 0.01 },
+                    sx: { fontSize: '0.8rem' }
+                  }}
+                  sx={{ 
+                    width: 80,
+                    '& .MuiOutlinedInput-root': { height: 32 }
+                  }}
+                />
+              ) : (
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontWeight: 500,
+                    fontSize: '0.8rem'
+                  }}
+                >
+                  ₪{item.unitPrice.toFixed(2)}
+                </Typography>
+              )
             ) : (
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  fontWeight: 500,
-                  fontSize: '0.8rem'
-                }}
-              >
-                ₪{item.unitPrice.toFixed(2)}
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                התחבר לצפייה
               </Typography>
             )}
           </Box>
@@ -166,16 +177,22 @@ const UnifiedCartItem = ({
 
           {/* Total Price */}
           <Box sx={{ minWidth: 70, textAlign: 'right' }}>
-            <Typography 
-              variant="body1" 
-              sx={{ 
-                fontWeight: 600,
-                color: 'primary.main',
-                fontSize: '0.9rem'
-              }}
-            >
-              ₪{(item.unitPrice * item.quantity).toFixed(2)}
-            </Typography>
+            {canViewPrices ? (
+              <Typography 
+                variant="body1" 
+                sx={{ 
+                  fontWeight: 600,
+                  color: 'primary.main',
+                  fontSize: '0.9rem'
+                }}
+              >
+                ₪{(item.unitPrice * item.quantity).toFixed(2)}
+              </Typography>
+            ) : (
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                התחבר לצפייה
+              </Typography>
+            )}
           </Box>
 
           {/* Remove Button */}
@@ -244,22 +261,28 @@ const UnifiedCartItem = ({
             />
 
             <Box>
-              {isAdmin ? (
-                <TextField
-                  size="small"
-                  type="number"
-                  value={item.unitPrice}
-                  onChange={handlePriceChange}
-                  sx={{
-                    width: 80,
-                    '& .MuiOutlinedInput-root': { height: 24 },
-                    '& input': { textAlign: 'center', fontSize: '0.7rem', fontWeight: 600, p: 0.5 }
-                  }}
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                />
+              {canViewPrices ? (
+                isAdmin ? (
+                  <TextField
+                    size="small"
+                    type="number"
+                    value={item.unitPrice}
+                    onChange={handlePriceChange}
+                    sx={{
+                      width: 80,
+                      '& .MuiOutlinedInput-root': { height: 24 },
+                      '& input': { textAlign: 'center', fontSize: '0.7rem', fontWeight: 600, p: 0.5 }
+                    }}
+                    InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+                  />
+                ) : (
+                  <Typography variant="subtitle2" color="primary" sx={{ fontWeight: 700, fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
+                    ₪{(item.unitPrice * item.quantity).toFixed(2)}
+                  </Typography>
+                )
               ) : (
-                <Typography variant="subtitle2" color="primary" sx={{ fontWeight: 700, fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
-                  ₪{(item.unitPrice * item.quantity).toFixed(2)}
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                  התחבר לצפייה
                 </Typography>
               )}
             </Box>
@@ -267,7 +290,7 @@ const UnifiedCartItem = ({
 
           {/* Total and Delete button row */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-            {isAdmin && (
+            {isAdmin && canViewPrices && (
               <Typography variant="subtitle2" color="success.main" sx={{ fontWeight: 700, fontSize: '0.875rem' }}>
                 סה"כ: ₪{(item.unitPrice * item.quantity).toFixed(2)}
               </Typography>
@@ -351,39 +374,51 @@ const UnifiedCartItem = ({
           />
 
           <Box sx={{ textAlign: 'center' }}>
-            {isAdmin ? (
-              <TextField
-                size="small"
-                type="number"
-                value={item.unitPrice}
-                onChange={handlePriceChange}
-                sx={{
-                  width: 80,
-                  '& .MuiOutlinedInput-root': { height: 32 },
-                  '& input': { textAlign: 'center', fontSize: '0.8rem', fontWeight: 600 }
-                }}
-                InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-              />
+            {canViewPrices ? (
+              isAdmin ? (
+                <TextField
+                  size="small"
+                  type="number"
+                  value={item.unitPrice}
+                  onChange={handlePriceChange}
+                  sx={{
+                    width: 80,
+                    '& .MuiOutlinedInput-root': { height: 32 },
+                    '& input': { textAlign: 'center', fontSize: '0.8rem', fontWeight: 600 }
+                  }}
+                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+                />
+              ) : (
+                <Typography
+                  variant="subtitle2"
+                  color="primary"
+                  sx={{ fontWeight: 700 }}
+                >
+                  ₪{item.unitPrice.toFixed(2)}
+                </Typography>
+              )
             ) : (
-              <Typography
-                variant="subtitle2"
-                color="primary"
-                sx={{ fontWeight: 700 }}
-              >
-                ₪{item.unitPrice.toFixed(2)}
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                התחבר לצפייה
               </Typography>
             )}
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.7rem', mt: 0.5 }}>
               {isAdmin ? 'מחיר יחידה' : 'יחידה'}
             </Typography>
           </Box>
-          <Typography
-            variant="subtitle2"
-            color="primary"
-            sx={{ fontWeight: 700, textAlign: 'center', minWidth: 50, ml: 1 }}
-          >
-            ₪{(item.unitPrice * item.quantity).toFixed(2)}
-          </Typography>
+          {canViewPrices ? (
+            <Typography
+              variant="subtitle2"
+              color="primary"
+              sx={{ fontWeight: 700, textAlign: 'center', minWidth: 50, ml: 1 }}
+            >
+              ₪{(item.unitPrice * item.quantity).toFixed(2)}
+            </Typography>
+          ) : (
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem', textAlign: 'center', minWidth: 50, ml: 1 }}>
+              התחבר לצפייה
+            </Typography>
+          )}
           <IconButton
             color="error"
             size="small"

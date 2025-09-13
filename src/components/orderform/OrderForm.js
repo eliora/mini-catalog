@@ -38,7 +38,10 @@ const OrderForm = () => {
   // === CONTEXT HOOKS ===
   const { cart, removeFromCart, updateQuantity, clearCart, addToCart, updateItemPrice } = useCart();
   const { settings: companySettings } = useCompany();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
+  
+  // Check if user can view prices (authenticated users)
+  const canViewPrices = !!user;
   const printRef = useRef(null);
 
   // === LOCAL STATE ===
@@ -138,13 +141,14 @@ const OrderForm = () => {
           customerName={customerName}
           onCustomerNameChange={setCustomerName}
           cart={cart}
-          subtotal={subtotal}
-          tax={tax}
-          total={total}
+          subtotal={canViewPrices ? subtotal : 0}
+          tax={canViewPrices ? tax : 0}
+          total={canViewPrices ? total : 0}
           formatCurrency={formatCurrency}
           companySettings={companySettings}
           isSubmitting={isSubmitting}
           onSubmit={handleSubmitOrder}
+          canViewPrices={canViewPrices}
         />
       </Grid>
 

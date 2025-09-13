@@ -38,7 +38,7 @@ export const getCompanySettings = async () => {
         .from('settings')
         .select('*')
         .maybeSingle(),
-      15000,
+      5000,
       'Load settings'
     );
 

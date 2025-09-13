@@ -22,7 +22,8 @@ const OrderSummary = ({
   formatCurrency,
   companySettings,
   isSubmitting,
-  onSubmit
+  onSubmit,
+  canViewPrices = true
 }) => {
   return (
     <Grid item xs={12} lg={4}>
@@ -114,7 +115,18 @@ const OrderSummary = ({
                 mt: 2,
                 py: 1.5,
                 fontSize: '0.9rem',
-                fontWeight: 600
+                fontWeight: 600,
+                border: '2px solid',
+                borderColor: 'primary.main',
+                borderRadius: 2,
+                '&:hover': {
+                  borderColor: 'primary.dark',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                },
+                '&:disabled': {
+                  borderColor: 'grey.300',
+                  boxShadow: 'none'
+                }
               }}
             >
               {isSubmitting ? 'מעבד הזמנה...' : 'הגש הזמנה'}

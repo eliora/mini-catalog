@@ -1,20 +1,23 @@
 import React, { createContext, useCallback, useContext, useMemo, useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSupabaseAuth } from '../hooks/useSupabaseAuth';
 import { supabase } from '../config/supabase';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+  // React Query client for cache management
+  const queryClient = useQueryClient();
+  
   // Supabase auth
   const supabaseAuth = useSupabaseAuth();
   
-  // User role and admin check (Supabase only)
-  const [userRole, setUserRole] = useState(null);
+  // Admin check for admin panel access
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Check user role from Supabase when user changes
+  // Check if user has admin role
   useEffect(() => {
-    const checkUserRole = async () => {
+    const checkAdminRole = async () => {
       if (supabaseAuth.user) {
         try {
           const { data, error } = await supabase.from('users')
@@ -22,33 +25,37 @@ export function AuthProvider({ children }) {
             .eq('id', supabaseAuth.user.id)
             .single();
           
-          if (!error && data) {
-            setUserRole(data.user_role);
-            setIsAdmin(data.user_role === 'admin');
-          }
+          // Show admin panel only to admin role
+          setIsAdmin(!error && data?.user_role === 'admin');
         } catch (err) {
-          console.error('Error fetching user role:', err);
+          console.error('Error checking admin role:', err);
           setIsAdmin(false);
         }
       } else {
-        setUserRole(null);
         setIsAdmin(false);
       }
     };
 
-    checkUserRole();
+    checkAdminRole();
   }, [supabaseAuth.user]);
 
-  // Sign out (Supabase only)
-  const signOut = useCallback(() => {
-    supabaseAuth.signOut();
-  }, [supabaseAuth]);
+  // Sign out with React Query cache clearing
+  const signOut = useCallback(async () => {
+    try {
+      // Clear React Query cache to prevent stale data issues
+      queryClient.clear();
+      console.log('🗑️ React Query cache cleared on logout');
+      
+      // Sign out from Supabase
+      await supabaseAuth.signOut();
+    } catch (error) {
+      console.error('Error during sign out:', error);
+      // Still clear cache even if signOut fails
+      queryClient.clear();
+    }
+  }, [supabaseAuth, queryClient]);
 
   const value = useMemo(() => ({
-    // Admin status (Supabase role-based)
-    isAdmin,
-    userRole, // Current user role from database
-    
     // Supabase auth
     user: supabaseAuth.user,
     isAuthenticated: supabaseAuth.isAuthenticated,
@@ -56,16 +63,19 @@ export function AuthProvider({ children }) {
     loading: supabaseAuth.loading,
     initializing: supabaseAuth.initializing,
     
+    // Admin panel access (only for admin role)
+    isAdmin,
+    
     // Supabase auth methods
     signUp: supabaseAuth.signUp,
     signIn: supabaseAuth.signIn,
     signInWithProvider: supabaseAuth.signInWithProvider,
-    signOut: supabaseAuth.signOut,
+    signOut,
     resetPassword: supabaseAuth.resetPassword,
     updatePassword: supabaseAuth.updatePassword,
     getUserProfile: supabaseAuth.getUserProfile,
     updateUserProfile: supabaseAuth.updateUserProfile,
-  }), [isAdmin, userRole, supabaseAuth]);
+  }), [isAdmin, supabaseAuth, signOut]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
