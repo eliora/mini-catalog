@@ -4,7 +4,7 @@ const CartContext = createContext(null);
 
 function sanitizeItem(item) {
   return {
-    ref: item.ref || '',
+    ref: String(item.ref ?? ''),
     productName: item.productName || '',
     unitPrice: parseFloat(item.unitPrice) || 0,
     productName2: item.productName2 || '',
@@ -51,7 +51,7 @@ export function CartProvider({ children }) {
 
   const addToCart = useCallback((product, quantity) => {
     setCart(prev => {
-      const existingIndex = prev.findIndex(i => i.ref === product.ref);
+      const existingIndex = prev.findIndex(i => String(i.ref) === String(product.ref));
       if (existingIndex !== -1) {
         // Update existing item - more efficient than map
         const newCart = [...prev];
@@ -65,7 +65,7 @@ export function CartProvider({ children }) {
 
   const updateQuantity = useCallback((ref, quantity) => {
     setCart(prev => {
-      const index = prev.findIndex(i => i.ref === ref);
+      const index = prev.findIndex(i => String(i.ref) === String(ref));
       if (index === -1) return prev;
       
       // More efficient than map - only update the specific item
@@ -77,7 +77,7 @@ export function CartProvider({ children }) {
 
   const removeFromCart = useCallback((ref) => {
     setCart(prev => {
-      const index = prev.findIndex(i => i.ref === ref);
+      const index = prev.findIndex(i => String(i.ref) === String(ref));
       if (index === -1) return prev;
       
       // More efficient than filter - splice out the specific item

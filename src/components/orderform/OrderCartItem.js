@@ -95,7 +95,7 @@ const OrderCartItem = ({
         {/* Quantity Controls - Compact */}
         <Box sx={{ minWidth: 100 }}>
           <QuantityInput
-            quantity={item.quantity}
+            value={item.quantity}
             onChange={handleQuantityChange}
             size="small"
             min={0}

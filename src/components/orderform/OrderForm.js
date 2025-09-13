@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { createOrder, getOrderById } from '../../api/orders';
+import { getPrices } from '../../api/prices';
 import { useCart } from '../../context/CartContext';
 import { useCompany } from '../../context/CompanyContext';
 import { useAuth } from '../../context/AuthContext';
@@ -51,6 +52,7 @@ import '../../styles/print.css';
 
 const OrderForm = () => {
   const { cart, removeFromCart, updateQuantity, clearCart, addToCart, updateItemPrice } = useCart();
+  const [canViewPrices, setCanViewPrices] = useState(false);
   const { settings: companySettings } = useCompany();
   const { isAdmin } = useAuth();
   const theme = useTheme();
@@ -62,6 +64,30 @@ const OrderForm = () => {
   const [customerName, setCustomerName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSummary, setOrderSummary] = useState(null);
+  // Load unit prices for items in cart from secure table (RLS-protected)
+  useEffect(() => {
+    const loadCartPrices = async () => {
+      if (!cart || cart.length === 0) {
+        setCanViewPrices(false);
+        return;
+      }
+      const refs = Array.from(new Set(cart.map(i => String(i.ref)))).filter(Boolean);
+      if (refs.length === 0) return;
+      const pricesMap = await getPrices(refs);
+      const hasAccess = pricesMap && Object.keys(pricesMap).length > 0;
+      setCanViewPrices(hasAccess);
+      if (hasAccess) {
+        refs.forEach(ref => {
+          const p = pricesMap[ref];
+          if (p && typeof p.unitPrice === 'number') {
+            updateItemPrice(ref, p.unitPrice);
+          }
+        });
+      }
+    };
+    loadCartPrices();
+  }, [cart, updateItemPrice]);
+
 
   // Revive order functionality
   const reviveOrder = useCallback(async (orderId) => {
