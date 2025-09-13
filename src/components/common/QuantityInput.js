@@ -241,16 +241,26 @@ const QuantityInput = ({
     const currentValue = parseInt(localValue, 10) || 0;
     const newValue = Math.max(currentValue - 1, min);
     setLocalValue(newValue.toString());
-    onChange?.(newValue);
-    onDecrement?.();
+    
+    // Call onChange for direct quantity updates, OR onDecrement for custom logic
+    if (onChange) {
+      onChange(newValue);
+    } else {
+      onDecrement?.();
+    }
   };
 
   const handleIncrement = () => {
     const currentValue = parseInt(localValue, 10) || 0;
     const newValue = Math.min(currentValue + 1, max);
     setLocalValue(newValue.toString());
-    onChange?.(newValue);
-    onIncrement?.();
+    
+    // Call onChange for direct quantity updates, OR onIncrement for custom logic  
+    if (onChange) {
+      onChange(newValue);
+    } else {
+      onIncrement?.();
+    }
   };
 
   // Update local value when prop changes, but only if user isn't currently typing

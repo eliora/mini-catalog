@@ -140,7 +140,8 @@ const CatalogClean = () => {
     if (current > 0) {
       updateQuantity(product.ref, next);
     } else {
-      addToCart(product, next);
+      // For new items, add with quantity 1, not next (which would be 1 + existing 0 = 1)
+      addToCart(product, 1);
     }
   }, [getCurrentQuantity, updateQuantity, addToCart]);
 
