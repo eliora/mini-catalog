@@ -98,20 +98,34 @@ const UnifiedCartItem = ({
                 fontWeight: 600,
                 color: 'text.primary',
                 fontSize: '0.875rem',
-                lineHeight: 1.2,
+                lineHeight: 1.1,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap'
               }}
             >
               {item.productName}
-              {item.productName2 && ` | ${item.productName2}`}
-              {item.size && ` | ${item.size}`}
+              {item.productName2 && ` • ${item.productName2}`}
             </Typography>
+            {item.size && (
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: 'text.secondary',
+                  fontSize: '0.75rem',
+                  display: 'block',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {item.size}
+              </Typography>
+            )}
           </Box>
 
           {/* Unit Price */}
-          <Box sx={{ minWidth: 60, textAlign: 'center' }}>
+          <Box sx={{ minWidth: 60, textAlign: 'center', ml: 1 }}>
             {editMode && isAdmin ? (
               <TextField
                 size="small"
@@ -306,20 +320,28 @@ const UnifiedCartItem = ({
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
-                mb: 0.25,
+                mb: item.size ? 0.25 : 0,
               }}
             >
               {item.productName}
               {item.productName2 && ` • ${item.productName2}`}
             </Typography>
+            {item.size && (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ 
+                  fontWeight: 500, 
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  fontSize: '0.75rem'
+                }}
+              >
+                {item.size.replace(/\s*(jar|tube|dispenser|bottle|tub|pump|cream|lotion|serum|gel|mask|cleanser|toner|moisturizer|oil|balm|scrub|peeling|foam|mousse|spray|mist)\s*/gi, '').trim()}
+              </Typography>
+            )}
           </Box>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ fontWeight: 500, whiteSpace: 'nowrap', mx: 1 }}
-          >
-            {item.size ? item.size.replace(/\s*(jar|tube|dispenser|bottle|tub|pump|cream|lotion|serum|gel|mask|cleanser|toner|moisturizer|oil|balm|scrub|peeling|foam|mousse|spray|mist)\s*/gi, '').trim() : ''}
-          </Typography>
           
           <QuantityInput
             value={item.quantity}

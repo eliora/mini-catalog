@@ -55,7 +55,7 @@ const AdminAddItemDialog = ({
    * Handle adding item to cart
    */
   const handleAddItem = () => {
-    if (!selectedProduct) return;
+    if (!selectedProduct || !Array.isArray(products)) return;
 
     const product = products.find(p => p.ref === selectedProduct);
     if (!product) return;
@@ -76,7 +76,9 @@ const AdminAddItemDialog = ({
   /**
    * Get selected product for price display
    */
-  const selectedProductData = products.find(p => p.ref === selectedProduct);
+  const selectedProductData = Array.isArray(products) 
+    ? products.find(p => p.ref === selectedProduct)
+    : null;
 
   return (
     <Dialog 
@@ -97,7 +99,7 @@ const AdminAddItemDialog = ({
               onChange={(e) => setSelectedProduct(e.target.value)}
               label="בחר מוצר"
             >
-              {products.map((product) => (
+              {Array.isArray(products) && products.map((product) => (
                 <MenuItem key={product.ref} value={product.ref}>
                   #{product.ref} - {product.productName}
                   {product.size && ` (${product.size})`}

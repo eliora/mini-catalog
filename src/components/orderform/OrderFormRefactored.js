@@ -59,28 +59,26 @@ const OrderForm = () => {
     closeSnackbar
   } = useOrderSubmission(cart, customerName, subtotal, tax, total, companySettings, clearCart);
 
-  // Load prices automatically (but not when in edit mode)
-  usePriceLoader(cart, updateItemPrice, editMode);
+  // Load prices automatically
+  usePriceLoader(cart, updateItemPrice);
 
   // === EFFECTS ===
   // Load products for admin features
   useEffect(() => {
-    if (isAdmin && (editMode || addItemDialog)) {
+    if (isAdmin && editMode) {
       loadProducts();
     }
-  }, [isAdmin, editMode, addItemDialog]);
+  }, [isAdmin, editMode]);
 
   // === HANDLERS ===
   const loadProducts = async () => {
     try {
       const productsData = await getProducts();
       setProducts(productsData);
-      console.log('📦 Products loaded for admin:', productsData?.length || 0);
     } catch (error) {
       console.error('Error loading products:', error);
     }
   };
-
 
   const handlePriceChange = (itemRef, newPrice) => {
     updateItemPrice(itemRef, Number(newPrice) || 0);
@@ -88,6 +86,7 @@ const OrderForm = () => {
 
   const handleAddCustomItem = (customItem) => {
     addToCart(customItem, customItem.quantity);
+    setAddItemDialog(false);
   };
 
   const handleSubmitOrder = () => {
@@ -129,7 +128,7 @@ const OrderForm = () => {
             isAdmin={isAdmin}
             editMode={editMode}
             onToggleEditMode={() => setEditMode(!editMode)}
-            onAddCustomItem={handleAddCustomItem}
+            onAddCustomItem={() => setAddItemDialog(true)}
           />
         </Grid>
 
