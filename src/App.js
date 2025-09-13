@@ -11,7 +11,8 @@ import {
   ThemeProvider, 
   CssBaseline, 
   Box,
-  Container
+  Container,
+  CircularProgress
 } from '@mui/material';
 import { CacheProvider } from '@emotion/react';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -42,7 +43,7 @@ function AppInner() {
   const location = useLocation();
   const navigate = useNavigate();
   const { cart, getCartItemCount } = useCart();
-  const { isAdmin, signOut } = useAuth();
+  const { isAdmin, signOut, initializing } = useAuth();
   const { settings: companySettings } = useCompany();
 
   // Search state for header
@@ -94,6 +95,29 @@ function AppInner() {
       navigate('/catalog');
     }
   }, [location.pathname, isAdmin, navigate]);
+
+  // Show loading screen while auth is initializing
+  if (initializing) {
+    return (
+      <CacheProvider value={rtlCache}>
+        <ThemeProvider theme={theme}>
+          <div dir="rtl">
+            <CssBaseline />
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: '100vh' 
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          </div>
+        </ThemeProvider>
+      </CacheProvider>
+    );
+  }
 
   return (
     <CacheProvider value={rtlCache}>

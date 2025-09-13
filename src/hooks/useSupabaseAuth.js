@@ -9,9 +9,12 @@ export const useSupabaseAuth = () => {
   // Initialize auth state
   useEffect(() => {
     // Get initial session
+    console.log('🚀 Initializing auth state...');
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
-        console.error('Error getting session:', error);
+        console.error('❌ Error getting session:', error);
+      } else {
+        console.log('📱 Initial session:', session?.user ? `User: ${session.user.email}` : 'No session');
       }
       setUser(session?.user ?? null);
       setInitializing(false);
@@ -22,7 +25,7 @@ export const useSupabaseAuth = () => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.email);
+      console.log('🔄 Auth state changed:', event, session?.user ? `User: ${session.user.email}` : 'No user');
       
       setUser(session?.user ?? null);
       setLoading(false);

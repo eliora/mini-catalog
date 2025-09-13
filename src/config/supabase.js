@@ -14,8 +14,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing required Supabase environment variables');
 }
 
-// Create Supabase client - ONLY with environment variables
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create Supabase client with session persistence
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+});
 
 // Connection working properly
 
