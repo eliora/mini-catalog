@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getProducts, saveProduct, deleteProduct as apiDeleteProduct } from '../api/products';
 import { getOrders as apiGetOrders } from '../api/orders';
-import CsvImport from './CsvImport';
-import SupabaseConnectionTest from './SupabaseConnectionTest';
-import DatabaseTest from './DatabaseTest';
-import CompanySettings from './CompanySettings';
+import CsvImport from './forms/CsvImport';
+import SupabaseConnectionTest from './data/SupabaseConnectionTest';
+import DatabaseTest from './data/DatabaseTest';
+import CompanySettings from './forms/CompanySettings';
 import VendorDashboardLayout from './layouts/VendorDashboardLayout';
 import DashboardOverview from './admin/DashboardOverview';
 import {
@@ -35,8 +35,8 @@ import ProductRow from './ProductRow';
 import OrderRow from './OrderRow';
 import OrderDetails from './OrderDetails';
 
-// Import Bazaar Pro components
-import BazaarButton from './bazaar/BazaarButton';
+// Styled components
+import StyledButton from './ui/StyledButton';
 
 const Admin = ({ onLogout }) => {
   const [activeTab, setActiveTab] = useState(0);
@@ -281,13 +281,13 @@ const Admin = ({ onLogout }) => {
         <Typography variant="h5" sx={{ fontWeight: 700 }}>
           ניהול מוצרים
         </Typography>
-        <BazaarButton
+              <StyledButton
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleAddProduct}
         >
           הוסף מוצר
-        </BazaarButton>
+              </StyledButton>
       </Box>
 
       <TableContainer component={Paper} sx={{ borderRadius: 3, overflow: 'hidden' }}>

@@ -6,7 +6,7 @@ import {
   Stack,
   Grid
 } from '@mui/material';
-import BazaarButton from '../bazaar/BazaarButton';
+import StyledButton from '../ui/StyledButton';
 
 /**
  * Order Summary Component (OS Column)
@@ -106,7 +106,7 @@ const OrderSummary = ({
             </Typography>
 
             {/* Submit Button */}
-            <BazaarButton
+            <StyledButton
               fullWidth
               disabled={cart.length === 0 || isSubmitting}
               onClick={onSubmit}
@@ -118,7 +118,7 @@ const OrderSummary = ({
               }}
             >
               {isSubmitting ? 'מעבד הזמנה...' : 'הגש הזמנה'}
-            </BazaarButton>
+            </StyledButton>
           </Stack>
         </Box>
       </Box>

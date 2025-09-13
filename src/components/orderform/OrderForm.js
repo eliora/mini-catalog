@@ -45,9 +45,10 @@ import {
   Edit as EditIcon,
   Save as SaveIcon
 } from '@mui/icons-material';
-import BazaarButton from '../bazaar/BazaarButton';
+import StyledButton from '../ui/StyledButton';
 import OrderCartItem from './OrderCartItem';
 import OrderSummary from './OrderSummary';
+import OrderConfirmation from './OrderConfirmation';
 import '../../styles/print.css';
 
 const OrderForm = () => {
@@ -311,12 +312,12 @@ const OrderForm = () => {
             <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>
               לא נמצאו מוצרים בעגלת הקניות
             </Typography>
-            <BazaarButton 
+              <StyledButton
               onClick={() => window.history.back()}
               sx={{ px: 4, py: 1.5 }}
             >
               חזור לקטלוג
-            </BazaarButton>
+              </StyledButton>
           </Box>
         </Fade>
       </Box>
@@ -451,20 +452,20 @@ const OrderForm = () => {
 
           {/* Action Buttons */}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
-            <BazaarButton
+              <StyledButton
               onClick={() => setOrderSummary(null)}
               variant="outlined"
               sx={{ minWidth: 150 }}
             >
               הזמנה חדשה
-            </BazaarButton>
-            <BazaarButton
+              </StyledButton>
+              <StyledButton
               onClick={() => window.print()}
               startIcon={<PrintIcon />}
               sx={{ minWidth: 150 }}
             >
               הדפס הזמנה
-            </BazaarButton>
+              </StyledButton>
           </Stack>
         </Paper>
       </Box>
@@ -636,19 +637,19 @@ const OrderForm = () => {
             </Stack>
           </DialogContent>
           <DialogActions>
-            <BazaarButton 
+            <StyledButton 
               variant="outlined" 
               onClick={() => setAddItemDialog(false)}
             >
               ביטול
-            </BazaarButton>
-            <BazaarButton 
+            </StyledButton>
+            <StyledButton 
               variant="contained" 
               onClick={handleAddCustomItem} 
               disabled={!selectedProduct}
             >
               הוסף לעגלה
-            </BazaarButton>
+            </StyledButton>
           </DialogActions>
         </Dialog>
       )}

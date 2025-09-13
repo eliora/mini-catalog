@@ -17,7 +17,7 @@ import {
   DialogActions
 } from '@mui/material';
 import { CloudUpload as UploadIcon, CheckCircle as SuccessIcon } from '@mui/icons-material';
-import { supabase } from '../config/supabase';
+import { supabase } from '../../config/supabase';
 
 const CsvImport = ({ onImportComplete }) => {
   const [file, setFile] = useState(null);

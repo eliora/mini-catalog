@@ -17,7 +17,7 @@ import {
   ExpandLess as ExpandLessIcon,
   Refresh as RefreshIcon
 } from '@mui/icons-material';
-import { supabase } from '../config/supabase';
+import { supabase } from '../../config/supabase';
 
 const SupabaseConnectionTest = () => {
   const [connectionStatus, setConnectionStatus] = useState('checking');

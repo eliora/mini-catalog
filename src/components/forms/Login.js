@@ -11,7 +11,7 @@ import {
 import { Lock as LockIcon } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import { FormContainer, TextFieldElement } from 'react-hook-form-mui';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 const Login = ({ onLogin }) => {
   const { login } = useAuth();

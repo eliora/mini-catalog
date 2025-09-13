@@ -10,8 +10,8 @@ import {
   Divider,
   Chip
 } from '@mui/material';
-import { createOrder, getOrders } from '../api/orders';
-import { supabase } from '../config/supabase';
+import { createOrder, getOrders } from '../../api/orders';
+import { supabase } from '../../config/supabase';
 
 const DatabaseTest = () => {
   const [testResults, setTestResults] = useState({});

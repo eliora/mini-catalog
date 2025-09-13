@@ -19,8 +19,8 @@ import {
   PhotoCamera as PhotoCameraIcon,
   Delete as DeleteIcon
 } from '@mui/icons-material';
-import { getCompanySettings, saveCompanySettings } from '../api/settings';
-import { useCompany } from '../context/CompanyContext';
+import { getCompanySettings, saveCompanySettings } from '../../api/settings';
+import { useCompany } from '../../context/CompanyContext';
 
 const CompanySettings = () => {
   const { refreshSettings } = useCompany();

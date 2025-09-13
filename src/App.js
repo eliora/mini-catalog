@@ -22,7 +22,7 @@ import CatalogClean from './components/CatalogClean';
 import { OrderForm } from './components/orderform';
 import Admin from './components/Admin';
 import AppProviders from './providers/AppProviders';
-import ErrorBoundary from './components/ErrorBoundary';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 import { useAuth } from './context/AuthContext';
 import { useCart } from './context/CartContext';
 import { useCompany } from './context/CompanyContext';
