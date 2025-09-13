@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getProducts, saveProduct, deleteProduct as apiDeleteProduct } from '../api/products';
 import { getOrders as apiGetOrders } from '../api/orders';
-import CsvImport from './forms/CsvImport';
-import SupabaseConnectionTest from './data/SupabaseConnectionTest';
-import DatabaseTest from './data/DatabaseTest';
-import CompanySettings from './forms/CompanySettings';
+import CsvImport from './admin/forms/CsvImport';
+import SupabaseConnectionTest from './admin/data/SupabaseConnectionTest';
+import DatabaseTest from './admin/data/DatabaseTest';
+import CompanySettings from './admin/forms/CompanySettings';
 import VendorDashboardLayout from './layouts/VendorDashboardLayout';
 import DashboardOverview from './admin/DashboardOverview';
 import {

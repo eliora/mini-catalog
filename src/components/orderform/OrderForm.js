@@ -1,5 +1,28 @@
+/**
+ * OrderForm Component
+ * 
+ * Main order management interface that allows users to:
+ * - View cart items in a compact, table-like format
+ * - Edit quantities and remove items
+ * - Enter customer information 
+ * - Submit orders with calculated totals (including tax)
+ * - Admin users can edit prices and add custom items
+ * 
+ * Features:
+ * - Real-time price loading from secure Supabase RLS table
+ * - Role-based admin controls (price editing, custom items)
+ * - Responsive design (mobile/desktop layouts)
+ * - Print-friendly order confirmation
+ * - Environment-protected connection to pricing API
+ * 
+ * Admin Features (when user.user_role = 'admin'):
+ * - Price editing in cart items
+ * - Add custom products with custom pricing
+ * - Edit mode toggle for price modifications
+ */
+
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { createOrder, getOrderById } from '../../api/orders';
+import { createOrder } from '../../api/orders';
 import { getPrices } from '../../api/prices';
 import { getProducts } from '../../api/products';
 import { useCart } from '../../context/CartContext';
@@ -15,7 +38,6 @@ import {
   Grid,
   Stack,
   useTheme,
-  useMediaQuery,
   TextField,
   Card,
   CardContent,
@@ -52,26 +74,28 @@ import OrderConfirmation from './OrderConfirmation';
 import '../../styles/print.css';
 
 const OrderForm = () => {
+  // === CART & CONTEXT HOOKS ===
   const { cart, removeFromCart, updateQuantity, clearCart, addToCart, updateItemPrice } = useCart();
-  const [canViewPrices, setCanViewPrices] = useState(false);
   const { settings: companySettings } = useCompany();
-  const { isAdmin } = useAuth();
+  const { isAdmin } = useAuth(); // Determines admin UI visibility
   const theme = useTheme();
-  const printRef = useRef(null);
+  const printRef = useRef(null); // For print functionality
 
-  // const [checkoutDialog, setCheckoutDialog] = useState(false);
+  // === CORE ORDER STATE ===
+  const [canViewPrices, setCanViewPrices] = useState(false); // RLS pricing access
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  const [customerName, setCustomerName] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [orderSummary, setOrderSummary] = useState(null);
+  const [customerName, setCustomerName] = useState(''); // Order customer info
+  const [isSubmitting, setIsSubmitting] = useState(false); // Prevent double submissions
+  const [orderSummary, setOrderSummary] = useState(null); // Post-submission order data
   
-  // Admin features state
-  const [editMode, setEditMode] = useState(false);
-  const [products, setProducts] = useState([]);
-  const [addItemDialog, setAddItemDialog] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState('');
-  const [customPrice, setCustomPrice] = useState('');
-  const [customQuantity, setCustomQuantity] = useState(1);
+  // === ADMIN FEATURES STATE ===
+  // Only used when isAdmin = true
+  const [editMode, setEditMode] = useState(false); // Toggle price editing mode
+  const [products, setProducts] = useState([]); // Product catalog for custom items
+  const [addItemDialog, setAddItemDialog] = useState(false); // Custom item dialog state
+  const [selectedProduct, setSelectedProduct] = useState(''); // Selected product for custom item
+  const [customPrice, setCustomPrice] = useState(''); // Custom price override
+  const [customQuantity, setCustomQuantity] = useState(1); // Custom quantity
   // Load unit prices for items in cart from secure table (RLS-protected)
   useEffect(() => {
     const loadCartPrices = async () => {
@@ -103,6 +127,10 @@ const OrderForm = () => {
     }
   }, [isAdmin, editMode]);
 
+  /**
+   * Load products for admin custom item selection
+   * Fetches full product catalog when admin enters edit mode
+   */
   const loadProducts = async () => {
     try {
       const productsData = await getProducts();
@@ -112,12 +140,27 @@ const OrderForm = () => {
     }
   };
 
-  // Admin function: Handle price change for cart items
+  /**
+   * Admin function: Handle price change for cart items
+   * Updates the unit price of a specific cart item when admin edits price
+   * 
+   * @param {string} itemRef - Product reference ID
+   * @param {number} newPrice - New unit price to set
+   */
   const handlePriceChange = (itemRef, newPrice) => {
     updateItemPrice(itemRef, Number(newPrice) || 0);
   };
 
-  // Admin function: Add custom item to cart
+  /**
+   * Admin function: Add custom item to cart with custom pricing
+   * Allows admin to add any product from catalog with custom price/quantity
+   * 
+   * Flow:
+   * 1. Find selected product from catalog
+   * 2. Create cart item with custom price/quantity
+   * 3. Add to cart using standard cart functions
+   * 4. Reset dialog state
+   */
   const handleAddCustomItem = () => {
     if (!selectedProduct) return;
 
@@ -129,13 +172,13 @@ const OrderForm = () => {
       productName: product.productName,
       productName2: product.productName2,
       size: product.size,
-      unitPrice: Number(customPrice) || 0,
+      unitPrice: Number(customPrice) || 0, // Custom price override
       quantity: Number(customQuantity) || 1
     };
 
     addToCart(customItem, customItem.quantity);
     
-    // Reset dialog
+    // Reset dialog state for next use
     setSelectedProduct('');
     setCustomPrice('');
     setCustomQuantity(1);

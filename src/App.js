@@ -26,7 +26,7 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 import { useAuth } from './context/AuthContext';
 import { useCart } from './context/CartContext';
 import { useCompany } from './context/CompanyContext';
-import UserMenu from './components/auth/UserMenu';
+// import UserMenu from './components/auth/UserMenu'; // TODO: Implement user menu
 import AuthCallback from './components/auth/AuthCallback';
 import JDAHeader from './components/layout/JDAHeader';
 

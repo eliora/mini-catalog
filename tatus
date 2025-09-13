@@ -1,6 +1,0 @@
-admin panel - order tab
-1) add option to edit order by reviving it and editing it in order form. keep it attached to the order so only saved it needed.
-make it viewble like seen on print that we have done before.
-3) allow name client changing from dashboard
-4) realign the whole orders summary in admin panel as shown in ecommerce panels keeping mui standards.
-5) if admin is logged in make it able to edit in order form price per unit and add ability to add inline new row so u can make manual charge. no popups.
