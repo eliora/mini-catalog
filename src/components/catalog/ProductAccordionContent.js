@@ -1,9 +1,30 @@
+/**
+ * ProductAccordionContent Component
+ * 
+ * Displays detailed product information in an accordion layout within the catalog.
+ * Handles image galleries, product specifications, descriptions, and related metadata.
+ * 
+ * Features:
+ * - Image gallery with thumbnail navigation
+ * - Responsive design (mobile/desktop layouts)
+ * - Product specifications display
+ * - HTML content parsing for descriptions
+ * - Lazy loading optimized images
+ * 
+ * Used by ProductListItem component in catalog accordion displays.
+ * 
+ * @param {Object} product - Main product data
+ * @param {Object} accordionData - Additional product details from API
+ * @param {boolean} isLoadingDetails - Loading state for additional details
+ * @param {boolean} shouldRenderContent - Whether to render content (for performance)
+ * @param {Function} parseJsonField - Utility to parse JSON fields safely
+ */
+
 import React, { useState } from 'react';
 import {
   Box,
   Typography,
   Divider,
-  Chip,
   Stack,
   Grid,
   Accordion,

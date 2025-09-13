@@ -1,3 +1,24 @@
+/**
+ * CartItem Component
+ * 
+ * Displays individual cart items with full editing capabilities.
+ * Supports both mobile and desktop layouts with responsive design.
+ * 
+ * Features:
+ * - Quantity editing with +/- buttons and direct input
+ * - Admin price editing when in admin mode
+ * - Product information display (name, ref, size)
+ * - Remove item functionality
+ * - Mobile-optimized compact layout
+ * - Desktop grid-based layout
+ * 
+ * @param {Object} item - Cart item data (ref, productName, quantity, unitPrice, etc.)
+ * @param {Function} onUpdateQuantity - Callback for quantity changes
+ * @param {Function} onRemove - Callback for item removal
+ * @param {Function} onUpdatePrice - Callback for price changes (admin only)
+ * @param {boolean} isAdmin - Whether user has admin privileges
+ */
+
 import React from 'react';
 import {
   Box, Typography, IconButton, Stack, useTheme, useMediaQuery, TextField

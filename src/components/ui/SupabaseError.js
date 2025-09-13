@@ -1,3 +1,20 @@
+/**
+ * SupabaseError Component
+ * 
+ * User-friendly error display for Supabase connection issues.
+ * Provides setup instructions and troubleshooting steps.
+ * 
+ * Features:
+ * - Clear error messaging
+ * - Step-by-step Supabase setup guide
+ * - Copy-to-clipboard functionality for environment variables
+ * - Retry connection functionality
+ * - Links to Supabase documentation
+ * 
+ * @param {Error} error - The error object from Supabase
+ * @param {Function} onRetry - Callback to retry connection
+ */
+
 import React from 'react';
 import {
   Alert,

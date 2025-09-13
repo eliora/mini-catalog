@@ -71,6 +71,7 @@ import StyledButton from '../ui/StyledButton';
 import OrderCartItem from './OrderCartItem';
 import OrderSummary from './OrderSummary';
 import OrderConfirmation from './OrderConfirmation';
+import AdminAddItemDialog from './AdminAddItemDialog';
 import '../../styles/print.css';
 
 const OrderForm = () => {
@@ -93,9 +94,6 @@ const OrderForm = () => {
   const [editMode, setEditMode] = useState(false); // Toggle price editing mode
   const [products, setProducts] = useState([]); // Product catalog for custom items
   const [addItemDialog, setAddItemDialog] = useState(false); // Custom item dialog state
-  const [selectedProduct, setSelectedProduct] = useState(''); // Selected product for custom item
-  const [customPrice, setCustomPrice] = useState(''); // Custom price override
-  const [customQuantity, setCustomQuantity] = useState(1); // Custom quantity
   // Load unit prices for items in cart from secure table (RLS-protected)
   useEffect(() => {
     const loadCartPrices = async () => {
@@ -153,35 +151,12 @@ const OrderForm = () => {
 
   /**
    * Admin function: Add custom item to cart with custom pricing
-   * Allows admin to add any product from catalog with custom price/quantity
+   * Handles items from AdminAddItemDialog component
    * 
-   * Flow:
-   * 1. Find selected product from catalog
-   * 2. Create cart item with custom price/quantity
-   * 3. Add to cart using standard cart functions
-   * 4. Reset dialog state
+   * @param {Object} customItem - Pre-formatted item from dialog
    */
-  const handleAddCustomItem = () => {
-    if (!selectedProduct) return;
-
-    const product = products.find(p => p.ref === selectedProduct);
-    if (!product) return;
-
-    const customItem = {
-      ref: product.ref,
-      productName: product.productName,
-      productName2: product.productName2,
-      size: product.size,
-      unitPrice: Number(customPrice) || 0, // Custom price override
-      quantity: Number(customQuantity) || 1
-    };
-
+  const handleAddCustomItem = (customItem) => {
     addToCart(customItem, customItem.quantity);
-    
-    // Reset dialog state for next use
-    setSelectedProduct('');
-    setCustomPrice('');
-    setCustomQuantity(1);
     setAddItemDialog(false);
   };
 
@@ -641,60 +616,14 @@ const OrderForm = () => {
       )}
 
       {/* Admin: Add Custom Item Dialog */}
+      {/* Add Custom Item Dialog - Admin Only */}
       {isAdmin && (
-        <Dialog open={addItemDialog} onClose={() => setAddItemDialog(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>הוסף פריט מותאם</DialogTitle>
-          <DialogContent>
-            <Stack spacing={3} sx={{ mt: 1 }}>
-              <FormControl fullWidth>
-                <InputLabel>בחר מוצר</InputLabel>
-                <Select
-                  value={selectedProduct}
-                  onChange={(e) => setSelectedProduct(e.target.value)}
-                  label="בחר מוצר"
-                >
-                  {products.map((product) => (
-                    <MenuItem key={product.ref} value={product.ref}>
-                      {product.ref} - {product.productName} {product.size && `(${product.size})`}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              
-              <TextField
-                label="מחיר מותאם"
-                type="number"
-                value={customPrice}
-                onChange={(e) => setCustomPrice(e.target.value)}
-                InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                helperText="השאר ריק להשתמש במחיר ברירת המחדל"
-              />
-              
-              <TextField
-                label="כמות"
-                type="number"
-                value={customQuantity}
-                onChange={(e) => setCustomQuantity(Number(e.target.value))}
-                InputProps={{ inputProps: { min: 1 } }}
-              />
-            </Stack>
-          </DialogContent>
-          <DialogActions>
-            <StyledButton 
-              variant="outlined" 
-              onClick={() => setAddItemDialog(false)}
-            >
-              ביטול
-            </StyledButton>
-            <StyledButton 
-              variant="contained" 
-              onClick={handleAddCustomItem} 
-              disabled={!selectedProduct}
-            >
-              הוסף לעגלה
-            </StyledButton>
-          </DialogActions>
-        </Dialog>
+        <AdminAddItemDialog
+          open={addItemDialog}
+          onClose={() => setAddItemDialog(false)}
+          products={products}
+          onAddItem={handleAddCustomItem}
+        />
       )}
 
       {/* Snackbar for notifications */}

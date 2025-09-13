@@ -13,7 +13,7 @@ import MobileFilterChips from './catalog/MobileFilterChips';
 import SearchHeader from './common/SearchHeader';
 import ProductDetailsDialog from './catalog/ProductDetailsDialog';
 import ImageZoomDialog from './catalog/ImageZoomDialog';
-import SupabaseError from './SupabaseError';
+import SupabaseError from './ui/SupabaseError';
 
 /**
  * Clean Catalog implementation with pure TanStack Query

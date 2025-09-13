@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, Skeleton } from '@mui/material';
 import { ImageNotSupported as ImageIcon } from '@mui/icons-material';
-import { processImageUrl } from '../utils/imageHelpers';
+import { processImageUrl } from '../../utils/imageHelpers';
 
 /**
  * OptimizedImage Component

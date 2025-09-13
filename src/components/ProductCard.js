@@ -1,10 +1,35 @@
-﻿import React from 'react';
+﻿/**
+ * ProductCard Component
+ * 
+ * Card-based product display for grid view in the catalog.
+ * Shows product image, information, pricing, and quantity controls.
+ * 
+ * Features:
+ * - Optimized image display with lazy loading
+ * - Product information (name, description, size)
+ * - Price display (when user has access)
+ * - Quantity input with increment/decrement controls
+ * - Info button for detailed product view
+ * - Responsive design with hover effects
+ * 
+ * @param {Object} product - Product data
+ * @param {number} quantity - Current quantity in cart
+ * @param {Function} onIncrement - Increment quantity callback
+ * @param {Function} onDecrement - Decrement quantity callback
+ * @param {Function} onQuantityChange - Direct quantity change callback
+ * @param {Function} onInfoClick - Product info dialog callback
+ * @param {Function} onImageClick - Image zoom callback
+ * @param {boolean} canViewPrices - Whether user can see prices
+ * @param {number} productPrice - Product price if available
+ */
+
+import React from 'react';
 import {
   Card, CardMedia, CardContent, CardActions,
   Typography, Chip, IconButton, Stack, Box
 } from '@mui/material';
 import { Info as InfoIcon } from '@mui/icons-material';
-import OptimizedImage from './OptimizedImage';
+import OptimizedImage from './ui/OptimizedImage';
 import QuantityInput from './common/QuantityInput';
 import useResponsiveConfig from './common/ResponsiveConfig';
 

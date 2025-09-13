@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import { getProductDetails } from '../api/products';
-import ProductAccordionContent from './product/ProductAccordionContent';
+import ProductAccordionContent from './catalog/ProductAccordionContent';
 import { AccordionContentSkeleton } from './common/SkeletonLoading';
 import QuantityInput from './common/QuantityInput';
 import PriceDisplay from './common/PriceDisplay';
