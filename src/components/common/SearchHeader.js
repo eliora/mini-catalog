@@ -77,25 +77,27 @@ const SearchHeader = ({
         )}
       </Box>
 
-      {/* Results Count and Active Filters */}
-      <Box sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: 2
-      }}>
-        {/* Results Count - Removed due to lazy loading inaccuracy */}
-        <div></div>
-
-        {/* Active Filters */}
-        {activeFilters && activeFilters.length > 0 && (
-          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+      {/* Active Filters */}
+      {activeFilters && activeFilters.length > 0 && (
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center',
+          mt: 1
+        }}>
+          <Stack 
+            direction="row" 
+            spacing={1} 
+            sx={{ 
+              flexWrap: 'wrap', 
+              gap: 1,
+              marginRight: 'auto' // In RTL layout, this pushes to the right side
+            }}
+          >
             {activeFilters.map((filter, index) => (
               <Chip
                 key={index}
                 label={filter.label}
-                onDelete={onFilterRemove ? () => onFilterRemove(filter) : undefined}
+                onDelete={onFilterRemove ? () => onFilterRemove(filter.type, filter.value) : undefined}
                 size="small"
                 color="primary"
                 variant="outlined"
@@ -108,8 +110,8 @@ const SearchHeader = ({
               />
             ))}
           </Stack>
-        )}
-      </Box>
+        </Box>
+      )}
     </Box>
   );
 };

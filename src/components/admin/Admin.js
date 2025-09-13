@@ -1,57 +1,75 @@
+/**
+ * Admin Component - Main Admin Dashboard
+ * 
+ * Central admin interface for managing products, orders, customers, and system settings.
+ * Provides tabbed navigation with different management sections.
+ * 
+ * Features:
+ * - Dashboard overview with statistics
+ * - Product management (CRUD operations)
+ * - Order management and processing
+ * - Customer management (placeholder)
+ * - Reports and analytics (placeholder)
+ * - Data import functionality
+ * - System settings and configuration
+ * 
+ * Architecture:
+ * - Uses VendorDashboardLayout for consistent UI
+ * - Extracted table components for better maintainability
+ * - Centralized state management for products and orders
+ * - Error handling with user-friendly messages
+ */
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { getProducts, saveProduct, deleteProduct as apiDeleteProduct } from '../api/products';
-import { getOrders as apiGetOrders } from '../api/orders';
-import CsvImport from './admin/forms/CsvImport';
-// Development testing components moved to temp/unused
-import CompanySettings from './admin/forms/CompanySettings';
-import VendorDashboardLayout from './layouts/VendorDashboardLayout';
-import DashboardOverview from './admin/DashboardOverview';
+import { getProducts, saveProduct, deleteProduct as apiDeleteProduct } from '../../api/products';
+import { getOrders as apiGetOrders } from '../../api/orders';
+
+// Admin sub-components
+import CsvImport from './forms/CsvImport';
+import CompanySettings from './forms/CompanySettings';
+import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
+import DashboardOverview from './DashboardOverview';
+import AdminProductsTable from './data/AdminProductsTable';
+import AdminOrdersTable from './data/AdminOrdersTable';
+import AdminSystemInfo from './AdminSystemInfo';
+import ProductForm from './forms/ProductForm';
+import OrderDetails from '../orderform/OrderDetails';
+
+// UI components
 import {
   Box,
-  Paper,
   Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Dialog,
   DialogContent,
   Grid,
   Alert,
-  Snackbar,
-  CircularProgress
+  Snackbar
 } from '@mui/material';
-import {
-  Add as AddIcon
-} from '@mui/icons-material';
-import ProductRow from './ProductRow';
-import OrderRow from './OrderRow';
-import OrderDetails from './OrderDetails';
-
-// Styled components
-import StyledButton from './ui/StyledButton';
-import ProductForm from './admin/forms/ProductForm';
 
 const Admin = ({ onLogout }) => {
+  // ===== NAVIGATION STATE =====
   const [activeTab, setActiveTab] = useState(0);
+  
+  // ===== DATA STATE =====
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
+  
+  // ===== DIALOG STATE =====
   const [productDialog, setProductDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [orderDialog, setOrderDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  
+  // ===== NOTIFICATION STATE =====
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  // CSV functionality removed - using direct Supabase operations instead
 
-  // Product form state (now handled by ProductForm component)
-
+  // ===== UTILITY FUNCTIONS =====
   const showSnackbar = useCallback((message, severity) => {
     setSnackbar({ open: true, message, severity });
   }, []);
 
+  // ===== DATA LOADING FUNCTIONS =====
   const loadProducts = useCallback(async () => {
     setLoading(true);
     try {
@@ -85,7 +103,7 @@ const Admin = ({ onLogout }) => {
     loadOrders();
   }, [loadProducts, loadOrders]);
 
-  // Product dialog handlers
+  // ===== PRODUCT MANAGEMENT HANDLERS =====
   const handleAddProduct = useCallback(() => {
     setEditingProduct(null);
     setProductDialog(true);
@@ -132,6 +150,7 @@ const Admin = ({ onLogout }) => {
     }
   }, [loadProducts, showSnackbar]);
 
+  // ===== ORDER MANAGEMENT HANDLERS =====
   const handleViewOrder = (order) => {
     setSelectedOrder(order);
     setOrderDialog(true);
@@ -159,11 +178,17 @@ const Admin = ({ onLogout }) => {
 
 
 
+  // ===== UTILITY FUNCTIONS =====
   const formatDate = useCallback((dateString) => {
     return new Date(dateString).toLocaleString('he-IL');
   }, []);
 
-  // Calculate stats for dashboard
+  const handleTabChange = (newTab) => {
+    setActiveTab(newTab);
+  };
+
+  // ===== COMPUTED VALUES =====
+  // Calculate stats for dashboard overview
   const dashboardStats = useMemo(() => ({
     products: products.length,
     orders: Array.isArray(orders) ? orders.length : 0,
@@ -172,10 +197,6 @@ const Admin = ({ onLogout }) => {
     pendingOrders: Array.isArray(orders) ? orders.filter(order => order.status !== 'completed').length : 0,
     completedOrders: Array.isArray(orders) ? orders.filter(order => order.status === 'completed').length : 0
   }), [products, orders]);
-
-  const handleTabChange = (newTab) => {
-    setActiveTab(newTab);
-  };
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -228,119 +249,26 @@ const Admin = ({ onLogout }) => {
     }
   };
 
+  // ===== TAB RENDER FUNCTIONS =====
   const renderProductsTab = () => (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700 }}>
-          ניהול מוצרים
-        </Typography>
-              <StyledButton
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAddProduct}
-        >
-          הוסף מוצר
-              </StyledButton>
-      </Box>
-
-      <TableContainer component={Paper} sx={{ borderRadius: 3, overflow: 'hidden' }}>
-        <Table>
-          <TableHead>
-            <TableRow sx={{ bgcolor: 'primary.main' }}>
-              <TableCell sx={{ color: 'white', fontWeight: 700 }}>קוד מוצר</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 700 }}>שם מוצר</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 700 }}>קטגוריה</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 700 }}>מחיר</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 700 }}>פעולות</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} sx={{ textAlign: 'center', py: 4 }}>
-                  <CircularProgress />
-                </TableCell>
-              </TableRow>
-            ) : products.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} sx={{ textAlign: 'center', py: 4 }}>
-                  <Typography variant="h6" color="text.secondary">
-                    אין מוצרים במערכת
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ) : (
-              products.map((product) => (
-                <ProductRow
-                  key={product.ref}
-                  product={product}
-                  onEdit={handleEditProduct}
-                  onDelete={handleDeleteProduct}
-                />
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Box>
+    <AdminProductsTable
+      products={products}
+      loading={loading}
+      onAddProduct={handleAddProduct}
+      onEditProduct={handleEditProduct}
+      onDeleteProduct={handleDeleteProduct}
+    />
   );
 
   const renderOrdersTab = () => (
-    <Box>
-      <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, mb: 3 }}>
-        ניהול הזמנות
-      </Typography>
-
-      <TableContainer component={Paper} sx={{ borderRadius: 3, overflow: 'hidden' }}>
-        <Table>
-          <TableHead>
-            <TableRow sx={{ bgcolor: 'success.main' }}>
-              <TableCell sx={{ color: 'white', fontWeight: 700 }}>תאריך ושעה</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 700 }}>מספר הזמנה</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 700 }}>פרטי לקוח</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 700 }}>סכום</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 700 }}>סטטוס</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 700 }}>פעולות</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={6} sx={{ textAlign: 'center', py: 6 }}>
-                  <CircularProgress size={40} />
-                  <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
-                    טוען הזמנות...
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ) : orders.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} sx={{ textAlign: 'center', py: 6 }}>
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
-                    אין הזמנות במערכת
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    הזמנות שיוגשו יופיעו כאן
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ) : (
-              orders.map((order) => (
-                <OrderRow
-                  key={order.id}
-                  order={order}
-                  onView={handleViewOrder}
-                  onEdit={handleEditOrder}
-                  onRevive={handleReviveOrder}
-                  formatDate={formatDate}
-                  isAdmin={true}
-                />
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Box>
+    <AdminOrdersTable
+      orders={orders}
+      loading={loading}
+      onViewOrder={handleViewOrder}
+      onEditOrder={handleEditOrder}
+      onReviveOrder={handleReviveOrder}
+      formatDate={formatDate}
+    />
   );
 
   const renderSettingsTab = () => (
@@ -357,26 +285,7 @@ const Admin = ({ onLogout }) => {
         {/* Development testing components removed for production */}
         
         <Grid item xs={12}>
-          <Paper sx={{ p: 3, borderRadius: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 700 }}>
-              מידע מערכת
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              כאן תוכל לעקוב אחר מצב המערכת ולבצע פעולות תחזוקה.
-            </Typography>
-
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="body1">
-                <strong>סביבת עבודה:</strong> {process.env.NODE_ENV || 'development'}
-              </Typography>
-              <Typography variant="body1">
-                <strong>זמן בנייה:</strong> {new Date().toLocaleString('he-IL')}
-              </Typography>
-              <Typography variant="body1">
-                <strong>מצב Supabase:</strong> {process.env.REACT_APP_SUPABASE_URL ? 'מוגדר' : 'לא מוגדר'}
-              </Typography>
-            </Box>
-          </Paper>
+          <AdminSystemInfo />
         </Grid>
       </Grid>
     </Box>

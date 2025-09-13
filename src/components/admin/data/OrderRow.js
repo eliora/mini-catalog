@@ -1,3 +1,26 @@
+/**
+ * OrderRow Component
+ * 
+ * Table row component for displaying order information in admin order management.
+ * Shows comprehensive order details with action buttons for admin operations.
+ * 
+ * Features:
+ * - Date and time display with localized formatting
+ * - Order ID with formatted reference number
+ * - Customer information with item count
+ * - Total amount with currency formatting
+ * - Status indicators with color coding
+ * - Action buttons (view, edit, revive) for admin users
+ * - Hover effects for better user experience
+ * 
+ * @param {Object} order - Order data object
+ * @param {Function} onView - View order details callback
+ * @param {Function} onEdit - Edit order callback
+ * @param {Function} onRevive - Revive order callback
+ * @param {Function} formatDate - Date formatting function
+ * @param {boolean} isAdmin - Whether current user has admin privileges
+ */
+
 import React from 'react';
 import { 
   TableRow, 
@@ -14,6 +37,7 @@ import {
 } from '@mui/icons-material';
 
 const OrderRow = ({ order, onView, onEdit, onRevive, formatDate, isAdmin = false }) => {
+  // ===== UTILITY FUNCTIONS =====
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('he-IL', {
       style: 'currency',
@@ -31,11 +55,12 @@ const OrderRow = ({ order, onView, onEdit, onRevive, formatDate, isAdmin = false
     }
   };
 
+  // ===== RENDER =====
   return (
     <TableRow sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
-      {/* Date/Time - Now First Column */}
-      <TableCell sx={{ }}>
-        <Typography variant="body2">
+      {/* Date and Time Column */}
+      <TableCell>
+        <Typography variant="body2" sx={{ fontWeight: 600 }}>
           {formatDate(order.created_at)}
         </Typography>
         <Typography variant="caption" color="text.secondary">
@@ -46,8 +71,8 @@ const OrderRow = ({ order, onView, onEdit, onRevive, formatDate, isAdmin = false
         </Typography>
       </TableCell>
       
-      {/* Order Number - Now Second Column */}
-      <TableCell sx={{ }}>
+      {/* Order ID Column */}
+      <TableCell>
         <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
           #{order.id}
         </Typography>
@@ -56,8 +81,8 @@ const OrderRow = ({ order, onView, onEdit, onRevive, formatDate, isAdmin = false
         </Typography>
       </TableCell>
       
-      {/* Customer - Now Third Column */}
-      <TableCell sx={{ }}>
+      {/* Customer Information Column */}
+      <TableCell>
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
           {order.customerName || order.customer_name || 'אורח'}
         </Typography>
@@ -65,19 +90,19 @@ const OrderRow = ({ order, onView, onEdit, onRevive, formatDate, isAdmin = false
           label={`${getItemsCount(order)} פריטים`} 
           size="small" 
           variant="outlined" 
-          sx={{ mt: 0.5 }}
+          sx={{ mt: 0.5, fontSize: '0.75rem' }}
         />
       </TableCell>
       
-      {/* Amount - Now Fourth Column */}
-      <TableCell sx={{ }}>
+      {/* Total Amount Column */}
+      <TableCell>
         <Typography variant="h6" sx={{ fontWeight: 700, color: 'success.main' }}>
           {formatCurrency(order.total)}
         </Typography>
       </TableCell>
       
-      {/* Status - Now Fifth Column */}
-      <TableCell sx={{ }}>
+      {/* Status Column */}
+      <TableCell>
         <Chip 
           label="הוגשה" 
           size="small" 
@@ -86,9 +111,10 @@ const OrderRow = ({ order, onView, onEdit, onRevive, formatDate, isAdmin = false
         />
       </TableCell>
       
-      {/* Actions - Now Sixth Column */}
-      <TableCell sx={{ }}>
+      {/* Actions Column */}
+      <TableCell>
         <Stack direction="row" spacing={1}>
+          {/* View Button */}
           <IconButton 
             size="small" 
             onClick={() => onView(order)}
@@ -102,8 +128,10 @@ const OrderRow = ({ order, onView, onEdit, onRevive, formatDate, isAdmin = false
             <ViewIcon />
           </IconButton>
           
+          {/* Admin-only Actions */}
           {isAdmin && (
             <>
+              {/* Edit Button */}
               <IconButton 
                 size="small" 
                 onClick={() => onEdit && onEdit(order)}
@@ -117,6 +145,7 @@ const OrderRow = ({ order, onView, onEdit, onRevive, formatDate, isAdmin = false
                 <EditIcon />
               </IconButton>
               
+              {/* Revive Button */}
               <IconButton 
                 size="small" 
                 onClick={() => onRevive && onRevive(order)}

@@ -149,7 +149,7 @@ const ProductDisplay = React.memo(({
 
   // Default catalog/grid view
   return (
-    <Grid container spacing={2} className="catalog-container">
+    <Grid container spacing={1} className="catalog-container">
       {products.map((product) => (
         <ProductRenderer
           key={product.ref}

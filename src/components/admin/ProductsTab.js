@@ -22,7 +22,7 @@ import {
 import {
   Add as AddIcon
 } from '@mui/icons-material';
-import ProductRow from '../ProductRow';
+import ProductRow from './data/ProductRow';
 import StyledButton from '../ui/StyledButton';
 
 const ProductsTab = ({ onSnackbar }) => {

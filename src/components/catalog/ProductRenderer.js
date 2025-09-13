@@ -20,8 +20,8 @@
 
 import React from 'react';
 import { Grid } from '@mui/material';
-import ProductCard from '../ProductCard';
-import ProductListItem from '../ProductListItem';
+import ProductCard from './ProductCard';
+import ProductListItem from './ProductListItem';
 
 const ProductRenderer = React.memo(({ 
   product, 

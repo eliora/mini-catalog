@@ -12,8 +12,8 @@ import {
   TableRow,
   CircularProgress
 } from '@mui/material';
-import OrderRow from '../OrderRow';
-import OrderDetails from '../OrderDetails';
+import OrderRow from './data/OrderRow';
+import OrderDetails from '../orderform/OrderDetails';
 
 const OrdersTab = ({ onSnackbar }) => {
   const [orders, setOrders] = useState([]);

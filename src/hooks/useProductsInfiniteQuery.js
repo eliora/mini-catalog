@@ -6,11 +6,13 @@ import { getProducts } from '../api/products';
  * Handles all combinations of filters correctly
  */
 export const useProductsInfiniteQuery = (filters = {}, searchTerm = '') => {
+  console.log('📊 useProductsInfiniteQuery called with:', { filters, searchTerm });
+  
   const {
-    selectedLines = [],
-    selectedProductTypes = [],
-    selectedSkinTypes = [],
-    selectedTypes = []
+    lines: selectedLines = [],
+    productTypes: selectedProductTypes = [],
+    skinTypes: selectedSkinTypes = [],
+    generalTypes: selectedTypes = []
   } = filters;
 
   // Check if we have any filters at all
@@ -27,7 +29,7 @@ export const useProductsInfiniteQuery = (filters = {}, searchTerm = '') => {
       lines: [...selectedLines].sort(),
       productTypes: [...selectedProductTypes].sort(),
       skinTypes: [...selectedSkinTypes].sort(),
-      types: [...selectedTypes].sort(),
+      generalTypes: [...selectedTypes].sort(),
       hasFilters: hasAnyFilters
     }
   ];

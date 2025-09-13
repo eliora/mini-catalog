@@ -1,73 +1,76 @@
 /**
  * OrderItemsTable Component
  * 
- * Displays order items in a table format with editing capabilities.
- * Supports admin editing modes for quantities and prices.
+ * Table displaying order items with edit capabilities for admin users.
+ * Extracted from OrderDetails.js for better maintainability and reusability.
  * 
  * Features:
- * - Item display with product info, quantities, prices
- * - Admin editing mode for quantities and prices  
- * - Add/remove item functionality
- * - Responsive table layout
- * - Edit/view mode toggling
+ * - Product listing with ref, name, size, quantity, price, total
+ * - Edit mode for quantity and price changes
+ * - Add and remove item functionality
+ * - Responsive table design
  * 
- * @param {Array} items - Order items to display
- * @param {boolean} editMode - Whether table is in edit mode
- * @param {boolean} isAdmin - Whether user has admin privileges
- * @param {Function} onQuantityChange - Quantity change handler
- * @param {Function} onPriceChange - Price change handler
- * @param {Function} onRemoveItem - Remove item handler
- * @param {Function} onAddItem - Add item handler
+ * @param {Array} items - Array of order items
+ * @param {boolean} editMode - Whether in edit mode
+ * @param {boolean} isAdmin - Whether user is admin
  * @param {Function} formatCurrency - Currency formatting function
+ * @param {Function} onQuantityChange - Quantity change callback
+ * @param {Function} onPriceChange - Price change callback
+ * @param {Function} onRemoveItem - Remove item callback
+ * @param {Function} onAddItem - Add item callback
  */
 
 import React from 'react';
 import {
+  Paper,
+  Typography,
   Table,
   TableHead,
   TableBody,
   TableRow,
   TableCell,
-  Typography,
   IconButton,
-  TextField,
   Stack,
+  Box,
+  TextField,
   Button
 } from '@mui/material';
 import {
-  Remove as RemoveIcon,
   Add as AddIcon,
+  Remove as RemoveIcon,
   Delete as DeleteIcon
 } from '@mui/icons-material';
 
 const OrderItemsTable = ({
-  items = [],
-  editMode = false,
-  isAdmin = false,
+  items,
+  editMode,
+  isAdmin,
+  formatCurrency,
   onQuantityChange,
   onPriceChange,
   onRemoveItem,
-  onAddItem,
-  formatCurrency
+  onAddItem
 }) => {
   return (
-    <>
-      {/* Table Header with Add Button */}
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-        <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
-          פירוט מוצרים
-        </Typography>
-        {editMode && isAdmin && onAddItem && (
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<AddIcon />}
-            onClick={onAddItem}
-          >
-            הוסף פריט
-          </Button>
-        )}
-      </Stack>
+    <Paper elevation={3} sx={{ mb: 3 }}>
+      {/* Table Header */}
+      <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
+            פירוט מוצרים
+          </Typography>
+          {editMode && isAdmin && (
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<AddIcon />}
+              onClick={onAddItem}
+            >
+              הוסף פריט
+            </Button>
+          )}
+        </Stack>
+      </Box>
 
       {/* Items Table */}
       <Table>
@@ -89,26 +92,26 @@ const OrderItemsTable = ({
               <TableCell align="right" sx={{ fontFamily: 'monospace', fontWeight: 700, color: 'primary.main' }}>
                 {item.ref}
               </TableCell>
-
+              
               {/* Product Name */}
               <TableCell align="right">
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
                   {item.productName || item.productName2}
                 </Typography>
               </TableCell>
-
+              
               {/* Size */}
               <TableCell align="right">
                 {item.size || '-'}
               </TableCell>
-
+              
               {/* Quantity */}
               <TableCell align="right">
                 {editMode ? (
                   <Stack direction="row" alignItems="center" spacing={1}>
                     <IconButton 
                       size="small" 
-                      onClick={() => onQuantityChange?.(index, -1)}
+                      onClick={() => onQuantityChange(index, -1)}
                       disabled={item.quantity <= 1}
                     >
                       <RemoveIcon />
@@ -118,7 +121,7 @@ const OrderItemsTable = ({
                     </Typography>
                     <IconButton 
                       size="small" 
-                      onClick={() => onQuantityChange?.(index, 1)}
+                      onClick={() => onQuantityChange(index, 1)}
                     >
                       <AddIcon />
                     </IconButton>
@@ -129,7 +132,7 @@ const OrderItemsTable = ({
                   </Typography>
                 )}
               </TableCell>
-
+              
               {/* Unit Price */}
               <TableCell align="right">
                 {editMode && isAdmin ? (
@@ -137,31 +140,31 @@ const OrderItemsTable = ({
                     size="small"
                     type="number"
                     value={item.unitPrice}
-                    onChange={(e) => onPriceChange?.(index, e.target.value)}
+                    onChange={(e) => onPriceChange(index, e.target.value)}
                     sx={{ width: 100 }}
                     InputProps={{ inputProps: { min: 0, step: 0.01 } }}
                   />
                 ) : (
                   <Typography sx={{ fontWeight: 600 }}>
-                    {formatCurrency?.(item.unitPrice)}
+                    {formatCurrency(item.unitPrice)}
                   </Typography>
                 )}
               </TableCell>
-
+              
               {/* Total Price */}
               <TableCell align="right">
                 <Typography sx={{ fontWeight: 700 }}>
-                  {formatCurrency?.(item.unitPrice * item.quantity)}
+                  {formatCurrency(item.unitPrice * item.quantity)}
                 </Typography>
               </TableCell>
-
+              
               {/* Actions */}
               {editMode && (
                 <TableCell align="right">
                   <IconButton 
                     size="small" 
                     color="error"
-                    onClick={() => onRemoveItem?.(index)}
+                    onClick={() => onRemoveItem(index)}
                   >
                     <DeleteIcon />
                   </IconButton>
@@ -171,8 +174,8 @@ const OrderItemsTable = ({
           ))}
         </TableBody>
       </Table>
-    </>
+    </Paper>
   );
 };
 
-export default OrderItemsTable;
+export default React.memo(OrderItemsTable);

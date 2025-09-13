@@ -152,9 +152,9 @@ const FilterSidebar = ({
         width: 300,
         flexShrink: 0,
         position: 'sticky',
-        top: 0,
+        top: 16, // Add top margin to align with SearchHeader
         alignSelf: 'flex-start',
-        maxHeight: '100vh',
+        maxHeight: 'calc(100vh - 16px)', // Adjust max height accordingly
         border: 1,
         borderColor: 'divider',
         borderRadius: 1,

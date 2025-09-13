@@ -1,20 +1,60 @@
+/**
+ * ProductListItem Component - Accordion-Based Product Display
+ * 
+ * Advanced accordion component for displaying products in list view with expandable details.
+ * Provides comprehensive product information with lazy-loaded detailed content and responsive design.
+ * 
+ * Features:
+ * - Accordion-based expandable interface with smooth animations
+ * - Lazy loading of detailed product information on expansion
+ * - Responsive layouts (mobile vs desktop) with different information density
+ * - Price loading integration with access control
+ * - Quantity controls with real-time cart integration
+ * - Image click-to-zoom functionality
+ * - Error handling with retry capability
+ * - Performance optimizations with React.memo
+ * - Timeout handling for slow API responses
+ * 
+ * Architecture:
+ * - Uses ResponsiveConfig for consistent sizing across devices
+ * - Integrates with pricing hook for dynamic price loading
+ * - Implements lazy loading pattern for accordion content
+ * - Provides error boundaries and loading states
+ * - Optimized for performance with useCallback and conditional rendering
+ * 
+ * Layout Patterns:
+ * - Mobile: Vertical stack with compact information
+ * - Desktop: Horizontal layout with expanded information
+ * - Responsive price and quantity controls
+ * - Consistent spacing and alignment
+ * 
+ * @param {Object} product - Product data object
+ * @param {number} quantity - Current quantity in cart
+ * @param {Function} onIncrement - Increment quantity callback
+ * @param {Function} onDecrement - Decrement quantity callback
+ * @param {Function} onQuantityChange - Direct quantity change callback
+ * @param {Function} onImageClick - Image zoom callback
+ * @param {Function} shouldRenderContent - Content rendering condition check
+ * @param {Function} parseJsonField - JSON field parsing utility
+ */
+
 import React, { useState, useCallback } from 'react';
 import {
   Accordion, AccordionSummary, AccordionDetails,
   Grid, Stack, Box, Typography, Button
 } from '@mui/material';
 import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
-import { getProductDetails } from '../api/products';
-import ProductAccordionContent from './catalog/ProductAccordionContent';
-import { AccordionContentSkeleton } from './common/SkeletonLoading';
-import QuantityInput from './common/QuantityInput';
-import PriceDisplay from './common/PriceDisplay';
-import { usePricing } from '../hooks/usePricing';
-import ProductImage from './common/ProductImage';
-import ProductInfo from './common/ProductInfo';
-import ProductRef from './common/ProductRef';
-import ProductSize from './common/ProductSize';
-import useResponsiveConfig from './common/ResponsiveConfig';
+import { getProductDetails } from '../../api/products';
+import ProductAccordionContent from './ProductAccordionContent';
+import { AccordionContentSkeleton } from '../common/SkeletonLoading';
+import QuantityInput from '../common/QuantityInput';
+import PriceDisplay from '../common/PriceDisplay';
+import { usePricing } from '../../hooks/usePricing';
+import ProductImage from '../common/ProductImage';
+import ProductInfo from '../common/ProductInfo';
+import ProductRef from '../common/ProductRef';
+import ProductSize from '../common/ProductSize';
+import useResponsiveConfig from '../common/ResponsiveConfig';
 
 const ProductListItem = ({
   product,
@@ -26,44 +66,50 @@ const ProductListItem = ({
   shouldRenderContent,
   parseJsonField
 }) => {
+  // ===== CONFIGURATION HOOKS =====
   const { isMobile, dimensions, spacing, size, variants } = useResponsiveConfig();
   const { canViewPrices, loadPrices, prices } = usePricing();
   
-  // Accordion state
+  // ===== ACCORDION STATE =====
   const [expanded, setExpanded] = useState(false);
   const [accordionData, setAccordionData] = useState(null);
   const [loadingAccordion, setLoadingAccordion] = useState(false);
   
+  // ===== COMPUTED VALUES =====
   // Get price for this product from the prices hook
   const productPrice = prices[product.ref] || null;
 
-  // Handle accordion expansion with lazy loading
+  // ===== ACCORDION EXPANSION HANDLER =====
+  // Handle accordion expansion with lazy loading of detailed product information
   const handleAccordionChange = useCallback(async (event, isExpanded) => {
     setExpanded(isExpanded);
     
+    // Only load data if expanding and data hasn't been loaded yet
     if (isExpanded && !accordionData && !loadingAccordion) {
       setLoadingAccordion(true);
       
+      // Set up timeout for slow API responses
       const timeoutId = setTimeout(() => {
         console.warn(`⏰ Accordion loading timeout for product ${product.ref}`);
         setAccordionData({ error: true, message: 'טעינה ארכה מדי - אנא נסה שוב' });
         setLoadingAccordion(false);
       }, 5000);
       
-        try {
-          // Load both product details and prices concurrently
-          const [details] = await Promise.all([
-            getProductDetails(product.ref),
-            // Load price for this specific product when accordion opens
-            canViewPrices && !prices[product.ref] ? loadPrices([product.ref]) : Promise.resolve()
-          ]);
-          
+      try {
+        // Load both product details and prices concurrently for optimal performance
+        const [details] = await Promise.all([
+          getProductDetails(product.ref),
+          // Load price for this specific product when accordion opens (if not already loaded)
+          canViewPrices && !prices[product.ref] ? loadPrices([product.ref]) : Promise.resolve()
+        ]);
+        
         clearTimeout(timeoutId);
-          setAccordionData(details);
-        } catch (error) {
+        setAccordionData(details);
+      } catch (error) {
         clearTimeout(timeoutId);
         console.error(`❌ Failed to load accordion details for ${product.ref}:`, error);
         
+        // Provide user-friendly error messages based on error type
         let userMessage = 'שגיאה בטעינת פרטי המוצר - אנא נסה שוב';
         if (error.message?.includes('timeout')) {
           userMessage = 'החיבור איטי מדי - אנא נסה שוב';
@@ -78,7 +124,8 @@ const ProductListItem = ({
     }
   }, [accordionData, loadingAccordion, product.ref, canViewPrices, prices, loadPrices]);
 
-  // Smart responsive price, size and quantity controls
+  // ===== RESPONSIVE PRICE AND CONTROLS COMPONENT =====
+  // Smart responsive component for price display and quantity controls
   const PriceAndControls = ({ mobileLayout = false }) => {
     const screenType = isMobile ? 'mobile' : 'desktop';
     const controlSize = size;
@@ -91,6 +138,7 @@ const ProductListItem = ({
         spacing={direction === 'row' ? 2 : 1} 
         alignItems="center"
       >
+        {/* Price and Size Information */}
         <Stack spacing={spacing.fine} alignItems="center">
           <PriceDisplay 
             price={productPrice} 
@@ -101,6 +149,7 @@ const ProductListItem = ({
           <ProductSize product={product} size={size} />
         </Stack>
         
+        {/* Quantity Controls - Prevent accordion expansion on interaction */}
         <Box 
           className="quantity-controls"
           onClick={(e) => e.stopPropagation()}
@@ -120,9 +169,11 @@ const ProductListItem = ({
     );
   };
 
-  // Mobile layout
+  // ===== MOBILE LAYOUT COMPONENT =====
+  // Optimized layout for mobile devices with vertical stacking
   const MobileLayout = () => (
     <Grid container spacing={1} alignItems="center">
+      {/* Image and Reference Column */}
       <Grid item xs="auto">
         <Stack spacing={0.5} alignItems="center">
           <ProductImage product={product} onImageClick={onImageClick} size={80} padding={0.3} />
@@ -130,6 +181,7 @@ const ProductListItem = ({
         </Stack>
       </Grid>
 
+      {/* Product Information Column */}
       <Grid item xs>
         <ProductInfo 
           product={product} 
@@ -139,23 +191,28 @@ const ProductListItem = ({
         />
       </Grid>
 
+      {/* Controls Column */}
       <Grid item xs="auto">
         <PriceAndControls mobileLayout={true} />
       </Grid>
     </Grid>
   );
 
-  // Desktop layout
+  // ===== DESKTOP LAYOUT COMPONENT =====
+  // Optimized layout for desktop devices with horizontal arrangement
   const DesktopLayout = () => (
     <Grid container spacing={2} alignItems="center" sx={{ mb: 0.5 }}>
+      {/* Product Reference */}
       <Grid item xs="auto">
         <ProductRef product={product} showType={true} />
       </Grid>
 
+      {/* Product Image */}
       <Grid item xs="auto">
         <ProductImage product={product} onImageClick={onImageClick} size={80} />
       </Grid>
 
+      {/* Product Information */}
       <Grid item xs="auto">
         <ProductInfo 
           product={product} 
@@ -166,12 +223,14 @@ const ProductListItem = ({
         />
       </Grid>
 
+      {/* Price and Controls (Right-aligned) */}
       <Grid item xs sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
         <PriceAndControls />
       </Grid>
     </Grid>
   );
 
+  // ===== RENDER =====
   return (
     <Accordion
       elevation={1}
@@ -188,7 +247,7 @@ const ProductListItem = ({
           margin: '8px 0',
           boxShadow: 2,
         },
-        // Remove any overlay effects
+        // Remove any overlay effects for clean appearance
         '& .MuiTouchRipple-root': {
           display: 'none',
         },
@@ -200,9 +259,11 @@ const ProductListItem = ({
         },
       }}
     >
+      {/* Accordion Header - Always Visible */}
       <AccordionSummary
         expandIcon={<ExpandMoreIcon />}
         onClick={(e) => {
+          // Prevent accordion expansion when interacting with quantity controls
           if (e.target.closest('.quantity-controls')) {
             e.stopPropagation();
           }
@@ -214,7 +275,7 @@ const ProductListItem = ({
             margin: { xs: '8px 0', md: '12px 0' },
             alignItems: 'center',
           },
-          // Remove grey overlay/ripple effect
+          // Remove grey overlay/ripple effect for clean appearance
           '&:hover': {
             backgroundColor: 'background.paper',
           },
@@ -227,14 +288,18 @@ const ProductListItem = ({
         }}
       >
         <Box sx={{ width: '100%' }}>
+          {/* Responsive Layout Selection */}
           {isMobile ? <MobileLayout /> : <DesktopLayout />}
-            </Box>
+        </Box>
       </AccordionSummary>
 
+      {/* Accordion Content - Lazy Loaded */}
       <AccordionDetails sx={{ px: { xs: 1, md: 2 }, py: { xs: 1, md: 2 } }}>
         {loadingAccordion ? (
+          /* Loading State */
           <AccordionContentSkeleton />
         ) : accordionData?.error ? (
+          /* Error State with Retry */
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <Typography variant="body2" color="error" sx={{ mb: 1 }}>
               שגיאה בטעינת פרטי המוצר
@@ -255,13 +320,14 @@ const ProductListItem = ({
             </Button>
           </Box>
         ) : (
-        <ProductAccordionContent
-          product={product}
-          accordionData={accordionData}
+          /* Detailed Product Content */
+          <ProductAccordionContent
+            product={product}
+            accordionData={accordionData}
             isLoadingDetails={loadingAccordion}
-          shouldRenderContent={shouldRenderContent}
-          parseJsonField={parseJsonField}
-        />
+            shouldRenderContent={shouldRenderContent}
+            parseJsonField={parseJsonField}
+          />
         )}
       </AccordionDetails>
     </Accordion>
