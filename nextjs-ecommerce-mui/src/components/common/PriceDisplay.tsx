@@ -1,0 +1,92 @@
+import React from 'react';
+import { Box, Typography } from '@mui/material';
+import { usePricing } from '@/hooks/usePricing';
+
+interface PriceDisplayProps {
+  productRef?: string; // For secure pricing lookup
+  price?: number | { unitPrice?: number; discountPrice?: number } | null; // Legacy fallback
+  canViewPrices?: boolean; // Will be overridden by usePricing
+  screenType?: 'mobile' | 'desktop';
+  align?: 'left' | 'center' | 'right';
+  loading?: boolean;
+  variant?: string;
+  color?: string;
+}
+
+const PriceDisplay: React.FC<PriceDisplayProps> = ({ 
+  productRef,
+  price, 
+  canViewPrices: legacyCanView, // Legacy prop, will be overridden
+  screenType = 'desktop', 
+  align = 'left',
+  loading = false,
+  variant: propVariant,
+  color: propColor
+}) => {
+  const { canViewPrices, formatPriceSimple, getProductPrice, getPricingMessage } = usePricing();
+  
+  const fontSize = screenType === 'mobile' ? '0.9rem' : '1rem';
+  const variant = propVariant || (screenType === 'mobile' ? 'subtitle1' : 'h6');
+  
+  // Use secure pricing if productRef is provided
+  const securePrice = productRef ? getProductPrice(productRef) : null;
+  
+  // Determine final price value
+  let priceValue: number | null = null;
+  let isDiscounted = false;
+  
+  if (securePrice) {
+    // Use secure pricing
+    priceValue = securePrice.discountPrice || securePrice.unitPrice;
+    isDiscounted = !!securePrice.discountPrice && securePrice.discountPrice < securePrice.unitPrice;
+  } else if (price) {
+    // Fallback to legacy pricing (only if user can view prices)
+    if (!canViewPrices) {
+      priceValue = null;
+    } else {
+      priceValue = typeof price === 'object' && price !== null 
+        ? (price.discountPrice || price.unitPrice) 
+        : Number(price);
+    }
+  }
+  
+  // Don't show anything if user can't view prices - silent catalog mode
+  if (!canViewPrices) {
+    return null;
+  }
+  
+  // Don't show anything if no valid price and not loading
+  if (!loading && (!priceValue || isNaN(Number(priceValue)))) return null;
+  
+  return (
+    <Box sx={{ textAlign: align }}>
+      {loading ? (
+        <Typography variant={variant as any} color="text.secondary" sx={{ fontSize }}>
+          טוען מחיר...
+        </Typography>
+      ) : (
+        <Box>
+          <Typography variant={variant as any} color={propColor || "primary"} sx={{ fontWeight: 600, fontSize }}>
+            ₪{Number(priceValue).toFixed(2)}
+          </Typography>
+          {isDiscounted && securePrice && (
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                fontSize: fontSize === '0.9rem' ? '0.7rem' : '0.8rem',
+                textDecoration: 'line-through',
+                color: 'text.secondary',
+                display: 'block'
+              }}
+            >
+              ₪{securePrice.unitPrice.toFixed(2)}
+            </Typography>
+          )}
+        </Box>
+      )}
+    </Box>
+  );
+};
+
+export default React.memo(PriceDisplay);
+

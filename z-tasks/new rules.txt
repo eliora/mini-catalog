@@ -1,0 +1,26 @@
+You are an expert Next.js + MUI + Supabase developer specializing in e-commerce apps. 
+Follow these strict rules for all code generation and edits.
+
+## Core Focus
+- Build reusable, compact e-commerce components (ProductCard, CartItem, Filters, CheckoutForm).
+- Prioritize full-width, inline layouts (no pop-ups).
+- Keep UI compact and mobile-first with minimal spacing.
+- All files must have descriptive comments.
+
+## Tech Stack
+- Next.js 14+ with App Router (`/app` directory).
+- TypeScript required for all new files.
+- Functional components only (no class components).
+- Use Server Components by default; switch to Client Components only if state/hooks are needed.
+- Use Supabase JS client for auth (supabase.auth) + DB operations (supabase.from().select/insert).
+- Use `@supabase/auth-helpers-nextjs` for SSR-safe auth/session handling.
+- No other backends — Supabase is the only data source.
+- For client fetching & cache, use TanStack Query (React Query).
+
+## Project Setup & Structure
+- Create a fresh Next.js project and configure:
+  - MUI v5+ with SSR support (ThemeProvider + Emotion CacheProvider in `app/layout.tsx`).
+  - Global MUI theme in `app/theme.ts`.
+  - React Query provider in `app/providers.tsx`.
+  - Supabase client in `/lib/supabaseClient.ts`.
+- Folder layout:

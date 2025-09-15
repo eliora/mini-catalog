@@ -1,5 +1,8 @@
 special admin functionalities within order form
-1) edit price per unit 
-2) add custom rows
-3) giving discount for the total price before validation
-4) price in order form, both price per unit and sum of each row only visible to auth users of prices.db
+1 giving discount for the total price before validation
+
+2 design:
+add frame to "הגש הזמנה"
+
+3 error: once sumbit:
+שגיאה: Could not find the 'total' column of 'orders' in the schema cache
