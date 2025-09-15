@@ -46,6 +46,28 @@ export const formatPrice = (price, currency = '₪') => {
 };
 
 /**
+ * Format currency for payment display
+ * Alternative name for formatPrice to match payment component expectations
+ */
+export const formatCurrency = (amount, currency = 'ILS') => {
+  if (!amount || isNaN(amount)) return '₪0.00';
+  const numAmount = parseFloat(amount);
+  
+  // Currency symbol mapping
+  const currencySymbols = {
+    'ILS': '₪',
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£'
+  };
+  
+  const symbol = currencySymbols[currency] || currency;
+  
+  if (numAmount === 0) return `${symbol}0.00`;
+  return `${symbol}${numAmount.toFixed(2)}`;
+};
+
+/**
  * Sanitize HTML content for safe rendering
  */
 export const sanitizeHtml = (html) => {

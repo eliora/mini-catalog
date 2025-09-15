@@ -31,6 +31,7 @@ import { useCompany } from './context/CompanyContext';
 // import UserMenu from './components/auth/UserMenu'; // TODO: Implement user menu
 import AuthCallback from './components/auth/AuthCallback';
 import JDAHeader from './components/layout/JDAHeader';
+import { QuickPaymentPage } from './pages/site';
 
 // Image performance utilities removed - can be added back if needed
 
@@ -125,36 +126,48 @@ function AppInner() {
     );
   }
 
+  // Check if current route is a standalone page (no header/container)
+  const isStandalonePage = location.pathname === '/quickpayment' || location.pathname === '/site/quickpayment';
+
   return (
     <CacheProvider value={rtlCache}>
       <ThemeProvider theme={theme}>
         <div dir="rtl">
           <CssBaseline />
-          <Box sx={{ flexGrow: 1 }}>
-            {/* JDA Style Header */}
-            <JDAHeader
-              companySettings={companySettings}
-              cartItemCount={getCartItemCount()}
-              searchTerm={headerSearchTerm}
-              onSearchChange={handleHeaderSearchChange}
-              onClearSearch={handleHeaderSearchClear}
-              searchPlaceholder="חיפוש מוצרים..."
-            />
+          
+          {isStandalonePage ? (
+            // Standalone pages (full screen, no header)
+            <Routes>
+              <Route path="/quickpayment" element={<QuickPaymentPage />} />
+              <Route path="/site/quickpayment" element={<QuickPaymentPage />} />
+            </Routes>
+          ) : (
+            // Regular pages (with header and container)
+            <Box sx={{ flexGrow: 1 }}>
+              {/* JDA Style Header */}
+              <JDAHeader
+                companySettings={companySettings}
+                cartItemCount={getCartItemCount()}
+                searchTerm={headerSearchTerm}
+                onSearchChange={handleHeaderSearchChange}
+                onClearSearch={handleHeaderSearchClear}
+                searchPlaceholder="חיפוש מוצרים..."
+              />
 
-        <Container maxWidth="xl" sx={{ mt: 2, mb: 2 }}>
-
-          <Routes>
-            <Route path="/" element={<Navigate to="/catalog" replace />} />
-            <Route path="/catalog" element={<CatalogClean />} />
-            <Route path="/orderform" element={<OrderForm />} />
-            <Route path="/admin" element={
-              isAdmin ? <Admin onLogout={handleAdminLogout} /> : <Navigate to="/catalog" replace />
-            } />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="*" element={<Navigate to="/catalog" replace />} />
-          </Routes>
-        </Container>
-          </Box>
+              <Container maxWidth="xl" sx={{ mt: 2, mb: 2 }}>
+                <Routes>
+                  <Route path="/" element={<Navigate to="/catalog" replace />} />
+                  <Route path="/catalog" element={<CatalogClean />} />
+                  <Route path="/orderform" element={<OrderForm />} />
+                  <Route path="/admin" element={
+                    isAdmin ? <Admin onLogout={handleAdminLogout} /> : <Navigate to="/catalog" replace />
+                  } />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="*" element={<Navigate to="/catalog" replace />} />
+                </Routes>
+              </Container>
+            </Box>
+          )}
         </div>
       </ThemeProvider>
     </CacheProvider>
