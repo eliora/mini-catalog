@@ -41,6 +41,7 @@ import CatalogLayout from './CatalogLayout';
 import SearchHeader from '@/components/common/SearchHeader';
 import ProductDetailsDialog from './ProductDetailsDialog';
 import ImageZoomDialog from './ImageZoomDialog';
+import MobileFilterChips from './mobile/MobileFilterChips';
 import SupabaseError from '@/components/ui/SupabaseError';
 import { Product } from '@/types/product';
 
@@ -80,17 +81,8 @@ const CatalogClean: React.FC = () => {
     src: '' 
   });
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [viewMode, setViewMode] = useState<string>('list');
-
-  // ===== INITIALIZE VIEWMODE FROM LOCALSTORAGE (CLIENT-SIDE ONLY) =====
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedViewMode = localStorage.getItem('catalogViewMode');
-      if (savedViewMode) {
-        setViewMode(savedViewMode);
-      }
-    }
-  }, []);
+  // Force list view only (card/catalog view removed)
+  const viewMode = 'list';
 
 
   // ===== HEADER SEARCH INTEGRATION =====
@@ -180,14 +172,7 @@ const CatalogClean: React.FC = () => {
     setImageZoom({ open: true, src });
   };
 
-  const handleViewModeChange = (newMode: string) => {
-    if (newMode) {
-      setViewMode(newMode);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('catalogViewMode', newMode);
-      }
-    }
-  };
+  // View mode change handler removed (list view only)
 
   const handleFilterClick = () => {
     if (isMobile) {
@@ -240,31 +225,7 @@ const CatalogClean: React.FC = () => {
         filteredCount={products.length}
         activeFilters={filterState.activeFilters}
         onFilterRemove={filterState.removeFilter}
-        actions={
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              variant={viewMode === 'list' ? 'contained' : 'outlined'}
-              size="small"
-              onClick={() => handleViewModeChange('list')}
-            >
-              רשימה
-            </Button>
-            <Button
-              variant={viewMode === 'catalog' ? 'contained' : 'outlined'}
-              size="small"
-              onClick={() => handleViewModeChange('catalog')}
-            >
-              קטלוג
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={handleFilterClick}
-            >
-              סינון
-            </Button>
-          </Box>
-        }
+        actions={null}
       />
 
       {/* MAIN LAYOUT WITH FILTERS AND CONTENT */}
@@ -273,6 +234,27 @@ const CatalogClean: React.FC = () => {
         mobileFilter={mobileFilter}
         isLoading={isLoading}
       >
+        {/* MOBILE FILTER CHIPS */}
+        {isMobile && (
+          <MobileFilterChips
+            filterOptions={{
+              lines: filterState.filterOptions?.lines || [],
+              productTypes: filterState.filterOptions?.productTypes || [],
+              skinTypes: filterState.filterOptions?.skinTypes || [],
+              types: filterState.filterOptions?.types || []
+            }}
+            selectedLines={filterState.selectedLines || []}
+            selectedProductTypes={filterState.selectedProductTypes || []}
+            selectedSkinTypes={filterState.selectedSkinTypes || []}
+            selectedTypes={filterState.selectedGeneralTypes || []}
+            onLinesChange={filterState.setSelectedLines}
+            onProductTypesChange={filterState.setSelectedProductTypes}
+            onSkinTypesChange={filterState.setSelectedSkinTypes}
+            onTypesChange={filterState.setSelectedGeneralTypes}
+            disabled={isLoading}
+          />
+        )}
+        
         {/* PRODUCTS DISPLAY */}
         {isLoading ? (
           <SearchResultsSkeleton viewMode={viewMode as 'list' | 'catalog'} count={6} />

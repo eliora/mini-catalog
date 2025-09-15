@@ -50,10 +50,6 @@ import { navigationItems } from './header/NavigationData';
 // Props interface
 interface JDAHeaderProps {
   companySettings?: CompanySettings | null;
-  searchTerm?: string;
-  onSearchChange?: (value: string) => void;
-  onClearSearch?: () => void;
-  searchPlaceholder?: string;
   showTopBar?: boolean;
   showNavigation?: boolean;
   elevation?: number;
@@ -66,10 +62,6 @@ interface AnchorElements {
 
 const JDAHeader: React.FC<JDAHeaderProps> = ({ 
   companySettings, 
-  searchTerm = '', 
-  onSearchChange,
-  onClearSearch,
-  searchPlaceholder = "חיפוש מוצרים...",
   showTopBar = true,
   showNavigation = true,
   elevation = 0
@@ -224,14 +216,11 @@ const JDAHeader: React.FC<JDAHeaderProps> = ({
       <MainToolbar
         companySettings={companySettings}
         cartItemCount={cartItemCount}
-        searchTerm={searchTerm}
-        onSearchChange={onSearchChange}
-        onSearchClear={onClearSearch}
-        searchPlaceholder={searchPlaceholder}
         handleAccountClick={handleAccountClick}
         handleCartClick={handleCartClick}
         onLogoClick={handleLogoClick}
         elevation={elevation}
+        showSearch={false}
       />
 
       {/* Desktop Navigation Menu */}

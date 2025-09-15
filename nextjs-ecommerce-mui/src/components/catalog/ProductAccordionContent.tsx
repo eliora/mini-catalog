@@ -66,6 +66,7 @@ const ProductAccordionContent: React.FC<ProductAccordionContentProps> = React.me
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isUltraSmall = useMediaQuery('(max-width:450px)'); // Custom breakpoint for ultra-small devices
   
   // Use accordion data if available, otherwise fall back to basic product data
   const productData = accordionData || product;
@@ -107,41 +108,69 @@ const ProductAccordionContent: React.FC<ProductAccordionContentProps> = React.me
   }
 
   return (
-    <Box sx={{ p: { xs: 1.5, md: 2 } }}>
+    <Box sx={{ 
+      p: { 
+        xs: isUltraSmall ? 1 : 2,  // Ultra-small-mobile (< 450px) vs mobile 
+        md: 2 
+      } 
+    }}>
       {/* Row 1: Product Description + Image Gallery (Desktop only) */}
       <Box sx={{ 
         display: 'flex',
         flexDirection: { xs: 'column', md: 'row' },
-        gap: 3,
-        mb: 3
+        gap: { xs: isUltraSmall ? 1.5 : 2.5, md: 3 },
+        mb: { xs: isUltraSmall ? 1.5 : 2.5, md: 3 }
       }}>
         {/* Column 1: Product Info */}
         <Box sx={{ flex: { xs: '1', md: isMobile ? '1' : '2' } }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'primary.main' }}>
+          <Typography 
+            variant={isUltraSmall ? "body1" : "h6"} 
+            sx={{ 
+              fontWeight: 600, 
+              mb: { xs: isUltraSmall ? 1 : 1.5, md: 2 }, 
+              color: 'primary.main',
+              fontSize: { xs: isUltraSmall ? '0.875rem' : '1.rem', md: '1.05rem' }
+            }}
+          >
             תיאור המוצר
           </Typography>
-                 <ContentRenderer
-                   content={productData.description || productData.description_he || product.short_description_he}
-                   shouldRenderContent={shouldRenderContent}
-                   fallback={
-                     <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                       אין תיאור זמין למוצר זה
-                     </Typography>
-                   }
-                 />
+          <ContentRenderer
+            content={productData.description || productData.description_he || product.short_description_he}
+            shouldRenderContent={shouldRenderContent}
+            fallback={
+              <Typography 
+                variant="body2" 
+                color="text.secondary" 
+                sx={{ 
+                  fontStyle: 'italic',
+                  fontSize: { xs: isUltraSmall ? '0.7rem' : '0.8rem', md: '0.875rem' }
+                }}
+              >
+                אין תיאור זמין למוצר זה
+              </Typography>
+            }
+          />
 
-                 {/* Active Ingredients */}
-                 {shouldRenderContent(productData.activeIngredients || productData.wirkunginhaltsstoffe_he || productData.active_ingredients_he) && (
-                   <Box sx={{ mt: 3 }}>
-                     <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'primary.main' }}>
-                       רכיבים פעילים
-                     </Typography>
-                     <ContentRenderer
-                       content={productData.activeIngredients || productData.wirkunginhaltsstoffe_he || productData.active_ingredients_he}
-                       shouldRenderContent={shouldRenderContent}
-                     />
-                   </Box>
-                 )}
+          {/* Active Ingredients */}
+          {shouldRenderContent(productData.activeIngredients || productData.wirkunginhaltsstoffe_he || productData.active_ingredients_he) && (
+            <Box sx={{ mt: { xs: isUltraSmall ? 1.5 : 2, md: 3 } }}>
+              <Typography 
+                variant={isUltraSmall ? "body1" : "h6"} 
+                sx={{ 
+                  fontWeight: 600, 
+                  mb: { xs: isUltraSmall ? 1 : 1.5, md: 2 }, 
+                  color: 'primary.main',
+                  fontSize: { xs: isUltraSmall ? '0.875rem' : '1.1rem', md: '1.25rem' }
+                }}
+              >
+                רכיבים פעילים
+              </Typography>
+              <ContentRenderer
+                content={productData.activeIngredients || productData.wirkunginhaltsstoffe_he || productData.active_ingredients_he}
+                shouldRenderContent={shouldRenderContent}
+              />
+            </Box>
+          )}
         </Box>
 
         {/* Column 2: Image Gallery - Desktop only */}
@@ -152,88 +181,148 @@ const ProductAccordionContent: React.FC<ProductAccordionContentProps> = React.me
               productName={productName}
               mainHeight={360}
             />
-            
           </Box>
         )}
       </Box>
 
       {/* Mobile Image Gallery */}
       {isMobile && images.length > 0 && (
-        <Box sx={{ mb: 3 }}>
+        <Box sx={{ 
+          mb: { xs: isUltraSmall ? 1.5 : 2, md: 3 }
+        }}>
           <ImageGallery
             images={images}
             productName={productName}
-            mainHeight={250}
+            mainHeight={isUltraSmall ? 180 : 220}  // Much smaller height for ultra-small-mobile (< 450px)
             onImageClick={onImageClick}
           />
         </Box>
-        
       )}
 
       {/* Row 2: Inner Accordions */}
-      <Box sx={{ width: '100%', mt: 3 }}>
+      <Stack spacing={isUltraSmall ? 1 : 1.5} sx={{ mt: { xs: isUltraSmall ? 1.5 : 2, md: 3 } }}>
         {/* Usage Instructions Accordion - Show only if data exists */}
         {shouldRenderContent(productData.usageInstructions || productData.anwendung_he || productData.usage_instructions_he) && (
-          <Accordion>
+          <Accordion 
+            elevation={0} 
+            sx={{ 
+              border: '1px solid', 
+              borderColor: 'divider', 
+              borderRadius: 1 
+            }}
+          >
             <AccordionSummary
               expandIcon={<ExpandMoreIcon />}
               aria-controls="usage-content"
               id="usage-header"
               sx={{
                 cursor: 'pointer',
-                minHeight: 48,
-                px: 2,
+                minHeight: isUltraSmall ? 36 : 44,
+                px: { xs: isUltraSmall ? 1 : 1.5, md: 2 },
                 bgcolor: 'background.paper',
-                '& .MuiAccordionSummary-content': { my: 0 }
+                '&:hover': { backgroundColor: 'action.hover' },
+                '& .MuiAccordionSummary-content': { 
+                  my: isUltraSmall ? '6px' : '10px' 
+                }
               }}
             >
-              <Typography>הוראות שימוש</Typography>
+              <Typography 
+                variant={isUltraSmall ? "body2" : "subtitle1"} 
+                sx={{ 
+                  fontWeight: 600,
+                  fontSize: { xs: isUltraSmall ? '0.75rem' : '0.9rem', md: '1rem' }
+                }}
+              >
+                הוראות שימוש
+              </Typography>
             </AccordionSummary>
-            <AccordionDetails>
-              <ContentRenderer
-                content={productData.usageInstructions || productData.anwendung_he || productData.usage_instructions_he}
-                shouldRenderContent={shouldRenderContent}
-                fallback={
-                  <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                    אין הוראות שימוש זמינות למוצר זה
-                  </Typography>
-                }
-              />
+            <AccordionDetails sx={{ p: { xs: isUltraSmall ? 1 : 1.5, md: 2 } }}>
+              <Box sx={{ 
+                fontSize: { xs: isUltraSmall ? '0.7rem' : '0.8rem', md: '0.875rem' },
+                lineHeight: 1.4
+              }}>
+                <ContentRenderer
+                  content={productData.usageInstructions || productData.anwendung_he || productData.usage_instructions_he}
+                  shouldRenderContent={shouldRenderContent}
+                  fallback={
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary" 
+                      sx={{ 
+                        fontStyle: 'italic',
+                        fontSize: { xs: isUltraSmall ? '0.7rem' : '0.8rem', md: '0.875rem' }
+                      }}
+                    >
+                      אין הוראות שימוש זמינות למוצר זה
+                    </Typography>
+                  }
+                />
+              </Box>
             </AccordionDetails>
           </Accordion>
         )}
 
         {/* Ingredients Accordion - Show only if data exists */}
         {shouldRenderContent(productData.ingredients) && (
-          <Accordion>
+          <Accordion 
+            elevation={0} 
+            sx={{ 
+              border: '1px solid', 
+              borderColor: 'divider', 
+              borderRadius: 1 
+            }}
+          >
             <AccordionSummary
               expandIcon={<ExpandMoreIcon />}
               aria-controls="ingredients-content"
               id="ingredients-header"
               sx={{
                 cursor: 'pointer',
-                minHeight: 48,
-                px: 2,
+                minHeight: isUltraSmall ? 36 : 44,
+                px: { xs: isUltraSmall ? 1 : 1.5, md: 2 },
                 bgcolor: 'background.paper',
-                '& .MuiAccordionSummary-content': { my: 0 }
+                '&:hover': { backgroundColor: 'action.hover' },
+                '& .MuiAccordionSummary-content': { 
+                  my: isUltraSmall ? '6px' : '10px' 
+                }
               }}
             >
-              <Typography>רכיבים</Typography>
+              <Typography 
+                variant={isUltraSmall ? "body2" : "subtitle1"} 
+                sx={{ 
+                  fontWeight: 600,
+                  fontSize: { xs: isUltraSmall ? '0.75rem' : '0.9rem', md: '1rem' }
+                }}
+              >
+                רכיבים
+              </Typography>
             </AccordionSummary>
-            <AccordionDetails>
-              <ContentRenderer 
-                content={productData.ingredients} 
-                shouldRenderContent={shouldRenderContent}
-                fallback={
-                  <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                    אין רכיבים זמינים למוצר זה
-                  </Typography>
-                }
-              />
+            <AccordionDetails sx={{ p: { xs: isUltraSmall ? 1 : 1.5, md: 2 } }}>
+              <Box sx={{ 
+                fontSize: { xs: isUltraSmall ? '0.7rem' : '0.8rem', md: '0.875rem' },
+                lineHeight: 1.4
+              }}>
+                <ContentRenderer 
+                  content={productData.ingredients} 
+                  shouldRenderContent={shouldRenderContent}
+                  fallback={
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary" 
+                      sx={{ 
+                        fontStyle: 'italic',
+                        fontSize: { xs: isUltraSmall ? '0.7rem' : '0.8rem', md: '0.875rem' }
+                      }}
+                    >
+                      אין רכיבים זמינים למוצר זה
+                    </Typography>
+                  }
+                />
+              </Box>
             </AccordionDetails>
           </Accordion>
         )}
-      </Box>
+      </Stack>
 
     </Box>
   );

@@ -11,6 +11,7 @@ interface PriceDisplayProps {
   loading?: boolean;
   variant?: string;
   color?: string;
+  size?: 'small' | 'medium'; // Match ProductSize sizing
 }
 
 const PriceDisplay: React.FC<PriceDisplayProps> = ({ 
@@ -21,11 +22,18 @@ const PriceDisplay: React.FC<PriceDisplayProps> = ({
   align = 'left',
   loading = false,
   variant: propVariant,
-  color: propColor
+  color: propColor,
+  size = 'medium'
 }) => {
   const { canViewPrices, formatPriceSimple, getProductPrice, getPricingMessage } = usePricing();
   
-  const fontSize = screenType === 'mobile' ? '0.9rem' : '1rem';
+  // Calculate fontSize based on size prop (matching ProductSize)
+  const calculateFontSize = () => {
+    if (size === 'small') return '0.65rem'; // Match ProductSize small
+    return screenType === 'mobile' ? '0.9rem' : '1rem';
+  };
+  
+  const fontSize = calculateFontSize();
   const variant = propVariant || (screenType === 'mobile' ? 'subtitle1' : 'h6');
   
   // Use secure pricing if productRef is provided

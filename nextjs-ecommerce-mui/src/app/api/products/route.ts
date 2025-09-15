@@ -191,6 +191,22 @@ async function getProductsInternal(
   pageSize = 50,
   filters: ProductFilter = {}
 ): Promise<ProductsResponse> {
+  // Check user role for out-of-stock filtering
+  let isAdmin = false;
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from('users')
+        .select('user_role')
+        .eq('id', user.id)
+        .single();
+      isAdmin = profile?.user_role === 'admin';
+    }
+  } catch (error) {
+    console.warn('Could not check user role:', error);
+    // Default to non-admin if we can't determine role
+  }
   // Select ONLY essential fields for initial catalog display
   let query = supabase.from('products').select(`
     ref,
@@ -250,13 +266,22 @@ async function getProductsInternal(
   if (error) throw error;
   
   console.log(`Raw products from DB: ${data?.length || 0} (page ${page}, pageSize ${pageSize})`);
+  console.log(`User role check: isAdmin = ${isAdmin}`);
   
-  // More permissive filtering - only exclude products explicitly marked as unavailable
+  // Filter products based on availability and user role
   const filteredData = (data || []).filter((product: any) => {
     const qty = product.qty;
-    // Allow products with qty 0 or positive numbers, exclude only null/undefined/empty string
+    
+    // Always exclude products with null/undefined/empty qty
     if (qty === null || qty === undefined) return false;
     if (typeof qty === 'string' && qty.trim() === '') return false;
+    
+    // Hide out-of-stock items (qty === 0) for non-admin users
+    if (!isAdmin && qty === 0) {
+      console.log(`Filtering out out-of-stock product for non-admin: ${product.ref} (qty: ${qty})`);
+      return false;
+    }
+    
     return true;
   });
   

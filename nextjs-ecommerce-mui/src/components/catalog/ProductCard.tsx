@@ -89,15 +89,34 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </Box>
         )}
         
-        <Box sx={{ mt: 2 }}>
-          <QuantityInput
-            value={quantity}
-            onChange={onQuantityChange}
-            onDecrement={onDecrement}
-            onIncrement={onIncrement}
-            size="small"
-          />
-        </Box>
+        {/* Quantity Controls - Only show if product is in stock */}
+        {product.qty > 0 && (
+          <Box sx={{ mt: 2 }}>
+            <QuantityInput
+              value={quantity}
+              onChange={onQuantityChange}
+              onDecrement={onDecrement}
+              onIncrement={onIncrement}
+              size="small"
+            />
+          </Box>
+        )}
+        
+        {/* Out of Stock Chip - Show instead of quantity controls when out of stock */}
+        {product.qty === 0 && (
+          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+            <Chip 
+              label="חסר במלאי" 
+              size="small" 
+              color="error" 
+              variant="outlined"
+              sx={{ 
+                fontSize: '0.7rem', 
+                height: 24
+              }} 
+            />
+          </Box>
+        )}
       </CardContent>
     </Card>
   );

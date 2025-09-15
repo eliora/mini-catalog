@@ -9,6 +9,8 @@ interface ProductInfoProps {
   showProductLine?: boolean;
   showDescription?: boolean;
   variant?: 'compact' | 'detailed' | 'default';
+  hideShortDesc?: boolean;
+  nameSize?: 'normal' | 'smaller' | 'ultraSmall';
 }
 
 interface SizeConfig {
@@ -25,15 +27,17 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
   size = 'medium',
   showProductLine = false,
   showDescription = true,
-  variant = 'default'
+  variant = 'default',
+  hideShortDesc = false,
+  nameSize = 'normal'
 }) => {
   const getSizes = (): SizeConfig => {
     switch (size) {
       case 'small':
         return {
           hebrewVariant: 'subtitle1',
-          hebrewSize: '0.95rem',
-          englishSize: '0.85rem',
+          hebrewSize: nameSize === 'ultraSmall' ? '0.665rem' : nameSize === 'smaller' ? '0.85rem' : '0.95rem', // 0.95 * 0.7 = 0.665
+          englishSize: nameSize === 'ultraSmall' ? '0.595rem' : nameSize === 'smaller' ? '0.75rem' : '0.85rem', // 0.85 * 0.7 = 0.595
           descSize: '0.7rem',
           lineSize: '0.7rem'
         };
@@ -48,8 +52,8 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
       default: // medium
         return {
           hebrewVariant: 'h6',
-          hebrewSize: '1rem',
-          englishSize: '0.9rem',
+          hebrewSize: nameSize === 'ultraSmall' ? '0.7rem' : nameSize === 'smaller' ? '0.9rem' : '1rem', // 1.0 * 0.7 = 0.7
+          englishSize: nameSize === 'ultraSmall' ? '0.63rem' : nameSize === 'smaller' ? '0.8rem' : '0.9rem', // 0.9 * 0.7 = 0.63
           descSize: '0.8rem',
           lineSize: '0.7rem'
         };
@@ -128,8 +132,8 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
         </>
       )}
       
-      {/* Description */}
-      {showDescription && product.short_description_he && (
+      {/* Description - Hide if hideShortDesc is true */}
+      {showDescription && !hideShortDesc && product.short_description_he && (
         <Typography 
           variant="caption" 
           color="text.secondary"

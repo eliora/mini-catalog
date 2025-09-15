@@ -17,6 +17,7 @@
 import React from 'react';
 import { Box, useTheme, useMediaQuery } from '@mui/material';
 import FilterSidebar from './desktop/FilterSidebar';
+import MobileFilterDrawer from './mobile/MobileFilterDrawer';
 
 interface FilterState {
   filterOptions: any;
@@ -54,21 +55,53 @@ const CatalogLayout: React.FC<CatalogLayoutProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   if (isMobile) {
-    // Mobile Layout - Full width content (filters handled by drawer in parent)
-    // No padding here - parent container handles alignment
+    // Mobile Layout - Full width content with mobile filter components
     return (
-      <Box sx={{ width: '100%' }}>
-        {children}
-      </Box>
+      <>
+        <Box sx={{ width: '100%' }}>
+          {children}
+        </Box>
+        {/* Mobile Filter Drawer */}
+        <MobileFilterDrawer
+          open={mobileFilter.isOpen}
+          onToggle={mobileFilter.toggleDrawer}
+          filterOptions={{
+            productLines: filterState.filterOptions?.lines,
+            lines: filterState.filterOptions?.lines,
+            productTypes: filterState.filterOptions?.productTypes,
+            skinTypes: filterState.filterOptions?.skinTypes,
+            types: filterState.filterOptions?.types
+          }}
+          selectedValues={{
+            selectedLines: filterState.selectedLines || [],
+            selectedProductTypes: filterState.selectedProductTypes || [],
+            selectedSkinTypes: filterState.selectedSkinTypes || [],
+            selectedTypes: filterState.selectedGeneralTypes || []
+          }}
+          onFilterChange={{
+            onLinesChange: filterState.setSelectedLines,
+            onProductTypesChange: filterState.setSelectedProductTypes,
+            onSkinTypesChange: filterState.setSelectedSkinTypes,
+            onTypesChange: filterState.setSelectedGeneralTypes,
+            onClearAll: () => {
+              filterState.setSelectedLines([]);
+              filterState.setSelectedProductTypes([]);
+              filterState.setSelectedSkinTypes([]);
+              filterState.setSelectedGeneralTypes([]);
+            }
+          }}
+          disabled={isLoading}
+        />
+      </>
     );
   }
 
   // Desktop Layout - Sidebar + Content using Flexbox for MUI v7 compatibility
-  // No padding here - parent container handles alignment
+  // Added proper spacing between filters and content area
   return (
-    <Box sx={{ display: 'flex', gap: 0 }}>
+    <Box sx={{ display: 'flex', gap: 3 }}>
       {/* Filter Sidebar */}
-      <Box sx={{ flex: '0 0 25%', maxWidth: '300px', pr: 2 }}>
+      <Box sx={{ flex: '0 0 25%', maxWidth: '300px' }}>
         <FilterSidebar 
           filterOptions={filterState.filterOptions}
           selectedLines={filterState.selectedLines || []}
@@ -84,7 +117,7 @@ const CatalogLayout: React.FC<CatalogLayoutProps> = ({
       </Box>
       
       {/* Main Content Area */}
-      <Box sx={{ flex: '1 1 75%' }}>
+      <Box sx={{ flex: '1 1 75%', pl: 1 }}>
         {children}
       </Box>
     </Box>
