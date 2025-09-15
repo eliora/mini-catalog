@@ -1,12 +1,50 @@
-ou are an expert React developer specializing in e-commerce apps. Follow these strict rules for all code generation and edits:
-comments all files.
-Core Focus: Build reusable, compact components for e-commerce (e.g., ProductCard, CartItem). Prioritize full-width, inline layouts (no pop-ups). Use compact views with minimal spacing.
-Tech Stack: React only (no Node.js). Functional components with hooks (useState, useEffect, useCallback, useMemo). Avoid class components. Integrate Supabase JS client for auth (supabase.auth) and DB ops (supabase.from().select()/insert()). No other backends.
-MUI Best Practices: Stick to MUI v5+ docs (check https://mui.com/material-ui/ for components like Grid, Box, Typography, Button, Card). Use responsive props (xs/sm/md) for mobile-friendliness. Theme via ThemeProvider if needed, but minimize custom sx/styles—prefer theme vars. No custom media queries.
-Reusability & Efficiency: Make components reusable with minimal props (e.g., {product}). Use React.memo for optimization. Co-locate logic in custom hooks. Avoid props drilling; use Context for global state if simple. Optimize renders: useMemo/useCallback for lists/computations. Lazy-load with React.lazy if app scales.
-Simplicity & Brevity: Short, readable code. Combine logic (e.g., fetch + state in one effect). No over-engineering or unnecessary abstractions. Leverage libraries only if essential: react-hook-form for forms, @mui/x-data-grid for tables. Don't reinvent—use core React/MUI/Supabase.
-Supabase Handling: Follow Supabase docs (https://supabase.com/docs/guides/getting-started/quickstarts/reactjs for React setup; https://supabase.com/docs/guides/database/tables for DB structure).  Fetch via supabase.from('products').select('*'). Use real-time subscriptions over polling (e.g., supabase.channel().subscribe()). Manage loading/errors with states. Try-catch async ops; show user-friendly errors via MUI Alert/Snackbar (English only). Client validation + RLS reliance. Never hardcode keys, URLs, or table names—use env vars for connection; for dynamic configs (e.g., table names, limits), store in DB and fetch.
-Configurations in DB: Store app settings (e.g., theme colors, price limits, feature flags) in a dedicated 'settings' table (per Supabase tables guide: use jsonb for structured data, primary key uuid, public schema for non-sensitive). Fetch on app init via supabase.from('settings').select('*'), cache in Context/useMemo. Avoid any hardcoded values—e.g., no static limits in code; query DB for 'max_cart_items'. Use views for simplified client queries if joins needed.
-File/Change Rules: Never delete files without explicit permission. Confirm changes unless ordered. Preserve/keep old code; comment out obsolete parts. Refactor incrementally—don't rewrite working logic. 
-Error/Security/Testing: English system errors. Validate inputs client-side. No hardcoded keys or values. 
-General: ESLint/Prettier compliant (camelCase vars, PascalCase components). JSDoc only for complex funcs. No bundle bloat—monitor size.
+# PROJECT CONTEXT
+This project is a MINI CATALOG E-COMMERCE APP built with React, Material-UI v5, Supabase, and TanStack Query.  
+The app contains:
+- Authentication (Supabase Auth)
+- Role-based admin panel
+- Product catalog with filters and infinite scroll
+- Integrated Hypay payment processing
+- Mobile-first responsive design
+
+# GOAL
+Convert the existing React project into **Next.js 14+ (App Router)** with:
+- TypeScript support (functional components only)
+- MUI v5 with full SSR support
+- Supabase Auth, RLS, and API integration
+- TanStack Query for data fetching/caching
+- SEO-friendly pages and API routes
+
+# ARCHITECTURE & FILE ORGANIZATION
+Follow this structure (keep as much of the original component breakdown as possible):
+
+src/
+├── api/           # API calls (server or client)
+├── components/    # UI components grouped by domain (auth, admin, catalog, etc.)
+├── config/        # Supabase config and env handling
+├── context/       # Context providers (Auth, Cart, Company)
+├── hooks/         # Custom hooks
+├── hypay/         # Payment integration logic
+├── lib/           # QueryClient, Supabase client
+├── app/           # Next.js App Router pages/layouts
+├── providers/     # App-level providers (ThemeProvider, QueryClientProvider)
+├── routes/        # Route configs
+├── styles/        # Global styles
+├── theme/         # MUI theme config
+└── utils/         # Utilities
+
+# CONVERSION REQUIREMENTS
+- Migrate pages to `/app` directory using Next.js server components where possible.
+- Use Next.js API routes for backend logic that was in src/api.
+- Ensure MUI works with SSR (use `AppRouterCacheProvider` and `ThemeProvider`).
+- Ensure Supabase Auth works with server components (middleware + `createServerComponentClient`).
+- Preserve TanStack Query patterns (hydrate data for SSR if needed).
+- Maintain existing responsive behavior and component breakdown.
+- Optimize for SEO: use `metadata` in layouts/pages.
+- Avoid rewriting business logic unnecessarily — migrate structure, not behavior.
+
+# CODING STYLE
+- TypeScript everywhere (types/interfaces for props and API responses)
+- Use `async/await` for data fetching
+- Use `sx` prop for MUI styling (not inline styles)
+- Prefer server components for read-only pages, client components only where necessary (forms, auth, interactive UI)
