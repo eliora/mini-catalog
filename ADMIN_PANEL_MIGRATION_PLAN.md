@@ -710,7 +710,7 @@ interface BaseDataTableProps<T> {
 
 ### Phase 3: Settings Management (Week 5-6)
 - [ ] Settings API endpoints
-- [ ] Redesigned settings interface
+- [ ] bazzar pro settings interface
 - [ ] Logo upload functionality
 - [ ] Company information management
 - [ ] Notification settings
@@ -728,7 +728,7 @@ interface BaseDataTableProps<T> {
 - [ ] Order data table with status management
 - [ ] Order revival system
 - [ ] SQL editor for orders
-- [ ] PDF export system
+- [ ] PDF/send email export system
 - [ ] Integration with existing order form
 
 ### Phase 6: Polish & Testing (Week 13-14)

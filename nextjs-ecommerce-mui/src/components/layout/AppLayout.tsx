@@ -111,9 +111,12 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   // Check if current route is a standalone page (no header/container)
   const isStandalonePage = pathname === '/quickpayment' || pathname === '/site/quickpayment';
+  
+  // Check if current route is an admin page (no JDAHeader, has its own layout)
+  const isAdminPage = pathname.startsWith('/admin') || pathname.startsWith('/(admin-dashboard)');
 
-  if (isStandalonePage) {
-    // Standalone pages (full screen, no header)
+  if (isStandalonePage || isAdminPage) {
+    // Standalone pages and admin pages (full screen, no JDAHeader)
     return <>{children}</>;
   }
 
