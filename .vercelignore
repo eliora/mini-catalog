@@ -1,0 +1,14 @@
+# Exclude legacy and heavy folders from Vercel upload
+temp/
+temp/**
+temp-packages/
+temp-packages/**
+
+# Ignore build maps to reduce upload size
+**/*.map
+
+# Optional: local build artifacts (Vercel builds on server)
+.next/
+out/
+dist/
+

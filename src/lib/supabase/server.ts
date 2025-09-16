@@ -29,3 +29,10 @@ export const createClient = async () => {
     }
   );
 };
+
+// Backward compatibility alias for older imports in routes
+// Some API routes import createSupabaseServerClient from this module
+// Export an alias to prevent build-time import errors on Vercel
+export const createSupabaseServerClient = createClient;
+
+export default createClient;
