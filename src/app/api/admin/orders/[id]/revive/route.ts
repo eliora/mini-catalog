@@ -1,9 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
-export async function POST(request: Request, context: { params: { id: string } }) {
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
     const supabase = await createSupabaseServerClient();
+    const params = await context.params;
     
     // Check authentication
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -42,7 +46,7 @@ export async function POST(request: Request, context: { params: { id: string } }
     const { data: existingOrder, error: orderCheckError } = await supabase
       .from('orders')
       .select('id, status')
-      .eq('id', context.params.id)
+      .eq('id', params.id)
       .single();
 
     if (orderCheckError || !existingOrder) {
@@ -67,7 +71,7 @@ export async function POST(request: Request, context: { params: { id: string } }
         status: 'processing', // Revival automatically sets to processing
         updated_at: new Date().toISOString()
       })
-      .eq('id', context.params.id)
+      .eq('id', params.id)
       .select(`
         *,
         client:profiles!orders_client_id_fkey (

@@ -3,10 +3,11 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createSupabaseServerClient();
+    const params = await context.params;
     
     // Check authentication
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -29,7 +30,7 @@ export async function GET(
           status
         )
       `)
-      .eq('id', context.params.id)
+      .eq('id', params.id)
       .single();
 
     if (error) {
@@ -58,10 +59,11 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createSupabaseServerClient();
+    const params = await context.params;
     
     // Check authentication
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -110,7 +112,7 @@ export async function PUT(
     const { data: order, error } = await supabase
       .from('orders')
       .update(updateData)
-      .eq('id', context.params.id)
+      .eq('id', params.id)
       .select(`
         *,
         client:profiles!orders_client_id_fkey (
@@ -141,10 +143,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createSupabaseServerClient();
+    const params = await context.params;
     
     // Check authentication
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -155,7 +158,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('orders')
       .delete()
-      .eq('id', context.params.id);
+      .eq('id', params.id);
 
     if (error) {
       console.error('Error deleting order:', error);
