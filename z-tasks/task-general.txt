@@ -7,6 +7,9 @@ please scan react docs/mui docs for this common problem. i think it happens when
 
 MAIN PAGE LAYOUT
 
-
+1)make current homepage as /debug-page
+2)make /catalog as homepage
+3)connect orderform page to the compunents u have done in phase 7
+4
 
 

@@ -8,48 +8,67 @@ This document provides comprehensive documentation for all database schemas, par
 
 ## 🧑‍💼 Client Management Database Schema
 
-### **`profiles` Table** (Main Client Table)
-> **Note**: Currently referenced as `public.profiles` but may need to be created or mapped to existing user tables.
+### **`users` Table** (Main Client/User Table)
+> **Note**: Integrated with Supabase Auth - `users.id` references `auth.users(id)`
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
-| `id` | `string` | PRIMARY KEY | Unique client identifier (UUID) |
-| `email` | `string` | NOT NULL, UNIQUE | Client email address |
-| `name` | `string` | NOT NULL | Client full name |
-| `business_name` | `string` | NULLABLE | Business/company name (optional) |
-| `phone_number` | `string` | NULLABLE | Client phone number |
-| `address` | `JSON` | NULLABLE | Structured address object |
-| `user_roles` | `JSON[]` | DEFAULT: `[]` | Array of user roles |
-| `status` | `enum` | DEFAULT: `'active'` | Client status |
-| `created_at` | `timestamp` | DEFAULT: `now()` | Creation timestamp |
-| `updated_at` | `timestamp` | DEFAULT: `now()` | Last update timestamp |
-| `last_login` | `timestamp` | NULLABLE | Last login timestamp |
+| `id` | `uuid` | PRIMARY KEY, FK to auth.users(id) | Unique user identifier from Supabase Auth |
+| `email` | `text` | NOT NULL, UNIQUE | User email address |
+| `role` | `text` | NOT NULL, DEFAULT: 'user' | System role (user/admin) |
+| `full_name` | `text` | NULLABLE | User full name |
+| `created_at` | `timestamp with time zone` | NOT NULL, DEFAULT: now() | Creation timestamp |
+| `updated_at` | `timestamp with time zone` | NOT NULL, DEFAULT: now() | Last update timestamp |
+| `user_role` | `text` | NULLABLE, DEFAULT: 'standard' | Business role level |
+| `business_name` | `text` | NULLABLE | Business/company name |
+| `phone_number` | `varchar(50)` | NULLABLE | Contact phone number |
+| `address` | `jsonb` | NULLABLE | Structured address object |
+| `status` | `varchar(20)` | NULLABLE, DEFAULT: 'active' | Account status |
+| `last_login` | `timestamp with time zone` | NULLABLE | Last login timestamp |
 
-### **Client Status Enum Values**
+### **Role Enum Values**
 ```typescript
-type ClientStatus = 'active' | 'inactive' | 'suspended'
+type Role = 'user' | 'admin'
+```
+
+### **User Role Enum Values**
+```typescript
+type UserRole = 'standard' | 'verified_members' | 'customer' | 'admin'
+```
+
+### **Status Enum Values**
+```typescript
+type Status = 'active' | 'inactive' | 'suspended'
 ```
 
 ### **Address Object Structure**
 ```typescript
 interface Address {
-  street: string;
-  city: string;
-  state: string;
-  postal_code: string;
-  country: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  country?: string;
 }
 ```
 
-### **User Role Object Structure**
-```typescript
-interface UserRole {
-  id: string;
-  name: 'customer' | 'premium_customer' | 'admin';
-  permissions: string[];
-  description: string;
-}
-```
+### **Database Constraints**
+- `users_role_check`: role ∈ ['user', 'admin']
+- `users_status_check`: status ∈ ['active', 'inactive', 'suspended']  
+- `users_user_role_check`: user_role ∈ ['standard', 'verified_members', 'customer', 'admin']
+- `users_id_fkey`: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
+
+### **Indexes**
+- `idx_users_email` - btree(email)
+- `idx_users_role` - btree(role)
+- `idx_users_user_role` - btree(user_role)
+- `idx_users_status` - btree(status)
+- `idx_users_business_name` - btree(business_name)
+- `idx_users_phone_number` - btree(phone_number)
+
+### **Triggers**
+- `update_users_updated_at` - Auto-update updated_at on row changes
+- `sync_user_metadata_trigger` - Sync with auth.users metadata
 
 ### **Client Management API Endpoints**
 - `GET /api/admin/client-management` - List clients with pagination
@@ -67,8 +86,6 @@ interface UserRole {
 |--------|------|-------------|-------------|
 | `id` | `string` | PRIMARY KEY | Unique product identifier (UUID) |
 | `ref` | `string` | NOT NULL, UNIQUE | Product reference/SKU |
-| `product_name` | `string` | NULLABLE | Primary product name |
-| `product_name_2` | `string` | NULLABLE | Secondary product name |
 | `hebrew_name` | `string` | NULLABLE | Hebrew product name |
 | `english_name` | `string` | NULLABLE | English product name |
 | `french_name` | `string` | NULLABLE | French product name |
@@ -83,10 +100,8 @@ interface UserRole {
 | `short_description_he` | `text` | NULLABLE | Short Hebrew description |
 | `header` | `string` | NULLABLE | Product header/title |
 | `ingredients` | `text` | NULLABLE | Product ingredients list |
-| `active_ingredients` | `text` | NULLABLE | Active ingredients (English) |
 | `active_ingredients_he` | `text` | NULLABLE | Active ingredients (Hebrew) |
 | `skin_type_he` | `string` | NULLABLE | Suitable skin types (Hebrew) |
-| `usage_instructions` | `text` | NULLABLE | Usage instructions (English) |
 | `usage_instructions_he` | `text` | NULLABLE | Usage instructions (Hebrew) |
 | `notice` | `text` | NULLABLE | Important notices |
 | `main_pic` | `string` | NULLABLE | Main product image URL |
@@ -103,7 +118,6 @@ interface UserRole {
 | `unit_price` | `number` | NOT NULL | Product price |
 | `cost_price` | `number` | NULLABLE | Product cost price |
 | `discount_price` | `number` | NULLABLE | Discounted price |
-| `price_tier` | `string` | NULLABLE | Price tier (e.g., 'standard', 'premium') |
 | `currency` | `string` | DEFAULT: `'ILS'` | Currency code |
 | `created_at` | `timestamp` | DEFAULT: `now()` | Creation timestamp |
 | `updated_at` | `timestamp` | DEFAULT: `now()` | Last update timestamp |
@@ -134,28 +148,43 @@ interface ProductImages {
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
-| `id` | `string` | PRIMARY KEY | Unique order identifier (UUID) |
-| `customer_name` | `string` | NOT NULL | Customer full name |
-| `customer_email` | `string` | NULLABLE | Customer email address |
-| `customer_phone` | `string` | NULLABLE | Customer phone number |
-| `customer_address` | `string` | NULLABLE | Customer delivery address |
-| `items` | `JSON` | NOT NULL | Order items array |
-| `total_amount` | `number` | NOT NULL | Total order amount |
-| `status` | `string` | DEFAULT: `'pending'` | Order status |
+| `id` | `uuid` | PRIMARY KEY, DEFAULT: uuid_generate_v4() | Unique order identifier |
+| `items` | `jsonb` | NOT NULL, DEFAULT: '[]' | Order items array |
+| `total_amount` | `numeric(10,2)` | NOT NULL, DEFAULT: 0.00 | Total order amount |
+| `status` | `text` | NOT NULL, DEFAULT: 'pending' | Order status |
 | `notes` | `text` | NULLABLE | Order notes/comments |
-| `created_at` | `timestamp` | DEFAULT: `now()` | Order creation time |
-| `updated_at` | `timestamp` | DEFAULT: `now()` | Last update time |
+| `created_at` | `timestamp with time zone` | NOT NULL, DEFAULT: now() | Order creation time |
+| `updated_at` | `timestamp with time zone` | NOT NULL, DEFAULT: now() | Last update time |
+| `client_id` | `uuid` | NULLABLE, FK to users(id) | Reference to client/user |
 
 ### **Order Status Enum Values**
 ```typescript
 type OrderStatus = 
   | 'pending'     // ממתין
+  | 'confirmed'   // אושר
   | 'processing'  // מעובד
   | 'shipped'     // נשלח
   | 'delivered'   // נמסר
-  | 'completed'   // הושלם
   | 'cancelled';  // בוטל
 ```
+
+### **Database Constraints**
+- `orders_pkey`: PRIMARY KEY (id)
+- `fk_orders_client_id`: FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE SET NULL
+- `orders_status_check`: status ∈ ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled']
+
+### **Indexes**
+- `idx_orders_status` - btree(status)
+- `idx_orders_created_at` - btree(created_at)
+- `idx_orders_client_id` - btree(client_id)
+
+### **Triggers**
+- `update_orders_updated_at` - Auto-update updated_at on row changes
+
+### **Relationships**
+- `orders.client_id` → `users.id` (Many-to-One)
+- Orders are linked to users (clients) through client_id
+- If user is deleted, client_id is set to NULL (soft reference)
 
 ### **Order Items JSON Structure**
 ```typescript
@@ -216,7 +245,7 @@ interface OrderItem {
 | `company_address` | `string` | NULLABLE | Company address |
 | `company_logo` | `string` | NULLABLE | Company logo URL |
 | `currency` | `string` | DEFAULT: `'ILS'` | Default currency |
-| `tax_rate` | `number` | DEFAULT: `0.17` | Tax rate (VAT) |
+| `tax_rate` | `number` | DEFAULT: `0.18` | Tax rate (VAT) |
 | `created_at` | `timestamp` | DEFAULT: `now()` | Creation timestamp |
 | `updated_at` | `timestamp` | DEFAULT: `now()` | Last update timestamp |
 
@@ -306,17 +335,23 @@ interface SystemSettings {
 
 ## 🔐 User Authentication & Permissions
 
-### **`users` Table** (System Users)
+### **`users` Table** (System Users & Clients)
+> **Note**: This is the same table documented above in Client Management - serves dual purpose
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
-| `id` | `string` | PRIMARY KEY | User identifier (UUID) |
-| `email` | `string` | NOT NULL, UNIQUE | User email |
-| `full_name` | `string` | NULLABLE | User full name |
-| `role` | `string` | NOT NULL | User role |
-| `user_role` | `string` | NULLABLE | Additional role info |
-| `created_at` | `timestamp` | DEFAULT: `now()` | Creation timestamp |
-| `updated_at` | `timestamp` | DEFAULT: `now()` | Last update timestamp |
+| `id` | `uuid` | PRIMARY KEY, FK to auth.users(id) | User identifier from Supabase Auth |
+| `email` | `text` | NOT NULL, UNIQUE | User email |
+| `full_name` | `text` | NULLABLE | User full name |
+| `role` | `text` | NOT NULL, DEFAULT: 'user' | System role (user/admin) |
+| `user_role` | `text` | NULLABLE, DEFAULT: 'standard' | Business role level |
+| `business_name` | `text` | NULLABLE | Business/company name |
+| `phone_number` | `varchar(50)` | NULLABLE | Contact phone number |
+| `address` | `jsonb` | NULLABLE | Structured address object |
+| `status` | `varchar(20)` | NULLABLE, DEFAULT: 'active' | Account status |
+| `created_at` | `timestamp with time zone` | NOT NULL, DEFAULT: now() | Creation timestamp |
+| `updated_at` | `timestamp with time zone` | NOT NULL, DEFAULT: now() | Last update timestamp |
+| `last_login` | `timestamp with time zone` | NULLABLE | Last login timestamp |
 
 ### **Admin Permissions System**
 ```typescript

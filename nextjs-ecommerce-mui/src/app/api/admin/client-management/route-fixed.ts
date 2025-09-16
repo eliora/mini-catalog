@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { USERS_TABLE, USERS_HELPERS, USERS_QUERIES } from '@/constants/users-schema.js';
+import { USERS_TABLE, USERS_HELPERS, USERS_QUERIES } from '@/constants/users-schema';
 
 // Type definitions matching database schema
 interface Client {
@@ -279,38 +279,23 @@ export async function POST(request: NextRequest) {
 // PUT - Update existing client
 export async function PUT(request: NextRequest) {
   try {
-    console.log('PUT request received');
     const supabase = await createClient();
-    
-    // For admin operations, we might need service role
-    // Let's first try with regular client and add debugging
     
     // Check authentication and admin permissions
     const { data: { session } } = await supabase.auth.getSession();
-    console.log('Session check:', !!session, session?.user?.email);
-    
     if (!session) {
-      console.log('No session found, returning 401');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { isAdmin, error: permError } = await checkAdminPermissions(supabase, session);
-    console.log('Admin check:', isAdmin, permError);
-    
     if (!isAdmin) {
-      console.log('Not admin, returning 403:', permError);
       return NextResponse.json({ error: permError || 'Admin access required' }, { status: 403 });
     }
 
     const body = await request.json();
-    console.log('Request body:', body);
-    
     const { id, ...updateData } = body;
-    console.log('Update data:', updateData);
-    console.log('Client ID:', id);
 
     if (!id) {
-      console.log('No client ID provided');
       return NextResponse.json({ error: 'Client ID is required' }, { status: 400 });
     }
 
@@ -328,89 +313,23 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update client
-    console.log('Updating client with data:', updateData);
-    
-    // Convert empty strings to null for database consistency, but preserve non-empty values
-    const cleanUpdateData = Object.fromEntries(
-      Object.entries(updateData).map(([key, value]) => [
-        key,
-        (value === '' || value === undefined) ? null : value
-      ])
-    );
-    
-    console.log('Cleaned update data:', cleanUpdateData);
-    console.log('Phone number specifically:', {
-      original: updateData.phone_number,
-      cleaned: cleanUpdateData.phone_number,
-      type: typeof cleanUpdateData.phone_number
-    });
-    
-    // Test: Try updating just phone number first
-    const { error: phoneUpdateError, count: phoneCount } = await supabase
+    const { data: client, error } = await supabase
       .from(USERS_TABLE.name)
       .update({
-        phone_number: cleanUpdateData.phone_number,
+        ...updateData,
         updated_at: new Date().toISOString()
       })
-      .eq('id', id);
-
-    console.log('Phone-only update result:', { phoneUpdateError, phoneCount });
-
-    // First, update the client
-    const { error: updateError, count } = await supabase
-      .from(USERS_TABLE.name)
-      .update({
-        ...cleanUpdateData,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id);
-
-    console.log('Full update operation result:', { updateError, count });
-
-    console.log('Supabase update error:', updateError);
-
-    if (updateError) {
-      console.error('Error updating client:', updateError);
-      return NextResponse.json({ 
-        error: 'Failed to update client', 
-        details: updateError.message,
-        code: updateError.code 
-      }, { status: 500 });
-    }
-
-    // Then, fetch the updated client
-    const { data: client, error: selectError } = await supabase
-      .from(USERS_TABLE.name)
-      .select(`
-        id,
-        email,
-        role,
-        full_name,
-        user_role,
-        business_name,
-        phone_number,
-        address,
-        status,
-        created_at,
-        updated_at,
-        last_login
-      `)
       .eq('id', id)
+      .select()
       .single();
 
-    console.log('Supabase select result:', { client, selectError });
-
-    if (selectError) {
-      console.error('Error fetching updated client:', selectError);
-      return NextResponse.json({ 
-        error: 'Failed to fetch updated client', 
-        details: selectError.message,
-        code: selectError.code 
-      }, { status: 500 });
+    if (error) {
+      console.error('Error updating client:', error);
+      return NextResponse.json({ error: 'Failed to update client' }, { status: 500 });
     }
 
     if (!client) {
-      return NextResponse.json({ error: 'Client not found after update' }, { status: 404 });
+      return NextResponse.json({ error: 'Client not found' }, { status: 404 });
     }
 
     // Transform response using helpers
@@ -431,7 +350,7 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE - Remove client (soft delete by setting status to inactive)
+// DELETE - Remove client
 export async function DELETE(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -463,20 +382,7 @@ export async function DELETE(request: NextRequest) {
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
-      .select(`
-        id,
-        email,
-        role,
-        full_name,
-        user_role,
-        business_name,
-        phone_number,
-        address,
-        status,
-        created_at,
-        updated_at,
-        last_login
-      `)
+      .select()
       .single();
 
     // Hard delete option (uncomment if needed):

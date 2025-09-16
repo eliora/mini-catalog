@@ -12,6 +12,18 @@ export interface Order extends OrderRow {
   parsedItems?: OrderItem[];
   formattedTotal?: string;
   statusLabel?: string;
+  
+  // Client information loaded via foreign key
+  client?: {
+    id: string;
+    name: string;
+    email: string;
+    phone_number?: string;
+    business_name?: string;
+    address?: any;
+    user_roles: string[];
+    status: 'active' | 'inactive' | 'suspended';
+  };
 }
 
 export interface OrderItem {

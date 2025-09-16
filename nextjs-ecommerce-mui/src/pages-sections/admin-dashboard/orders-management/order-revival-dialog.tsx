@@ -49,16 +49,23 @@ interface OrderItem {
 
 interface Order {
   id: string;
-  customer_name: string;
-  customer_email: string;
-  customer_phone: string;
+  client_id: string;
   total_amount: number;
   status: string;
-  payment_status: string;
   items_count: number;
   created_at: string;
   updated_at: string;
   items: OrderItem[];
+  client?: {
+    id: string;
+    name: string;
+    email: string;
+    phone_number?: string;
+    business_name?: string;
+    address?: any;
+    user_roles: string[];
+    status: string;
+  };
 }
 
 interface OrderRevivalDialogProps {
@@ -98,7 +105,8 @@ export default function OrderRevivalDialog({
         items_count: items.length,
         total_amount: totalAmount,
         status: "processing", // Revival automatically sets to processing
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        client_id: formData.client_id
       };
       onSave(updatedOrder);
     }
@@ -184,8 +192,17 @@ export default function OrderRevivalDialog({
                     <TextField
                       fullWidth
                       label="שם הלקוח"
-                      value={formData.customer_name}
-                      onChange={(e) => setFormData(prev => prev ? { ...prev, customer_name: e.target.value } : null)}
+                      value={formData.client?.name || ''}
+                      onChange={(e) => setFormData(prev => prev ? { 
+                        ...prev, 
+                        client: prev.client ? { ...prev.client, name: e.target.value } : { 
+                          id: prev.client_id, 
+                          name: e.target.value, 
+                          email: '', 
+                          user_roles: [], 
+                          status: 'active' 
+                        } 
+                      } : null)}
                       sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                     />
                   </Grid>
@@ -195,8 +212,17 @@ export default function OrderRevivalDialog({
                       fullWidth
                       label="אימייל"
                       type="email"
-                      value={formData.customer_email}
-                      onChange={(e) => setFormData(prev => prev ? { ...prev, customer_email: e.target.value } : null)}
+                      value={formData.client?.email || ''}
+                      onChange={(e) => setFormData(prev => prev ? { 
+                        ...prev, 
+                        client: prev.client ? { ...prev.client, email: e.target.value } : { 
+                          id: prev.client_id, 
+                          name: '', 
+                          email: e.target.value, 
+                          user_roles: [], 
+                          status: 'active' 
+                        } 
+                      } : null)}
                       sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                     />
                   </Grid>
@@ -205,8 +231,18 @@ export default function OrderRevivalDialog({
                     <TextField
                       fullWidth
                       label="טלפון"
-                      value={formData.customer_phone}
-                      onChange={(e) => setFormData(prev => prev ? { ...prev, customer_phone: e.target.value } : null)}
+                      value={formData.client?.phone_number || ''}
+                      onChange={(e) => setFormData(prev => prev ? { 
+                        ...prev, 
+                        client: prev.client ? { ...prev.client, phone_number: e.target.value } : { 
+                          id: prev.client_id, 
+                          name: '', 
+                          email: '', 
+                          phone_number: e.target.value, 
+                          user_roles: [], 
+                          status: 'active' 
+                        } 
+                      } : null)}
                       sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                     />
                   </Grid>
@@ -366,19 +402,16 @@ export default function OrderRevivalDialog({
                   </Grid>
 
                   <Grid item md={6} xs={12}>
-                    <FormControl fullWidth>
-                      <InputLabel>סטטוס תשלום</InputLabel>
-                      <Select
-                        value={formData.payment_status}
-                        label="סטטוס תשלום"
-                        onChange={(e) => setFormData(prev => prev ? { ...prev, payment_status: e.target.value } : null)}
-                        sx={{ borderRadius: 2 }}
-                      >
-                        {paymentStatuses.map(status => (
-                          <MenuItem key={status.value} value={status.value}>{status.label}</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
+                    <TextField
+                      fullWidth
+                      label="הערות"
+                      multiline
+                      rows={2}
+                      value={formData.notes || ''}
+                      onChange={(e) => setFormData(prev => prev ? { ...prev, notes: e.target.value } : null)}
+                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                      placeholder="הערות נוספות להזמנה..."
+                    />
                   </Grid>
                 </Grid>
 

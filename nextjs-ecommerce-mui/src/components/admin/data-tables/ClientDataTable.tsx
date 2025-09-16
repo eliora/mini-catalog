@@ -39,15 +39,22 @@ import { format } from 'date-fns';
 interface Client {
   id: string;
   email: string;
-  name: string;
+  role: 'user' | 'admin';
+  full_name: string;        // Changed from 'name' to 'full_name'
+  user_role: 'standard' | 'verified_members' | 'customer' | 'admin';  // Single enum, not array
   business_name?: string;
   phone_number?: string;
   address?: any;
-  user_roles: any[];
   status: 'active' | 'inactive' | 'suspended';
   created_at: string;
   updated_at: string;
   last_login?: string;
+  // Helper fields added by API
+  display_name?: string;
+  formatted_address?: string;
+  is_admin?: boolean;
+  is_verified?: boolean;
+  is_active?: boolean;
 }
 
 interface ClientDataTableProps {
@@ -148,31 +155,34 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({
     }
   };
 
-  const getRoleChips = (roles: any[]) => {
-    if (!roles || roles.length === 0) {
-      return <Chip label="אין תפקידים" size="small" variant="outlined" />;
+  const getUserRoleLabel = (userRole: string) => {
+    switch (userRole) {
+      case 'standard':
+        return 'לקוח רגיל';
+      case 'verified_members':
+        return 'חבר מאומת';
+      case 'customer':
+        return 'לקוח';
+      case 'admin':
+        return 'מנהל';
+      default:
+        return userRole || 'לא מוגדר';
     }
+  };
 
-    return (
-      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-        {roles.slice(0, 2).map((role, index) => (
-          <Chip
-            key={index}
-            label={role.name || role}
-            size="small"
-            color="primary"
-            variant="outlined"
-          />
-        ))}
-        {roles.length > 2 && (
-          <Chip
-            label={`+${roles.length - 2}`}
-            size="small"
-            variant="outlined"
-          />
-        )}
-      </Box>
-    );
+  const getUserRoleColor = (userRole: string) => {
+    switch (userRole) {
+      case 'admin':
+        return 'error';
+      case 'verified_members':
+        return 'primary';
+      case 'customer':
+        return 'secondary';
+      case 'standard':
+        return 'default';
+      default:
+        return 'default';
+    }
   };
 
   return (
@@ -190,9 +200,12 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({
               </TableCell>
               <TableCell>לקוח</TableCell>
               <TableCell>פרטי קשר</TableCell>
-              <TableCell>תפקידים</TableCell>
+              <TableCell>תפקיד משתמש</TableCell>
+              <TableCell>תפקיד מערכת</TableCell>
               <TableCell>סטטוס</TableCell>
+              <TableCell>כתובת</TableCell>
               <TableCell>נוצר</TableCell>
+              <TableCell>עודכן</TableCell>
               <TableCell>כניסה אחרונה</TableCell>
               <TableCell align="right">פעולות</TableCell>
             </TableRow>
@@ -222,12 +235,18 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({
                     </Avatar>
                     <Box>
                       <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                        {client.name}
+                        {client.display_name || client.full_name || 'ללא שם'}
                       </Typography>
                       {client.business_name && (
                         <Typography variant="caption" color="text.secondary">
                           {client.business_name}
                         </Typography>
+                      )}
+                      {client.is_admin && (
+                        <Chip label="מנהל" size="small" color="error" sx={{ ml: 1 }} />
+                      )}
+                      {client.is_verified && (
+                        <Chip label="מאומת" size="small" color="primary" sx={{ ml: 1 }} />
                       )}
                     </Box>
                   </Box>
@@ -247,7 +266,20 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({
                 </TableCell>
                 
                 <TableCell>
-                  {getRoleChips(client.user_roles)}
+                  <Chip
+                    label={getUserRoleLabel(client.user_role)}
+                    size="small"
+                    color={getUserRoleColor(client.user_role) as any}
+                    variant="outlined"
+                  />
+                </TableCell>
+                
+                <TableCell>
+                  <Chip
+                    label={client.role === 'admin' ? 'מנהל' : 'משתמש'}
+                    size="small"
+                    color={client.role === 'admin' ? 'error' : 'default'}
+                  />
                 </TableCell>
                 
                 <TableCell>
@@ -259,18 +291,48 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({
                 </TableCell>
                 
                 <TableCell>
+                  <Box>
+                    <Typography variant="body2">
+                      {client.formatted_address || 'לא הוזנה כתובת'}
+                    </Typography>
+                  </Box>
+                </TableCell>
+                
+                <TableCell>
                   <Typography variant="body2">
-                    {format(new Date(client.created_at), 'MMM dd, yyyy')}
+                    {format(new Date(client.created_at), 'dd/MM/yyyy')}
                   </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {format(new Date(client.created_at), 'HH:mm')}
+                  </Typography>
+                </TableCell>
+                
+                <TableCell>
+                  <Typography variant="body2">
+                    {client.updated_at 
+                      ? format(new Date(client.updated_at), 'dd/MM/yyyy')
+                      : 'לא עודכן'
+                    }
+                  </Typography>
+                  {client.updated_at && (
+                    <Typography variant="caption" color="text.secondary">
+                      {format(new Date(client.updated_at), 'HH:mm')}
+                    </Typography>
+                  )}
                 </TableCell>
                 
                 <TableCell>
                   <Typography variant="body2" color="text.secondary">
                     {client.last_login 
-                      ? format(new Date(client.last_login), 'MMM dd, yyyy')
+                      ? format(new Date(client.last_login), 'dd/MM/yyyy')
                       : 'אף פעם'
                     }
                   </Typography>
+                  {client.last_login && (
+                    <Typography variant="caption" color="text.secondary">
+                      {format(new Date(client.last_login), 'HH:mm')}
+                    </Typography>
+                  )}
                 </TableCell>
                 
                 <TableCell align="right">

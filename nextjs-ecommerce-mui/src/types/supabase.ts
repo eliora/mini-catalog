@@ -17,10 +17,7 @@ export type Database = {
       orders: {
         Row: {
           created_at: string
-          customer_address: string | null
-          customer_email: string | null
-          customer_name: string
-          customer_phone: string | null
+          client_id: string
           id: string
           items: Json
           notes: string | null
@@ -30,10 +27,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          customer_address?: string | null
-          customer_email?: string | null
-          customer_name: string
-          customer_phone?: string | null
+          client_id: string
           id?: string
           items?: Json
           notes?: string | null
@@ -43,10 +37,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          customer_address?: string | null
-          customer_email?: string | null
-          customer_name?: string
-          customer_phone?: string | null
+          client_id?: string
           id?: string
           items?: Json
           notes?: string | null
@@ -54,7 +45,15 @@ export type Database = {
           total_amount?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_orders_client_id"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       prices: {
         Row: {
@@ -190,6 +189,48 @@ export type Database = {
           updated_at?: string
           usage_instructions?: string | null
           usage_instructions_he?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          id: string
+          email: string
+          name: string
+          business_name: string | null
+          phone_number: string | null
+          address: Json | null
+          user_roles: string[]
+          status: string
+          created_at: string
+          updated_at: string
+          last_login: string | null
+        }
+        Insert: {
+          id?: string
+          email: string
+          name: string
+          business_name?: string | null
+          phone_number?: string | null
+          address?: Json | null
+          user_roles?: string[]
+          status?: string
+          created_at?: string
+          updated_at?: string
+          last_login?: string | null
+        }
+        Update: {
+          id?: string
+          email?: string
+          name?: string
+          business_name?: string | null
+          phone_number?: string | null
+          address?: Json | null
+          user_roles?: string[]
+          status?: string
+          created_at?: string
+          updated_at?: string
+          last_login?: string | null
         }
         Relationships: []
       }

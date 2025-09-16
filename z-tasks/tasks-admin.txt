@@ -1,7 +1,9 @@
 
-your task: edit migration plan and add these feautres/mods to the correct tasks within phase 8. dont exectute yet
+your task: while migrating keep in mind these features.
 
 details:
+
+need dashboard
 
 1) endpoints: make within admin_panel full endpoints
 -admin/client-managment, admin/settings, admin/products-management, admin/order-management etc
@@ -14,7 +16,6 @@ details:
 -when i upload logo it says it competed but doesnt really save it.
  
  4) admin/products-management: 
--in original react it was saying "אין מוצרים במערכת" 'while there are. fix it. 
 -add ability to edit/view product with all fields. include sort of every field. make it very compact. add ability to edit fields within the table without opening. 
 -add ability in the sort fuction to hide columns for easier viewing
 -make the products db values in column editable mui table with a custom Toolbar.  use the TableSortLabel component(mui) to help style column headings.

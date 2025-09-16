@@ -1,7 +1,7 @@
 /**
  * Client Edit Dialog Component
  * 
- * Dialog for creating and editing client information.
+ * Reusable dialog for creating and editing client information with Hebrew localization.
  */
 
 'use client';
@@ -14,7 +14,6 @@ import {
   DialogActions,
   Button,
   TextField,
-  Grid,
   Box,
   Typography,
   FormControl,
@@ -22,23 +21,48 @@ import {
   Select,
   MenuItem,
   Chip,
-  OutlinedInput,
-  FormControlLabel,
-  Switch,
+  Card,
+  CardContent,
+  Divider,
   Alert,
-  CircularProgress
+  CircularProgress,
+  IconButton,
+  Avatar,
+  Switch,
+  FormControlLabel,
+  Autocomplete,
+  Stack
 } from '@mui/material';
+import {
+  Close as CloseIcon,
+  Person as PersonIcon,
+  Business as BusinessIcon,
+  Email as EmailIcon,
+  Phone as PhoneIcon,
+  LocationOn as LocationIcon,
+  Security as SecurityIcon,
+  Save as SaveIcon
+} from '@mui/icons-material';
 import { SelectChangeEvent } from '@mui/material/Select';
 
 interface Client {
   id: string;
   email: string;
-  name: string;
+  role: 'user' | 'admin';
+  full_name: string;
+  user_role: 'standard' | 'verified_members' | 'customer' | 'admin';
   business_name?: string;
   phone_number?: string;
   address?: any;
-  user_roles: any[];
   status: 'active' | 'inactive' | 'suspended';
+  created_at: string;
+  updated_at: string;
+  last_login?: string;
+  display_name?: string;
+  formatted_address?: string;
+  is_admin?: boolean;
+  is_verified?: boolean;
+  is_active?: boolean;
 }
 
 interface UserRole {
@@ -48,17 +72,11 @@ interface UserRole {
   description?: string;
 }
 
-interface ClientEditDialogProps {
-  client?: Client;
-  userRoles: UserRole[];
-  open: boolean;
-  onClose: () => void;
-  onSave: (clientData: any) => Promise<void>;
-}
-
 interface FormData {
   email: string;
   name: string;
+  role: 'user' | 'admin';
+  user_role: 'standard' | 'verified_members' | 'customer' | 'admin';
   business_name: string;
   phone_number: string;
   address: {
@@ -68,20 +86,106 @@ interface FormData {
     postal_code: string;
     country: string;
   };
-  user_roles: string[];
   status: 'active' | 'inactive' | 'suspended';
 }
+
+interface ClientEditDialogProps {
+  client?: Client;
+  userRoles: UserRole[];
+  open: boolean;
+  onClose: () => void;
+  onSave: (clientData: any) => Promise<void>;
+  mode?: 'create' | 'edit';
+}
+
+// Hebrew labels and options
+const HEBREW_LABELS = {
+  dialog: {
+    create: 'הוספת לקוח חדש',
+    edit: 'עריכת פרטי לקוח',
+  },
+  fields: {
+    email: 'כתובת אימייל',
+    fullName: 'שם מלא',
+    businessName: 'שם עסק',
+    phoneNumber: 'מספר טלפון',
+    role: 'תפקיד מערכת',
+    userRole: 'תפקיד משתמש',
+    status: 'סטטוס',
+    address: 'כתובת',
+    street: 'רחוב',
+    city: 'עיר',
+    state: 'מחוז/אזור',
+    postalCode: 'מיקוד',
+    country: 'מדינה',
+  },
+  roles: {
+    user: 'משתמש',
+    admin: 'מנהל מערכת',
+  },
+  userRoles: {
+    standard: 'לקוח רגיל',
+    verified_members: 'חבר מאומת',
+    customer: 'לקוח',
+    admin: 'מנהל',
+  },
+  status: {
+    active: 'פעיל',
+    inactive: 'לא פעיל',
+    suspended: 'מושעה',
+  },
+  actions: {
+    save: 'שמירה',
+    cancel: 'ביטול',
+    close: 'סגירה',
+  },
+  validation: {
+    emailRequired: 'כתובת אימייל נדרשת',
+    nameRequired: 'שם מלא נדרש',
+    invalidEmail: 'כתובת אימייל לא תקינה',
+    phoneInvalid: 'מספר טלפון לא תקין',
+  },
+  placeholders: {
+    email: 'הזן כתובת אימייל',
+    fullName: 'הזן שם מלא',
+    businessName: 'הזן שם עסק (אופציונלי)',
+    phoneNumber: 'הזן מספר טלפון',
+    street: 'רחוב ומספר בית',
+    city: 'עיר',
+    state: 'מחוז או אזור',
+    postalCode: 'מיקוד',
+  },
+  sections: {
+    personalInfo: 'פרטים אישיים',
+    contactInfo: 'פרטי קשר',
+    permissions: 'הרשאות ותפקידים',
+    address: 'כתובת',
+  }
+};
+
+const ISRAELI_CITIES = [
+  'תל אביב', 'ירושלים', 'חיפה', 'ראשון לציון', 'פתח תקווה', 'אשדוד', 'נתניה', 
+  'באר שבע', 'בני ברק', 'רמת גן', 'אשקלון', 'חולון', 'בת ים', 'רחובות', 'כפר סבא',
+  'הרצליה', 'חדרה', 'מודיעין', 'נצרת', 'לוד', 'רמלה', 'רעננה', 'אילת', 'טבריה'
+];
 
 const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
   client,
   userRoles,
   open,
   onClose,
-  onSave
+  onSave,
+  mode = client ? 'edit' : 'create'
 }) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
   const [formData, setFormData] = useState<FormData>({
     email: '',
     name: '',
+    role: 'user',
+    user_role: 'standard',
     business_name: '',
     phone_number: '',
     address: {
@@ -89,32 +193,28 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
       city: '',
       state: '',
       postal_code: '',
-      country: 'Israel'
+      country: 'ישראל'
     },
-    user_roles: [],
     status: 'active'
   });
-  
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const isEditing = Boolean(client);
-
+  // Initialize form data when client changes
   useEffect(() => {
     if (client) {
       setFormData({
         email: client.email || '',
-        name: client.name || '',
+        name: client.full_name || client.display_name || '',
+        role: client.role || 'user',
+        user_role: client.user_role || 'standard',
         business_name: client.business_name || '',
         phone_number: client.phone_number || '',
-        address: client.address || {
-          street: '',
-          city: '',
-          state: '',
-          postal_code: '',
-          country: 'Israel'
+        address: {
+          street: client.address?.street || '',
+          city: client.address?.city || '',
+          state: client.address?.state || '',
+          postal_code: client.address?.postal_code || '',
+          country: client.address?.country || 'ישראל'
         },
-        user_roles: client.user_roles?.map(role => role.id || role.name || role) || [],
         status: client.status || 'active'
       });
     } else {
@@ -122,6 +222,8 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
       setFormData({
         email: '',
         name: '',
+        role: 'user',
+        user_role: 'standard',
         business_name: '',
         phone_number: '',
         address: {
@@ -129,48 +231,76 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
           city: '',
           state: '',
           postal_code: '',
-          country: 'Israel'
+          country: 'ישראל'
         },
-        user_roles: [],
         status: 'active'
       });
     }
     setError(null);
+    setValidationErrors({});
   }, [client, open]);
 
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    // Email validation
+    if (!formData.email.trim()) {
+      errors.email = HEBREW_LABELS.validation.emailRequired;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = HEBREW_LABELS.validation.invalidEmail;
+    }
+
+    // Name validation
+    if (!formData.name.trim()) {
+      errors.name = HEBREW_LABELS.validation.nameRequired;
+    }
+
+    // Phone validation (optional but if provided must be valid)
+    if (formData.phone_number && !/^[\d\s\-\+\(\)]+$/.test(formData.phone_number)) {
+      errors.phone_number = HEBREW_LABELS.validation.phoneInvalid;
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleInputChange = (field: string) => (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: event.target.value
-    }));
-  };
-
-  const handleAddressChange = (field: string) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormData(prev => ({
-      ...prev,
-      address: {
-        ...prev.address,
-        [field]: event.target.value
-      }
-    }));
-  };
-
-  const handleRolesChange = (event: SelectChangeEvent<string[]>) => {
     const value = event.target.value;
-    setFormData(prev => ({
-      ...prev,
-      user_roles: typeof value === 'string' ? value.split(',') : value
-    }));
+    
+    if (field.startsWith('address.')) {
+      const addressField = field.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          [addressField]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
+
+    // Clear validation error for this field
+    if (validationErrors[field]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
-  const handleStatusChange = (event: SelectChangeEvent) => {
+  const handleSelectChange = (field: string) => (
+    event: SelectChangeEvent<string>
+  ) => {
     setFormData(prev => ({
       ...prev,
-      status: event.target.value as 'active' | 'inactive' | 'suspended'
+      [field]: event.target.value as any
     }));
   };
 
@@ -179,26 +309,31 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
       setLoading(true);
       setError(null);
 
-      // Basic validation
-      if (!formData.email || !formData.name) {
-        setError('Email and name are required');
+      if (!validateForm()) {
         return;
       }
 
-      // Map role IDs to role objects
-      const selectedRoles = userRoles.filter(role => 
-        formData.user_roles.includes(role.id)
-      );
-
+      // Map form data to API expected format
       const clientData = {
-        ...formData,
-        user_roles: selectedRoles
+        ...(client && { id: client.id }),
+        email: formData.email.trim(),
+        full_name: formData.name.trim(),
+        role: formData.role,
+        user_role: formData.user_role,
+        business_name: formData.business_name.trim(),
+        phone_number: formData.phone_number.trim(),
+        address: formData.address,
+        status: formData.status
       };
+
+      console.log('Dialog sending data:', clientData);
+      console.log('Phone number from form:', formData.phone_number);
+      console.log('Phone number after trim:', formData.phone_number.trim());
 
       await onSave(clientData);
       
     } catch (err: any) {
-      setError(err.message || 'Failed to save client');
+      setError(err.message || 'שגיאה בשמירת הנתונים');
     } finally {
       setLoading(false);
     }
@@ -210,202 +345,281 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
     }
   };
 
+  const isAdmin = formData.role === 'admin';
+
   return (
-    <Dialog
-      open={open}
+    <Dialog 
+      open={open} 
       onClose={handleClose}
       maxWidth="md"
       fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 2,
+          maxHeight: '90vh'
+        }
+      }}
     >
-      <DialogTitle>
-        {isEditing ? 'Edit Client' : 'Add New Client'}
+      <DialogTitle sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between',
+        pb: 1,
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        mb: 2
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)' }}>
+            {mode === 'create' ? <PersonIcon /> : <BusinessIcon />}
+          </Avatar>
+          <Typography variant="h6" component="div">
+            {mode === 'create' ? HEBREW_LABELS.dialog.create : HEBREW_LABELS.dialog.edit}
+          </Typography>
+        </Box>
+        <IconButton
+          onClick={handleClose}
+          disabled={loading}
+          sx={{ color: 'white' }}
+        >
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
-      
-      <DialogContent>
+
+      <DialogContent sx={{ px: 3, py: 2 }}>
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
             {error}
           </Alert>
         )}
 
-        <Box sx={{ mt: 1 }}>
-          <Grid container spacing={3}>
-            {/* Basic Information */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom>
-                Basic Information
-              </Typography>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Email Address"
-                type="email"
-                value={formData.email}
-                onChange={handleInputChange('email')}
-                required
-                disabled={loading}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Full Name"
-                value={formData.name}
-                onChange={handleInputChange('name')}
-                required
-                disabled={loading}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Business Name"
-                value={formData.business_name}
-                onChange={handleInputChange('business_name')}
-                disabled={loading}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Phone Number"
-                value={formData.phone_number}
-                onChange={handleInputChange('phone_number')}
-                disabled={loading}
-              />
-            </Grid>
+        <Stack spacing={3}>
+          {/* Personal Information Section */}
+          <Card variant="outlined" sx={{ borderRadius: 2 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <PersonIcon color="primary" />
+                <Typography variant="h6" color="primary">
+                  {HEBREW_LABELS.sections.personalInfo}
+                </Typography>
+              </Box>
+              
+              <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+                <TextField
+                  fullWidth
+                  label={HEBREW_LABELS.fields.fullName}
+                  placeholder={HEBREW_LABELS.placeholders.fullName}
+                  value={formData.name}
+                  onChange={handleInputChange('name')}
+                  error={!!validationErrors.name}
+                  helperText={validationErrors.name}
+                  required
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+                
+                <TextField
+                  fullWidth
+                  label={HEBREW_LABELS.fields.businessName}
+                  placeholder={HEBREW_LABELS.placeholders.businessName}
+                  value={formData.business_name}
+                  onChange={handleInputChange('business_name')}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+              </Box>
+            </CardContent>
+          </Card>
 
-            {/* Address */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                Address
-              </Typography>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Street Address"
-                value={formData.address.street}
-                onChange={handleAddressChange('street')}
-                disabled={loading}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="City"
-                value={formData.address.city}
-                onChange={handleAddressChange('city')}
-                disabled={loading}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="State/Province"
-                value={formData.address.state}
-                onChange={handleAddressChange('state')}
-                disabled={loading}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="Postal Code"
-                value={formData.address.postal_code}
-                onChange={handleAddressChange('postal_code')}
-                disabled={loading}
-              />
-            </Grid>
+          {/* Contact Information Section */}
+          <Card variant="outlined" sx={{ borderRadius: 2 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <EmailIcon color="primary" />
+                <Typography variant="h6" color="primary">
+                  {HEBREW_LABELS.sections.contactInfo}
+                </Typography>
+              </Box>
+              
+              <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+                <TextField
+                  fullWidth
+                  type="email"
+                  label={HEBREW_LABELS.fields.email}
+                  placeholder={HEBREW_LABELS.placeholders.email}
+                  value={formData.email}
+                  onChange={handleInputChange('email')}
+                  error={!!validationErrors.email}
+                  helperText={validationErrors.email}
+                  required
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+                
+                <TextField
+                  fullWidth
+                  label={HEBREW_LABELS.fields.phoneNumber}
+                  placeholder={HEBREW_LABELS.placeholders.phoneNumber}
+                  value={formData.phone_number}
+                  onChange={handleInputChange('phone_number')}
+                  error={!!validationErrors.phone_number}
+                  helperText={validationErrors.phone_number}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+              </Box>
+            </CardContent>
+          </Card>
 
-            {/* Roles and Status */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                Roles & Status
-              </Typography>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth disabled={loading}>
-                <InputLabel>User Roles</InputLabel>
-                <Select
-                  multiple
-                  value={formData.user_roles}
-                  onChange={handleRolesChange}
-                  input={<OutlinedInput label="User Roles" />}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((value) => {
-                        const role = userRoles.find(r => r.id === value);
-                        return (
-                          <Chip
-                            key={value}
-                            label={role?.name || value}
-                            size="small"
-                          />
-                        );
-                      })}
-                    </Box>
-                  )}
-                >
-                  {userRoles.map((role) => (
-                    <MenuItem key={role.id} value={role.id}>
-                      <Box>
-                        <Typography variant="body2">{role.name}</Typography>
-                        {role.description && (
-                          <Typography variant="caption" color="text.secondary">
-                            {role.description}
-                          </Typography>
-                        )}
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth disabled={loading}>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={formData.status}
-                  onChange={handleStatusChange}
-                  label="Status"
-                >
-                  <MenuItem value="active">Active</MenuItem>
-                  <MenuItem value="inactive">Inactive</MenuItem>
-                  <MenuItem value="suspended">Suspended</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-        </Box>
+          {/* Address Section */}
+          <Card variant="outlined" sx={{ borderRadius: 2 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <LocationIcon color="primary" />
+                <Typography variant="h6" color="primary">
+                  {HEBREW_LABELS.sections.address}
+                </Typography>
+              </Box>
+              
+              <Stack spacing={2}>
+                <TextField
+                  fullWidth
+                  label={HEBREW_LABELS.fields.street}
+                  placeholder={HEBREW_LABELS.placeholders.street}
+                  value={formData.address.street}
+                  onChange={handleInputChange('address.street')}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+                
+                <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+                  <Autocomplete
+                    freeSolo
+                    options={ISRAELI_CITIES}
+                    value={formData.address.city}
+                    onChange={(_, value) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        address: { ...prev.address, city: value || '' }
+                      }));
+                    }}
+                    sx={{ flex: 1 }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label={HEBREW_LABELS.fields.city}
+                        placeholder={HEBREW_LABELS.placeholders.city}
+                        onChange={handleInputChange('address.city')}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                      />
+                    )}
+                  />
+                  
+                  <TextField
+                    label={HEBREW_LABELS.fields.state}
+                    placeholder={HEBREW_LABELS.placeholders.state}
+                    value={formData.address.state}
+                    onChange={handleInputChange('address.state')}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 }, flex: 1 }}
+                  />
+                  
+                  <TextField
+                    label={HEBREW_LABELS.fields.postalCode}
+                    placeholder={HEBREW_LABELS.placeholders.postalCode}
+                    value={formData.address.postal_code}
+                    onChange={handleInputChange('address.postal_code')}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 }, flex: 1 }}
+                  />
+                </Box>
+              </Stack>
+            </CardContent>
+          </Card>
+
+          {/* Permissions Section */}
+          <Card variant="outlined" sx={{ borderRadius: 2 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <SecurityIcon color="primary" />
+                <Typography variant="h6" color="primary">
+                  {HEBREW_LABELS.sections.permissions}
+                </Typography>
+              </Box>
+              
+              <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+                <FormControl fullWidth>
+                  <InputLabel>{HEBREW_LABELS.fields.role}</InputLabel>
+                  <Select
+                    value={formData.role}
+                    onChange={handleSelectChange('role')}
+                    label={HEBREW_LABELS.fields.role}
+                    sx={{ borderRadius: 2 }}
+                  >
+                    <MenuItem value="user">{HEBREW_LABELS.roles.user}</MenuItem>
+                    <MenuItem value="admin">{HEBREW_LABELS.roles.admin}</MenuItem>
+                  </Select>
+                </FormControl>
+                
+                <FormControl fullWidth>
+                  <InputLabel>{HEBREW_LABELS.fields.userRole}</InputLabel>
+                  <Select
+                    value={formData.user_role}
+                    onChange={handleSelectChange('user_role')}
+                    label={HEBREW_LABELS.fields.userRole}
+                    sx={{ borderRadius: 2 }}
+                  >
+                    <MenuItem value="standard">{HEBREW_LABELS.userRoles.standard}</MenuItem>
+                    <MenuItem value="verified_members">{HEBREW_LABELS.userRoles.verified_members}</MenuItem>
+                    <MenuItem value="customer">{HEBREW_LABELS.userRoles.customer}</MenuItem>
+                    <MenuItem value="admin">{HEBREW_LABELS.userRoles.admin}</MenuItem>
+                  </Select>
+                </FormControl>
+                
+                <FormControl fullWidth>
+                  <InputLabel>{HEBREW_LABELS.fields.status}</InputLabel>
+                  <Select
+                    value={formData.status}
+                    onChange={handleSelectChange('status')}
+                    label={HEBREW_LABELS.fields.status}
+                    sx={{ borderRadius: 2 }}
+                  >
+                    <MenuItem value="active">{HEBREW_LABELS.status.active}</MenuItem>
+                    <MenuItem value="inactive">{HEBREW_LABELS.status.inactive}</MenuItem>
+                    <MenuItem value="suspended">{HEBREW_LABELS.status.suspended}</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+
+              {isAdmin && (
+                <Alert severity="warning" sx={{ mt: 2, borderRadius: 2 }}>
+                  <Typography variant="body2">
+                    <strong>שים לב:</strong> המשתמש יקבל הרשאות מנהל מערכת מלאות
+                  </Typography>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+        </Stack>
       </DialogContent>
-      
-      <DialogActions sx={{ p: 3 }}>
+
+      <Divider />
+
+      <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
         <Button
           onClick={handleClose}
           disabled={loading}
+          variant="outlined"
+          sx={{ borderRadius: 2, minWidth: 100 }}
         >
-          Cancel
+          {HEBREW_LABELS.actions.cancel}
         </Button>
         
         <Button
           onClick={handleSubmit}
-          variant="contained"
           disabled={loading}
-          startIcon={loading ? <CircularProgress size={20} /> : undefined}
+          variant="contained"
+          startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
+          sx={{ 
+            borderRadius: 2, 
+            minWidth: 120,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+          }}
         >
-          {loading ? 'Saving...' : (isEditing ? 'Update Client' : 'Create Client')}
+          {loading ? 'שומר...' : HEBREW_LABELS.actions.save}
         </Button>
       </DialogActions>
     </Dialog>
