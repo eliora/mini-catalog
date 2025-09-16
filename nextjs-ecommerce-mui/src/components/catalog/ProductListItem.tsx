@@ -87,7 +87,7 @@ const ProductListItem: React.FC<ProductListItemProps> = React.memo(({
         tabIndex={0}
         onClick={(e) => {
           // Don't expand if clicking on quantity controls
-          if (e.target.closest('.quantity-controls')) {
+          if ((e.target as Element).closest?.('.quantity-controls')) {
             return;
           }
           setExpanded(!expanded);

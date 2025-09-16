@@ -59,7 +59,7 @@ export const getPrices = async (productRefs: string | string[] | null = null): P
         pricesMap[price.product_ref] = {
           unitPrice: price.unit_price,
           currency: price.currency || 'ILS',
-          discountPrice: price.discount_price,
+          discountPrice: price.discount_price || undefined,
           priceTier: price.price_tier || 'standard',
           updatedAt: price.updated_at
         };
@@ -180,8 +180,8 @@ export const updatePrice = async (
     return {
       unitPrice: data.unit_price,
       currency: data.currency,
-      discountPrice: data.discount_price,
-      priceTier: data.price_tier,
+      discountPrice: data.discount_price || undefined,
+      priceTier: data.price_tier || 'standard',
       updatedAt: data.updated_at
     };
   } catch (error) {

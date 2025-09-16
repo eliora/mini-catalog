@@ -1,2 +1,3 @@
-price in order form, both price per unit and sum of each row only visible to auth users of prices.db
-price is seen in accordion header 
+catalog in mobile view 
+1)filter button in line with search bar ( need to make search smaller)
+2) remove pic in inner accordion

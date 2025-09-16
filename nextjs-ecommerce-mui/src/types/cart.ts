@@ -39,6 +39,7 @@ export interface CartState {
   // Actions
   addItem: (product: Product, quantity: number, notes?: string) => Promise<void>;
   updateItem: (productId: string, quantity: number, notes?: string) => Promise<void>;
+  updateItemPrice: (productId: string, unitPrice: number) => Promise<void>;
   removeItem: (productId: string) => Promise<void>;
   clearCart: () => Promise<void>;
   // Legacy aliases for backward compatibility

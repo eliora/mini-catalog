@@ -1,27 +1,32 @@
 
-ADMIN PANEL
+your task: edit migration plan and add these feautres/mods to the correct tasks within phase 8. dont exectute yet
+
+details:
 
 1) endpoints: make within admin_panel full endpoints
-admin/clients, admin/settings admin/orders, etc
+-admin/client-managment, admin/settings, admin/products-management, admin/order-management etc
 
-2) admin/clients: within clients add ability to edit clients with the following: name,address,phone number,roles.
+2) admin/client-management: within clients add ability to edit clients with the following: name, business name, address,phone number,user_roles(in db).
+*important*: these componets will be used to in account-page panel (client backend) 
+
 3) admin/setttings:
-
-a.redesign admin/settings - its look really bad. also make it compact
-b.when i upload logo it says it competed but doesnt really save it.
+-redesign admin/settings - its look really bad. also make it compact use ecommerce setting best practice, use mui components
+-when i upload logo it says it competed but doesnt really save it.
  
- 4) admin/products: 
-it says "אין מוצרים במערכת" 'while there are. fix it. add ability to edit/view product with all fields. include sort of every field. make it very compact. add ability to edit fields within the table without opening. add ability in the sort fuction to hide columns for easier viewing
-make the products db values in column editable mui table with a custom Toolbar.  use the TableSortLabel component to help style column headings.
+ 4) admin/products-management: 
+-in original react it was saying "אין מוצרים במערכת" 'while there are. fix it. 
+-add ability to edit/view product with all fields. include sort of every field. make it very compact. add ability to edit fields within the table without opening. 
+-add ability in the sort fuction to hide columns for easier viewing
+-make the products db values in column editable mui table with a custom Toolbar.  use the TableSortLabel component(mui) to help style column headings.
+-export to csv function
 
 
-5) admin/orders
-A.make use of componeets from orderform as much as possible
-B.add option to edit order by reviving it and editing it in order form. keep it attached to the order so only saved it needed.
-C.make sql editor to fix orders.db table
+5) admin/orders-management
+-make use of componeets from orderform as much as possible
+-add option to edit order by reviving it and editing it in order form. keep it attached to the order so only saved it needed.
+-make sql editor to fix orders.db table
+- add print/export to pdf
 
-6) admin/users
-A. allow name client changing from dashboard
 
 
 

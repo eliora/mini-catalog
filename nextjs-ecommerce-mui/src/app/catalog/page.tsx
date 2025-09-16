@@ -1,5 +1,6 @@
-import CatalogClean from '@/components/catalog/CatalogClean';
+import { redirect } from 'next/navigation';
 
 export default function CatalogPage() {
-  return <CatalogClean />;
+  // Since catalog is now the homepage, redirect to root
+  redirect('/');
 }

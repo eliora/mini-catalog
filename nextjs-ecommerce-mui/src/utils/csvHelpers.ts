@@ -17,30 +17,31 @@
  * - validateProductData: Validate product data
  */
 
-interface CSVRow {
+// Types for CSV data structures
+export interface CSVRow {
   [key: string]: string;
 }
 
-interface ProductData {
-  ref: string; // Changed from 'ref no' to match Supabase schema
-  product_name: string; // Changed from 'product name' to match schema
-  product_name_2?: string; // Changed from 'product name 2' to match schema
-  size?: string;
-  brand?: string;
-  categories?: string;
-  key_ingredients?: string; // Changed from 'key ingredients' to match schema
-  description?: string;
-  how_to_use?: string; // Changed from 'how to use' to match schema
-  notes?: string;
-  main_pic?: string; // Changed from 'image' to match schema
+export interface ProductRow {
+  'ref no': string;
+  'product name': string;
+  'product name 2': string;
+  'size': string;
+  'brand': string;
+  'categories': string;
+  'key ingredients': string;
+  'description': string;
+  'how to use': string;
+  'notes': string;
+  'image': string;
 }
 
-interface ValidationResult {
-  validProducts: ProductData[];
+export interface ValidationResult {
+  validProducts: ProductRow[];
   errors: string[];
 }
 
-interface PreviewData {
+export interface PreviewData {
   ref: string;
   name: string;
   name2: string;
@@ -93,24 +94,24 @@ export const parseCSV = (csvText: string): CSVRow[] => {
 /**
  * Transform CSV row to product object with proper field mapping
  */
-export const transformProduct = (row: CSVRow): ProductData => {
-  const product: ProductData = {
-    ref: row['ref no'] || row['ref'] || row['מק"ט'] || '',
-    product_name: row['product name'] || row['שם מוצר'] || '',
-    product_name_2: row['product name 2'] || row['שם מוצר 2'] || '',
-    size: row['size'] || row['גודל'] || '',
-    brand: row['brand'] || row['מותג'] || '',
-    categories: row['categories'] || row['קטגוריות'] || '',
-    key_ingredients: row['key ingredients'] || row['רכיבים עיקריים'] || '',
-    description: row['description'] || row['תיאור'] || '',
-    how_to_use: row['how to use'] || row['אופן שימוש'] || '',
-    notes: row['notes'] || row['הערות'] || '',
-    main_pic: row['image'] || row['תמונה'] || ''
+export const transformProduct = (row: CSVRow): ProductRow => {
+  const product: ProductRow = {
+    'ref no': row['ref no'] || row['ref'] || row['מק"ט'] || '',
+    'product name': row['product name'] || row['שם מוצר'] || '',
+    'product name 2': row['product name 2'] || row['שם מוצר 2'] || '',
+    'size': row['size'] || row['גודל'] || '',
+    'brand': row['brand'] || row['מותג'] || '',
+    'categories': row['categories'] || row['קטגוריות'] || '',
+    'key ingredients': row['key ingredients'] || row['רכיבים עיקריים'] || '',
+    'description': row['description'] || row['תיאור'] || '',
+    'how to use': row['how to use'] || row['אופן שימוש'] || '',
+    'notes': row['notes'] || row['הערות'] || '',
+    'image': row['image'] || row['תמונה'] || ''
   };
 
-  // Clean empty values and quotes
+  // Clean empty values
   Object.keys(product).forEach(key => {
-    const typedKey = key as keyof ProductData;
+    const typedKey = key as keyof ProductRow;
     if (product[typedKey] === '' || product[typedKey] === null || product[typedKey] === undefined) {
       product[typedKey] = '';
     }
@@ -141,19 +142,19 @@ export const deduplicateData = (data: CSVRow[]): CSVRow[] => {
 /**
  * Validate product data for required fields
  */
-export const validateProductData = (products: ProductData[]): ValidationResult => {
+export const validateProductData = (products: ProductRow[]): ValidationResult => {
   const errors: string[] = [];
-  const validProducts: ProductData[] = [];
+  const validProducts: ProductRow[] = [];
 
   products.forEach((product, index) => {
-    const refNo = product.ref;
+    const refNo = product['ref no'];
     
     if (!refNo || !refNo.trim()) {
-      errors.push(`שורה ${index + 2}: חסר מספר מוצר (ref)`);
+      errors.push(`שורה ${index + 2}: חסר מספר מוצר (ref no)`);
       return;
     }
 
-    if (!product.product_name || !product.product_name.trim()) {
+    if (!product['product name'] || !product['product name'].trim()) {
       errors.push(`שורה ${index + 2}: חסר שם מוצר`);
       return;
     }

@@ -90,7 +90,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         )}
         
         {/* Quantity Controls - Only show if product is in stock */}
-        {product.qty > 0 && (
+        {(product.qty !== null && product.qty > 0) && (
           <Box sx={{ mt: 2 }}>
             <QuantityInput
               value={quantity}

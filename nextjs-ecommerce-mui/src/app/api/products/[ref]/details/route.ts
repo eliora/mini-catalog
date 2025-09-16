@@ -54,7 +54,7 @@ export async function GET(
     let processedPics: string[] = [];
     if (data.pics) {
       if (Array.isArray(data.pics)) {
-        processedPics = data.pics;
+        processedPics = data.pics as string[];
       } else if (typeof data.pics === 'string') {
         processedPics = data.pics.split(' | ').filter(Boolean);
       }

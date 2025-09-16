@@ -100,7 +100,9 @@ const CatalogClean: React.FC = () => {
 
   // ===== CART MANAGEMENT =====
   const getCurrentQuantity = useCallback((ref: string): number => {
-    const cartItem = cart.items.find(item => (item.product_ref || item.ref) === ref);
+    const cartItem = cart.items.find(item => 
+      item.product_id === ref || (item.product_ref || item.ref) === ref
+    );
     return cartItem ? cartItem.quantity : 0;
   }, [cart]);
 
@@ -111,13 +113,15 @@ const CatalogClean: React.FC = () => {
     const product = products.find(p => p.ref === ref);
     if (!product) return;
 
-    const cartItem = cart.items.find(i => (i.product_ref || i.ref) === ref);
+    const cartItem = cart.items.find(i => 
+      i.product_id === ref || (i.product_ref || i.ref) === ref
+    );
 
     if (newQuantity === 0) {
-      if (cartItem) removeFromCart(ref);
+      if (cartItem) removeFromCart(cartItem.product_id);
     } else {
       if (cartItem) {
-        updateQuantity(ref, newQuantity);
+        updateQuantity(cartItem.product_id, newQuantity);
       } else {
         addToCart(product, newQuantity);
       }
@@ -297,7 +301,7 @@ const CatalogClean: React.FC = () => {
         quantity={selectedProduct ? getCurrentQuantity(selectedProduct.ref) : 0}
         onDecrement={handleDialogDecrement}
         onIncrement={handleDialogIncrement}
-        onQuantityChange={handleDialogQuantityChange}
+        onQuantityChange={(value) => handleDialogQuantityChange(String(value))}
         onImageClick={handleZoom}
         canViewPrices={canViewPrices}
         productPrice={selectedProduct ? prices[selectedProduct.ref] : undefined}

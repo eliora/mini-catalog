@@ -59,24 +59,26 @@ const UnifiedCartItem: React.FC<UnifiedCartItemProps> = ({
   // Check if user can view prices (authenticated users)
   const canViewPrices = !!user;
 
+  // Get consistent item identifier
+  const itemId = item.product_id || item.product_ref || item.ref || '';
+  const itemRef = item.product_ref || item.ref || ''; // Keep for display purposes
+
   const handleQuantityChange = useCallback((value: string) => {
     const newQuantity = parseInt(value, 10) || 0;
     if (newQuantity <= 0) {
-      onRemove(item.product_ref || item.ref || '');
+      onRemove(itemId);
     } else {
-      onUpdateQuantity(item.product_ref || item.ref || '', newQuantity);
+      onUpdateQuantity(itemId, newQuantity);
     }
-  }, [item.product_ref, item.ref, onUpdateQuantity, onRemove]);
+  }, [itemId, onUpdateQuantity, onRemove]);
 
   const handlePriceChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    onPriceChange && onPriceChange(item.product_ref || item.ref || '', e.target.value);
-  }, [item.product_ref, item.ref, onPriceChange]);
-
-  // Get item reference
-  const itemRef = item.product_ref || item.ref || '';
+    onPriceChange && onPriceChange(itemId, e.target.value);
+  }, [itemId, onPriceChange]);
   const itemName = item.productName || item.product_name || '';
   const itemName2 = item.productName2 || item.product_name_2 || '';
   const itemSize = item.size || '';
+  const itemLine = item.productLine || item.product?.product_line || '';
   const itemPrice = item.unit_price || item.unitPrice || 0;
   const itemQuantity = item.quantity || 0;
 
@@ -126,7 +128,7 @@ const UnifiedCartItem: React.FC<UnifiedCartItemProps> = ({
               {itemName}
               {itemName2 && ` • ${itemName2}`}
             </Typography>
-            {itemSize && (
+            {(itemSize || itemLine) && (
               <Typography 
                 variant="caption" 
                 sx={{ 
@@ -138,7 +140,7 @@ const UnifiedCartItem: React.FC<UnifiedCartItemProps> = ({
                   whiteSpace: 'nowrap'
                 }}
               >
-                {itemSize}
+                {[itemSize, itemLine].filter(Boolean).join(' • ')}
               </Typography>
             )}
           </Box>
@@ -212,7 +214,7 @@ const UnifiedCartItem: React.FC<UnifiedCartItemProps> = ({
           {/* Remove Button */}
           <Box sx={{ minWidth: 32 }}>
             <IconButton
-              onClick={() => onRemove(itemRef)}
+              onClick={() => onRemove(itemId)}
               size="small"
               color="error"
             >
@@ -312,7 +314,7 @@ const UnifiedCartItem: React.FC<UnifiedCartItemProps> = ({
             <IconButton
               color="error"
               size="small"
-              onClick={() => onRemove(itemRef)}
+              onClick={() => onRemove(itemId)}
               sx={{ '&:hover': { backgroundColor: 'error.main', color: 'error.contrastText' } }}
             >
               <DeleteIcon fontSize="small" />
@@ -357,13 +359,13 @@ const UnifiedCartItem: React.FC<UnifiedCartItemProps> = ({
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
-                mb: itemSize ? 0.25 : 0,
+                mb: (itemSize || itemLine) ? 0.25 : 0,
               }}
             >
               {itemName}
               {itemName2 && ` • ${itemName2}`}
             </Typography>
-            {itemSize && (
+            {(itemSize || itemLine) && (
               <Typography
                 variant="caption"
                 color="text.secondary"
@@ -375,7 +377,10 @@ const UnifiedCartItem: React.FC<UnifiedCartItemProps> = ({
                   fontSize: '0.75rem'
                 }}
               >
-                {itemSize.replace(/\s*(jar|tube|dispenser|bottle|tub|pump|cream|lotion|serum|gel|mask|cleanser|toner|moisturizer|oil|balm|scrub|peeling|foam|mousse|spray|mist)\s*/gi, '').trim()}
+                {[
+                  itemSize ? itemSize.replace(/\s*(jar|tube|dispenser|bottle|tub|pump|cream|lotion|serum|gel|mask|cleanser|toner|moisturizer|oil|balm|scrub|peeling|foam|mousse|spray|mist)\s*/gi, '').trim() : '',
+                  itemLine
+                ].filter(Boolean).join(' • ')}
               </Typography>
             )}
           </Box>

@@ -1,85 +1,51 @@
 /**
- * Data helper utilities for parsing and processing data
+ * Data Helper Utilities
+ * Functions to help with data parsing and validation
  */
+
+// Type definitions for data helpers
+export type JsonValue = string | number | boolean | null | JsonObject | JsonArray;
+export interface JsonObject {
+  [key: string]: JsonValue;
+}
+export interface JsonArray extends Array<JsonValue> {}
+
+export type CurrencyCode = 'ILS' | 'USD' | 'EUR' | 'GBP';
+
+export interface CurrencySymbolMap {
+  [key: string]: string;
+}
 
 /**
  * Parse JSON field safely
  */
-export const parseJsonField = (field: any): any => {
+export const parseJsonField = (field: unknown): JsonValue | null => {
   if (!field) return null;
+  if (typeof field === 'object') return field as JsonValue;
   
-  if (typeof field === 'string') {
-    try {
-      return JSON.parse(field);
-    } catch (error) {
-      console.warn('Failed to parse JSON field:', field);
-      return field;
-    }
+  try {
+    return JSON.parse(field as string);
+  } catch (error) {
+    console.warn('Failed to parse JSON field:', field);
+    return null;
   }
-  
-  return field;
 };
 
 /**
- * Check if content should be rendered
+ * Check if content should be rendered based on various conditions
  */
-export const shouldRenderContent = (content: any): boolean => {
+export const shouldRenderContent = (content: unknown): boolean => {
   if (!content) return false;
-  
   if (typeof content === 'string') {
     return content.trim().length > 0;
   }
-  
   if (Array.isArray(content)) {
     return content.length > 0;
   }
-  
   if (typeof content === 'object') {
-    return Object.keys(content).length > 0;
+    return Object.keys(content as object).length > 0;
   }
-  
   return Boolean(content);
-};
-
-/**
- * Sanitize HTML content
- */
-export const sanitizeHtml = (html: string): string => {
-  if (!html) return '';
-  
-  // Basic HTML sanitization - remove script tags and dangerous attributes
-  return html
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/javascript:/gi, '')
-    .replace(/on\w+\s*=/gi, '');
-};
-
-/**
- * Format text for display
- */
-export const formatDisplayText = (text: string): string => {
-  if (!text) return '';
-  
-  return text
-    .replace(/\n/g, '<br>')
-    .replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
-};
-
-/**
- * Extract text content from HTML
- */
-export const extractTextContent = (html: string): string => {
-  if (!html) return '';
-  
-  // Remove HTML tags and decode entities
-  return html
-    .replace(/<[^>]*>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .trim();
 };
 
 /**
@@ -87,7 +53,7 @@ export const extractTextContent = (html: string): string => {
  */
 export const formatPrice = (price: number | string | null | undefined, currency: string = '₪'): string => {
   if (!price || isNaN(Number(price))) return '';
-  const numPrice = parseFloat(price.toString());
+  const numPrice = parseFloat(String(price));
   if (numPrice === 0) return 'חינם';
   return `${numPrice.toFixed(2)} ${currency}`;
 };
@@ -96,12 +62,12 @@ export const formatPrice = (price: number | string | null | undefined, currency:
  * Format currency for payment display
  * Alternative name for formatPrice to match payment component expectations
  */
-export const formatCurrency = (amount: number | string | null | undefined, currency: string = 'ILS'): string => {
+export const formatCurrency = (amount: number | string | null | undefined, currency: CurrencyCode = 'ILS'): string => {
   if (!amount || isNaN(Number(amount))) return '₪0.00';
-  const numAmount = parseFloat(amount.toString());
+  const numAmount = parseFloat(String(amount));
   
   // Currency symbol mapping
-  const currencySymbols: Record<string, string> = {
+  const currencySymbols: CurrencySymbolMap = {
     'ILS': '₪',
     'USD': '$',
     'EUR': '€',
@@ -112,6 +78,36 @@ export const formatCurrency = (amount: number | string | null | undefined, curre
   
   if (numAmount === 0) return `${symbol}0.00`;
   return `${symbol}${numAmount.toFixed(2)}`;
+};
+
+/**
+ * Sanitize HTML content for safe rendering
+ */
+export const sanitizeHtml = (html: string | null | undefined): string => {
+  if (!html) return '';
+  // Basic HTML sanitization - in production, use a proper library like DOMPurify
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '');
+};
+
+/**
+ * Extract text content from HTML
+ * Note: This function uses DOM manipulation and should only be used in client-side code
+ */
+export const extractTextFromHtml = (html: string | null | undefined): string => {
+  if (!html) return '';
+  
+  // Check if we're in a browser environment
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    // Server-side: strip HTML tags using regex (basic fallback)
+    return html.replace(/<[^>]*>/g, '');
+  }
+  
+  // Client-side: use DOM parser
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  return div.textContent || div.innerText || '';
 };
 
 /**
@@ -131,42 +127,72 @@ export const containsHtml = (str: string | null | undefined): boolean => {
 };
 
 /**
- * Check if a value is empty or null
+ * Safe number parsing with fallback
  */
-export const isEmpty = (value: any): boolean => {
-  if (value == null) return true;
-  if (typeof value === 'string') return value.trim().length === 0;
-  if (Array.isArray(value)) return value.length === 0;
-  if (typeof value === 'object') return Object.keys(value).length === 0;
-  return false;
-};
-
-/**
- * Deep merge objects
- */
-export const deepMerge = (target: any, source: any): any => {
-  const output = { ...target };
-  
-  if (isObject(target) && isObject(source)) {
-    Object.keys(source).forEach(key => {
-      if (isObject(source[key])) {
-        if (!(key in target)) {
-          output[key] = source[key];
-        } else {
-          output[key] = deepMerge(target[key], source[key]);
-        }
-      } else {
-        output[key] = source[key];
-      }
-    });
+export const parseNumber = (value: unknown, fallback: number = 0): number => {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? fallback : parsed;
   }
-  
-  return output;
+  return fallback;
 };
 
 /**
- * Check if value is an object
+ * Safe string parsing with fallback
  */
-const isObject = (item: any): boolean => {
-  return item && typeof item === 'object' && !Array.isArray(item);
+export const parseString = (value: unknown, fallback: string = ''): string => {
+  if (typeof value === 'string') return value;
+  if (value === null || value === undefined) return fallback;
+  return String(value);
+};
+
+/**
+ * Deep clone an object (simple implementation)
+ */
+export const deepClone = <T>(obj: T): T => {
+  if (obj === null || typeof obj !== 'object') return obj;
+  if (obj instanceof Date) return new Date(obj.getTime()) as unknown as T;
+  if (Array.isArray(obj)) return obj.map(item => deepClone(item)) as unknown as T;
+  
+  const cloned = {} as T;
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      cloned[key] = deepClone(obj[key]);
+    }
+  }
+  return cloned;
+};
+
+/**
+ * Debounce function for performance optimization
+ */
+export const debounce = <T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): ((...args: Parameters<T>) => void) => {
+  let timeout: NodeJS.Timeout | null = null;
+  
+  return (...args: Parameters<T>) => {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
+
+/**
+ * Throttle function for performance optimization
+ */
+export const throttle = <T extends (...args: any[]) => any>(
+  func: T,
+  limit: number
+): ((...args: Parameters<T>) => void) => {
+  let inThrottle: boolean = false;
+  
+  return (...args: Parameters<T>) => {
+    if (!inThrottle) {
+      func(...args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  };
 };

@@ -129,22 +129,49 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setError(undefined);
 
     try {
+      console.log('🛒 Adding product to cart:', product);
+      
       const newItem: CartItem = {
         product_id: product.id || product.ref || '',
-        product_name: product.product_name || product.name || '',
+        product_name: product.product_name || '',
         quantity: Math.max(1, quantity),
         unit_price: 0, // Will be updated with pricing logic
         total_price: 0,
-        unit_type: product.size || product.unit || '',
+        unit_type: product.size || '',
         notes: notes || '',
+        // Legacy compatibility fields for UI components
+        product_ref: product.ref,
+        ref: product.ref,
+        productName: product.hebrew_name || product.product_name || '',
+        productName2: product.english_name || product.product_name_2 || '',
+        product_name_2: product.english_name || product.product_name_2 || '',
+        productLine: product.product_line || '',
+        unitPrice: 0, // Will be updated with pricing logic
+        size: product.size || '',
+        // Product details for display
         product: {
           id: product.id,
           ref: product.ref,
-          product_name: product.product_name || product.name,
+          product_name: product.product_name,
+          hebrew_name: product.hebrew_name,
+          english_name: product.english_name,
+          product_line: product.product_line,
           main_pic: product.main_pic,
-          product_type: product.product_type || product.category,
+          product_type: product.product_type,
+          size: product.size,
+          description: product.description,
+          description_he: product.description_he,
+          short_description_he: product.short_description_he,
+          ingredients: product.ingredients,
+          active_ingredients: product.active_ingredients,
+          active_ingredients_he: product.active_ingredients_he,
+          usage_instructions: product.usage_instructions,
+          usage_instructions_he: product.usage_instructions_he,
+          pics: product.pics,
         },
       };
+
+      console.log('📦 Created cart item:', newItem);
 
       setCart(prev => {
         const existingIndex = prev.items.findIndex(item => 
@@ -233,6 +260,49 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Update item price in cart
+  const updateItemPrice = useCallback(async (productId: string, unitPrice: number): Promise<void> => {
+    setIsLoading(true);
+    setError(undefined);
+
+    try {
+      setCart(prev => {
+        const itemIndex = prev.items.findIndex(item => item.product_id === productId);
+        
+        if (itemIndex === -1) {
+          console.warn(`Item with ID ${productId} not found in cart for price update`);
+          return prev;
+        }
+
+        const newItems = [...prev.items];
+        
+        // Update item price
+        newItems[itemIndex] = {
+          ...newItems[itemIndex],
+          unit_price: unitPrice,
+          unitPrice: unitPrice, // Legacy field
+          total_price: unitPrice * newItems[itemIndex].quantity,
+        };
+
+        // Recalculate totals
+        const totals = calculateCartTotals(newItems);
+        
+        return {
+          items: newItems,
+          ...totals,
+          lastUpdated: new Date(),
+        };
+      });
+
+      console.log(`💰 Updated price for item ${productId}: ₪${unitPrice}`);
+    } catch (error) {
+      console.error('Error updating item price:', error);
+      setError('Failed to update item price');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   // Remove item from cart
   const removeItem = useCallback(async (productId: string): Promise<void> => {
     setIsLoading(true);
@@ -314,6 +384,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     // Actions
     addItem,
     updateItem,
+    updateItemPrice,
     removeItem,
     clearCart,
     

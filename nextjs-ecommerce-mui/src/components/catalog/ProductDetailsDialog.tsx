@@ -83,7 +83,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = React.memo(({
   productPrice
 }) => {
   // Memoize expensive operations
-  const images = useMemo(() => getAllImages(product), [product]);
+  const images = useMemo(() => getAllImages(product || undefined), [product]);
   const productName = product?.product_name || product?.productName || '';
   const finalQuantity = currentQuantity || quantity;
 
@@ -127,7 +127,6 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = React.memo(({
                 <ImageGallery
                   images={images}
                   productName={productName}
-                  size="large"
                 />
                 {onImageClick && images.length > 0 && (
                   <IconButton
@@ -177,9 +176,9 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = React.memo(({
                     <strong>גודל:</strong> {product.size}
                   </Typography>
                 )}
-                {shouldRenderContent(product.product_type || product.productType) && (
+                {shouldRenderContent(product.product_type) && (
                   <Typography variant="body1" sx={{ mb: 1 }}>
-                    <strong>סוג מוצר:</strong> {product.product_type || product.productType}
+                    <strong>סוג מוצר:</strong> {product.product_type}
                   </Typography>
                 )}
                 {shouldRenderContent(product.skin_type_he) && (
@@ -209,13 +208,13 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = React.memo(({
                   </Box>
                 )}
 
-                {shouldRenderContent(product.key_ingredients || product.activeIngredients || product.wirkunginhaltsstoffe_he) && (
+                {shouldRenderContent(product.active_ingredients) && (
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                       רכיבים פעילים
                     </Typography>
                     <ContentRenderer 
-                      content={product.key_ingredients || product.activeIngredients || product.wirkunginhaltsstoffe_he} 
+                      content={product.active_ingredients} 
                       shouldRenderContent={shouldRenderContent} 
                     />
                   </Box>

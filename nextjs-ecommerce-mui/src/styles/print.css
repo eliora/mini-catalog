@@ -1,0 +1,389 @@
+/* Clean Professional Print Layout for Next.js */
+@media print {
+  /* Hide everything except print area */
+  body * {
+    visibility: hidden;
+  }
+  
+  [data-print-area], [data-print-area] * {
+    visibility: visible;
+  }
+  
+  [data-print-area] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 21cm !important;
+    margin: 0 !important;
+    padding: 1cm !important;
+    background: white !important;
+    color: #000 !important;
+    font-family: 'Heebo', 'Arial', sans-serif !important;
+    direction: rtl !important;
+    box-shadow: none !important;
+    border: none !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Page setup */
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
+
+  /* Clean Invoice Header */
+  .print-invoice-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    margin-bottom: 25px !important;
+    padding-bottom: 15px !important;
+    border-bottom: 2px solid #1976d2 !important;
+  }
+
+  .print-company-logo {
+    width: 30% !important;
+    text-align: right !important;
+  }
+
+  .print-company-name {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: #1976d2 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .print-company-details {
+    font-size: 10px !important;
+    color: #666 !important;
+    line-height: 1.3 !important;
+  }
+
+  .print-invoice-title {
+    width: 40% !important;
+    text-align: center !important;
+  }
+
+  .print-invoice-title h1 {
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    color: #000 !important;
+    margin: 0 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+  }
+
+  .print-order-number {
+    width: 30% !important;
+    text-align: left !important;
+  }
+
+  .print-order-number .number {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #1976d2 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .print-order-number .date {
+    font-size: 10px !important;
+    color: #666 !important;
+  }
+
+  /* Customer and Order Information Section */
+  .print-info-section {
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 15px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .print-customer-info,
+  .print-order-info {
+    width: 48% !important;
+    padding: 10px !important;
+    background-color: #f8f9fa !important;
+    border: 1px solid #ddd !important;
+    border-radius: 3px !important;
+    box-sizing: border-box !important;
+  }
+
+  .print-info-title {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #1976d2 !important;
+    margin-bottom: 8px !important;
+    text-transform: uppercase !important;
+    border-bottom: 1px solid #ddd !important;
+    padding-bottom: 3px !important;
+  }
+
+  .print-info-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    margin-bottom: 5px !important;
+    align-items: center !important;
+  }
+
+  .print-info-label {
+    font-size: 10px !important;
+    color: #666 !important;
+    font-weight: 600 !important;
+  }
+
+  .print-info-value {
+    font-size: 10px !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+  }
+
+  /* Products Table */
+  .print-products-section {
+    margin-bottom: 20px !important;
+  }
+
+  .print-section-title {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #1976d2 !important;
+    margin-bottom: 10px !important;
+    text-transform: uppercase !important;
+    border-bottom: 2px solid #1976d2 !important;
+    padding-bottom: 3px !important;
+  }
+
+  .print-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 0 !important;
+    font-size: 10px !important;
+    border: 1px solid #1976d2 !important;
+  }
+
+  .print-table thead th {
+    background-color: #1976d2 !important;
+    color: white !important;
+    font-weight: 700 !important;
+    padding: 8px 6px !important;
+    text-align: right !important;
+    border-right: 1px solid #144a80 !important;
+    font-size: 10px !important;
+  }
+
+  .print-table tbody td {
+    padding: 6px 6px !important;
+    border-right: 1px solid #ddd !important;
+    border-bottom: 1px solid #ddd !important;
+    text-align: right !important;
+    color: #000 !important;
+    vertical-align: middle !important;
+  }
+
+  .print-table tbody tr:nth-child(even) {
+    background-color: #f8f9fa !important;
+  }
+
+  .print-table .product-code {
+    font-weight: 700 !important;
+    color: #1976d2 !important;
+    font-family: monospace !important;
+    font-size: 9px !important;
+  }
+
+  .print-table .quantity {
+    font-weight: 700 !important;
+    color: #d32f2f !important;
+    text-align: center !important;
+  }
+
+  .print-table .price {
+    font-weight: 600 !important;
+    color: #000 !important;
+    text-align: left !important;
+  }
+
+  /* Fixed Summary Section */
+  .print-summary-section {
+    margin-top: 15px !important;
+    display: flex !important;
+    justify-content: flex-start !important;
+    clear: both !important;
+  }
+
+  .print-summary {
+    width: 250px !important;
+    max-width: 250px !important;
+    border: 1px solid #1976d2 !important;
+    border-radius: 4px !important;
+    overflow: hidden !important;
+    background-color: white !important;
+    box-sizing: border-box !important;
+  }
+
+  .print-summary-header {
+    background-color: #1976d2 !important;
+    color: white !important;
+    padding: 6px 12px !important;
+    text-align: center !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+  }
+
+  .print-summary-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 6px 12px !important;
+    border-bottom: 1px solid #eee !important;
+    font-size: 10px !important;
+  }
+
+  .print-summary-row:last-child {
+    border-bottom: none !important;
+  }
+
+  .print-summary-row.subtotal {
+    background-color: #f8f9fa !important;
+  }
+
+  .print-summary-row.tax {
+    background-color: #fff3e0 !important;
+    color: #f57c00 !important;
+  }
+
+  .print-summary-row.total {
+    background-color: #1976d2 !important;
+    color: white !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+  }
+
+  .print-summary-label {
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+  }
+
+  .print-summary-value {
+    font-weight: 700 !important;
+    text-align: left !important;
+  }
+
+  /* Hide buttons and action elements */
+  button, .MuiButton-root, .action-buttons {
+    display: none !important;
+  }
+
+  /* Hide navigation and other UI elements */
+  .MuiAppBar-root, .MuiTabs-root, .sticky-header, nav {
+    display: none !important;
+  }
+
+  /* Hide Next.js specific elements that shouldn't print */
+  #__next-build-watcher,
+  #__next-dev-overlay,
+  [data-nextjs-scroll-focus-boundary] {
+    display: none !important;
+  }
+
+  /* Compact Footer */
+  .print-footer {
+    display: block !important;
+    margin-top: 25px !important;
+    padding-top: 12px !important;
+    border-top: 1px solid #1976d2 !important;
+    text-align: center !important;
+    page-break-inside: avoid;
+  }
+
+  .print-footer-content {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 8px !important;
+  }
+
+  .print-footer-company {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: #1976d2 !important;
+  }
+
+  .print-footer-contact {
+    font-size: 8px !important;
+    color: #666 !important;
+    text-align: center !important;
+  }
+
+  .print-footer-timestamp {
+    font-size: 8px !important;
+    color: #999 !important;
+    text-align: left !important;
+  }
+
+  .print-footer-disclaimer {
+    font-size: 8px !important;
+    color: #999 !important;
+    text-align: center !important;
+    margin-top: 5px !important;
+    padding-top: 5px !important;
+    border-top: 1px solid #eee !important;
+  }
+
+  /* Page breaks */
+  .print-page-break {
+    page-break-before: always !important;
+  }
+
+  .print-no-break {
+    page-break-inside: avoid !important;
+  }
+
+  /* Clear floats */
+  .print-clearfix::after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+
+  /* Remove success colors that don't work well in print */
+  .MuiBox-root[class*="success"] {
+    background-color: white !important;
+    color: #000 !important;
+  }
+
+  /* Next.js Image component print optimization */
+  img[data-nimg] {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Material-UI component overrides for print */
+  .MuiPaper-root {
+    box-shadow: none !important;
+    background-color: white !important;
+  }
+
+  .MuiCard-root {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+
+  .MuiTypography-root {
+    color: #000 !important;
+  }
+
+  /* RTL support for print */
+  [dir="rtl"] .print-table thead th:first-child,
+  [dir="rtl"] .print-table tbody td:first-child {
+    border-right: none !important;
+  }
+
+  [dir="rtl"] .print-table thead th:last-child,
+  [dir="rtl"] .print-table tbody td:last-child {
+    border-left: 1px solid #ddd !important;
+  }
+}
