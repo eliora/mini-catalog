@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
-interface RouteParams {
-  params: { id: string };
-}
-
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
   try {
     const supabase = await createSupabaseServerClient();
     
@@ -30,7 +29,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           status
         )
       `)
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .single();
 
     if (error) {
@@ -57,7 +56,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export async function PUT(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
   try {
     const supabase = await createSupabaseServerClient();
     
@@ -108,7 +110,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const { data: order, error } = await supabase
       .from('orders')
       .update(updateData)
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .select(`
         *,
         client:profiles!orders_client_id_fkey (
@@ -137,7 +139,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
   try {
     const supabase = await createSupabaseServerClient();
     
@@ -150,7 +155,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const { error } = await supabase
       .from('orders')
       .delete()
-      .eq('id', params.id);
+      .eq('id', context.params.id);
 
     if (error) {
       console.error('Error deleting order:', error);

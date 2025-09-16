@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
-interface RouteParams {
-  params: { id: string };
-}
-
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
   try {
     const supabase = await createSupabaseServerClient();
     
@@ -46,7 +45,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const { data: existingOrder, error: orderCheckError } = await supabase
       .from('orders')
       .select('id, status')
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .single();
 
     if (orderCheckError || !existingOrder) {
@@ -71,7 +70,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         status: 'processing', // Revival automatically sets to processing
         updated_at: new Date().toISOString()
       })
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .select(`
         *,
         client:profiles!orders_client_id_fkey (
