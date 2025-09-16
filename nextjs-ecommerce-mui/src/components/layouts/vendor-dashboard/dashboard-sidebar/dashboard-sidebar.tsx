@@ -69,12 +69,12 @@ export default function DashboardSidebar() {
       >
         {(!sidebarCompact || isSidebarHover) && (
           <Typography variant="h6" color="primary" sx={{ fontWeight: 700 }}>
-            Admin Panel
+            לוח בקרה
           </Typography>
         )}
         {sidebarCompact && !isSidebarHover && (
           <Typography variant="h6" color="primary" sx={{ fontWeight: 700 }}>
-            AP
+            לב
           </Typography>
         )}
       </Box>

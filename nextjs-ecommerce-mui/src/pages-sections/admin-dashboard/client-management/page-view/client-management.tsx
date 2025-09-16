@@ -99,19 +99,19 @@ const ClientManagementView: React.FC = () => {
           id: '1',
           name: 'customer',
           permissions: ['order.create', 'profile.edit'],
-          description: 'Regular customer'
+          description: 'לקוח רגיל'
         },
         {
           id: '2',
           name: 'premium_customer',
           permissions: ['order.create', 'profile.edit', 'pricing.premium'],
-          description: 'Premium customer with special pricing'
+          description: 'לקוח פרימיום עם תמחור מיוחד'
         },
         {
           id: '3',
           name: 'admin',
           permissions: ['*'],
-          description: 'Administrator with full access'
+          description: 'מנהל מערכת עם גישה מלאה'
         }
       ];
       
@@ -205,7 +205,7 @@ const ClientManagementView: React.FC = () => {
       <Card>
         <CardContent>
           <Alert severity="error">
-            You don't have permission to view client management.
+            אין לך הרשאה לצפות בניהול לקוחות.
           </Alert>
         </CardContent>
       </Card>
@@ -221,7 +221,7 @@ const ClientManagementView: React.FC = () => {
   }
 
   return (
-    <PageWrapper title="Client Management">
+    <PageWrapper title="ניהול לקוחות">
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
@@ -237,7 +237,7 @@ const ClientManagementView: React.FC = () => {
             startIcon={<UploadIcon />}
             onClick={() => console.log('Import clients')}
           >
-            Import
+            ייבוא
           </Button>
           
           <Button
@@ -245,7 +245,7 @@ const ClientManagementView: React.FC = () => {
             startIcon={<DownloadIcon />}
             onClick={handleExport}
           >
-            Export
+            ייצוא
           </Button>
           
           {canWrite && (
@@ -254,7 +254,7 @@ const ClientManagementView: React.FC = () => {
               startIcon={<AddIcon />}
               onClick={handleAddClient}
             >
-              Add Client
+              הוסף לקוח
             </Button>
           )}
         </Box>

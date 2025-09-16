@@ -35,7 +35,7 @@ import * as yup from "yup";
 
 // Form validation schema
 const validationSchema = yup.object().shape({
-  vatRate: yup.number().min(0).max(100).required("שיעור מע\"מ הוא שדה חובה"),
+  vatRate: yup.number().min(0).max(100).required('שיעור מע"מ הוא שדה חובה'),
   currency: yup.string().required("מטבע הוא שדה חובה"),
   shippingCost: yup.number().min(0).required("עלות משלוח הוא שדה חובה"),
   freeShippingThreshold: yup.number().min(0)
@@ -67,7 +67,7 @@ export default function TaxSettings() {
     taxExemptProducts: false,
     roundingMethod: "round",
     displayPricesWithVat: true,
-    invoiceFooterText: "תודה שבחרתם בנו! המחירים כולל מע\"מ"
+    invoiceFooterText: 'תודה שבחרתם בנו! המחירים כולל מע"מ'
   };
 
   const handleFormSubmit = async (values: TaxSettingsFormValues) => {
@@ -86,7 +86,7 @@ export default function TaxSettings() {
       <Box sx={{ mb: 3 }}>
         <H5 sx={{ fontWeight: 700, mb: 1 }}>מיסוי ומשלוח</H5>
         <Paragraph color="grey.600">
-          נהל הגדרות מע\"מ, מטבע, משלוח ותצוגת מחירים
+          נהל הגדרות מע"מ, מטבע, משלוח ותצוגת מחירים
         </Paragraph>
       </Box>
 
@@ -104,7 +104,7 @@ export default function TaxSettings() {
                   <CardContent>
                     <FlexBox alignItems="center" gap={2} mb={2}>
                       <Receipt color="primary" />
-                      <H6 sx={{ fontWeight: 700 }}>הגדרות מע\"מ</H6>
+                      <H6 sx={{ fontWeight: 700 }}>הגדרות מע"מ</H6>
                     </FlexBox>
                     
                     <Grid container spacing={2}>
@@ -112,7 +112,7 @@ export default function TaxSettings() {
                         <TextField
                           fullWidth
                           name="vatRate"
-                          label="שיעור מע\"מ"
+                          label='שיעור מע"מ'
                           type="number"
                           value={values.vatRate}
                           onChange={handleChange}
@@ -153,7 +153,7 @@ export default function TaxSettings() {
                                 color="primary"
                               />
                             }
-                            label="המחירים כוללים מע\"מ"
+                            label='המחירים כוללים מע"מ'
                           />
                           <FormControlLabel
                             control={
@@ -163,7 +163,7 @@ export default function TaxSettings() {
                                 color="primary"
                               />
                             }
-                            label="הצג מחירים כולל מע\"מ בקטלוג"
+                            label='הצג מחירים כולל מע"מ בקטלוג'
                           />
                           <FormControlLabel
                             control={
@@ -173,7 +173,7 @@ export default function TaxSettings() {
                                 color="primary"
                               />
                             }
-                            label="אפשר מוצרים פטורים ממע\"מ"
+                            label='אפשר מוצרים פטורים ממע"מ'
                           />
                         </Box>
                       </Grid>

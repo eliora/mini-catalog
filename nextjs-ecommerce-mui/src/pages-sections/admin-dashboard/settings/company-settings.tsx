@@ -61,7 +61,7 @@ interface CompanySettingsFormValues {
 
 export default function CompanySettings() {
   const initialValues: CompanySettingsFormValues = {
-    companyName: "פורטל לקוסמטיקאיות בע\"מ",
+    companyName: 'פורטל לקוסמטיקאיות בע"מ',
     businessNumber: "516123456",
     vatNumber: "123456789",
     address: "רחוב הברושים 15",
@@ -183,7 +183,7 @@ export default function CompanySettings() {
                               color="primary"
                             />
                           }
-                          label="עוסק מורשה במע\"מ"
+                          label='עוסק מורשה במע"מ'
                         />
                       </Grid>
                     </Grid>

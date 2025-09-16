@@ -135,9 +135,22 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'פעיל';
+      case 'inactive':
+        return 'לא פעיל';
+      case 'suspended':
+        return 'מושעה';
+      default:
+        return status;
+    }
+  };
+
   const getRoleChips = (roles: any[]) => {
     if (!roles || roles.length === 0) {
-      return <Chip label="No roles" size="small" variant="outlined" />;
+      return <Chip label="אין תפקידים" size="small" variant="outlined" />;
     }
 
     return (
@@ -175,13 +188,13 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({
                   onChange={handleSelectAll}
                 />
               </TableCell>
-              <TableCell>Client</TableCell>
-              <TableCell>Contact</TableCell>
-              <TableCell>Roles</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Created</TableCell>
-              <TableCell>Last Login</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell>לקוח</TableCell>
+              <TableCell>פרטי קשר</TableCell>
+              <TableCell>תפקידים</TableCell>
+              <TableCell>סטטוס</TableCell>
+              <TableCell>נוצר</TableCell>
+              <TableCell>כניסה אחרונה</TableCell>
+              <TableCell align="right">פעולות</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -239,10 +252,9 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({
                 
                 <TableCell>
                   <Chip
-                    label={client.status}
+                    label={getStatusLabel(client.status)}
                     size="small"
                     color={getStatusColor(client.status) as any}
-                    sx={{ textTransform: 'capitalize' }}
                   />
                 </TableCell>
                 
@@ -256,7 +268,7 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({
                   <Typography variant="body2" color="text.secondary">
                     {client.last_login 
                       ? format(new Date(client.last_login), 'MMM dd, yyyy')
-                      : 'Never'
+                      : 'אף פעם'
                     }
                   </Typography>
                 </TableCell>
@@ -296,7 +308,7 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({
             <ListItemIcon>
               <EditIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>Edit</ListItemText>
+            <ListItemText>עריכה</ListItemText>
           </MenuItem>
         )}
         
@@ -305,7 +317,7 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({
             <ListItemIcon>
               <DeleteIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>Delete</ListItemText>
+            <ListItemText>מחיקה</ListItemText>
           </MenuItem>
         )}
       </Menu>

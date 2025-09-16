@@ -2,45 +2,45 @@
 // Adapted from Bazaar Pro template for our mini-catalog admin panel
 
 export const navigation = [
-  { type: "label", label: "Admin Dashboard" },
+  { type: "label", label: "לוח בקרה מנהל" },
   { 
-    name: "Dashboard", 
-    icon: "🏠", // Will replace with proper icons later
+    name: "דשבורד", 
+    icon: "🏠",
     path: "/admin" 
   },
 
   {
-    name: "Client Management",
+    name: "ניהול לקוחות",
     icon: "👥",
     path: "/admin/client-management"
   },
 
   {
-    name: "Products Management",
+    name: "ניהול מוצרים",
     icon: "📦",
     path: "/admin/products-management"
   },
 
   {
-    name: "Orders Management",
+    name: "ניהול הזמנות",
     icon: "🛒",
     path: "/admin/orders-management"
   },
 
   {
-    name: "Settings",
+    name: "הגדרות מערכת",
     icon: "⚙️",
     path: "/admin/settings"
   },
 
-  { type: "label", label: "System" },
+  { type: "label", label: "כלי מערכת" },
   {
-    name: "Analytics",
+    name: "אנליטיקס",
     icon: "📊",
     path: "/admin/analytics"
   },
   {
-    name: "Logout",
+    name: "התנתקות",
     icon: "🚪",
     path: "/auth/logout"
   }

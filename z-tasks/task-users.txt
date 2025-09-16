@@ -1,0 +1,21 @@
+make account page insipred by bazzar pro using mui
+C:\python\mini-catalog-deployment\bazaar_pro_template\src\components\layouts\customer-dashboard
+
+
+link the account page to the client dialog that is already in jdaheader
+
+need to be two tabs
+1. my profile
+2. my orders
+
+
+tab- my user
+-allow user to edit his own details
+-params allowed to be edited
+
+
+tab my order
+-allow user to see,print,send to email is own order
+
+
+
