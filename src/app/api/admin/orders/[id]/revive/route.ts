@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest) {
+  // Extract id from URL path
+  const url = new URL(request.url);
+  const pathSegments = url.pathname.split('/');
+  const id = pathSegments[pathSegments.length - 2]; // Get id from /admin/orders/[id]/revive
   try {
     const supabase = await createSupabaseServerClient();
     
@@ -45,7 +46,7 @@ export async function POST(
     const { data: existingOrder, error: orderCheckError } = await supabase
       .from('orders')
       .select('id, status')
-      .eq('id', params.id)
+      .eq('id', id)
       .single();
 
     if (orderCheckError || !existingOrder) {
@@ -70,7 +71,7 @@ export async function POST(
         status: 'processing', // Revival automatically sets to processing
         updated_at: new Date().toISOString()
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .select(`
         *,
         client:profiles!orders_client_id_fkey (

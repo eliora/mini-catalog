@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest) {
+  // Extract id from URL path
+  const url = new URL(request.url);
+  const pathSegments = url.pathname.split('/');
+  const id = pathSegments[pathSegments.length - 1]; // Get id from /admin/orders/[id]
+  
   try {
     const supabase = await createSupabaseServerClient();
     
@@ -29,7 +31,7 @@ export async function GET(
           status
         )
       `)
-      .eq('id', params.id)
+      .eq('id', id)
       .single();
 
     if (error) {
@@ -56,10 +58,12 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest) {
+  // Extract id from URL path
+  const url = new URL(request.url);
+  const pathSegments = url.pathname.split('/');
+  const id = pathSegments[pathSegments.length - 1]; // Get id from /admin/orders/[id]
+  
   try {
     const supabase = await createSupabaseServerClient();
     
@@ -110,7 +114,7 @@ export async function PUT(
     const { data: order, error } = await supabase
       .from('orders')
       .update(updateData)
-      .eq('id', params.id)
+      .eq('id', id)
       .select(`
         *,
         client:profiles!orders_client_id_fkey (
@@ -139,10 +143,12 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest) {
+  // Extract id from URL path
+  const url = new URL(request.url);
+  const pathSegments = url.pathname.split('/');
+  const id = pathSegments[pathSegments.length - 1]; // Get id from /admin/orders/[id]
+  
   try {
     const supabase = await createSupabaseServerClient();
     
@@ -155,7 +161,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('orders')
       .delete()
-      .eq('id', params.id);
+      .eq('id', id);
 
     if (error) {
       console.error('Error deleting order:', error);
