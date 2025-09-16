@@ -3,11 +3,10 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export async function POST(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const supabase = await createSupabaseServerClient();
-    const params = await context.params;
     
     // Check authentication
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();

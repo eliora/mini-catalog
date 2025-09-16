@@ -3,11 +3,10 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const supabase = await createSupabaseServerClient();
-    const params = await context.params;
     
     // Check authentication
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -59,11 +58,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const supabase = await createSupabaseServerClient();
-    const params = await context.params;
     
     // Check authentication
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -143,11 +141,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const supabase = await createSupabaseServerClient();
-    const params = await context.params;
     
     // Check authentication
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
