@@ -37,7 +37,7 @@ interface UnifiedCartItemProps {
   item: CartItem;
   onUpdateQuantity: (ref: string, quantity: number) => void;
   onRemove: (ref: string) => void;
-  onPriceChange?: (ref: string, price: string) => void;
+  onPriceChange?: (ref: string, price: number) => void;
   isAdmin?: boolean;
   editMode?: boolean;
   variant?: 'compact' | 'detailed';
@@ -73,7 +73,8 @@ const UnifiedCartItem: React.FC<UnifiedCartItemProps> = ({
   }, [itemId, onUpdateQuantity, onRemove]);
 
   const handlePriceChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    onPriceChange && onPriceChange(itemId, e.target.value);
+    const newPrice = Number(e.target.value) || 0;
+    onPriceChange && onPriceChange(itemId, newPrice);
   }, [itemId, onPriceChange]);
   const itemName = item.productName || item.product_name || '';
   const itemName2 = item.productName2 || item.product_name_2 || '';
@@ -95,9 +96,9 @@ const UnifiedCartItem: React.FC<UnifiedCartItemProps> = ({
           '&:hover': { bgcolor: 'action.hover' }
         }}
       >
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: 48 }}>
+<Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: 48 }}>
           {/* Product Ref */}
-          <Box sx={{ minWidth: 80 }}>
+          <Box sx={{ minWidth: isMobile ? 20 : 80 }}>
             <Chip 
               label={itemRef}
               variant="outlined"
@@ -128,7 +129,9 @@ const UnifiedCartItem: React.FC<UnifiedCartItemProps> = ({
               {itemName}
               {itemName2 && ` • ${itemName2}`}
             </Typography>
-            {(itemSize || itemLine) && (
+            
+            {/* Size, Product Line, and Price combined on mobile OR just size/line on desktop */}
+            {(itemSize || itemLine || (isMobile && canViewPrices)) && (
               <Typography 
                 variant="caption" 
                 sx={{ 
@@ -140,46 +143,86 @@ const UnifiedCartItem: React.FC<UnifiedCartItemProps> = ({
                   whiteSpace: 'nowrap'
                 }}
               >
-                {[itemSize, itemLine].filter(Boolean).join(' • ')}
+                {isMobile ? (
+                  // Mobile: Include price inline with size and product line
+                  canViewPrices ? (
+                    editMode && isAdmin ? (
+                      [itemSize, itemLine].filter(Boolean).join(' • ')
+                    ) : (
+                      [
+                        itemSize,
+                        itemLine,
+                        `₪${itemPrice.toFixed(2)}`
+                      ].filter(Boolean).join(' • ')
+                    )
+                  ) : (
+                    [itemSize, itemLine, 'התחבר לצפייה'].filter(Boolean).join(' • ')
+                  )
+                ) : (
+                  // Desktop: Just size and product line
+                  [itemSize, itemLine].filter(Boolean).join(' • ')
+                )}
               </Typography>
+            )}
+            
+            {/* Price input for admin edit mode on mobile */}
+            {isMobile && canViewPrices && editMode && isAdmin && (
+              <TextField
+                size="small"
+                type="number"
+                value={itemPrice}
+                onChange={handlePriceChange}
+                placeholder="מחיר"
+                InputProps={{ 
+                  inputProps: { min: 0, step: 0.01 },
+                  sx: { fontSize: '0.75rem' }
+                }}
+                sx={{ 
+                  width: 80,
+                  mt: 0.5,
+                  '& .MuiOutlinedInput-root': { height: 28 }
+                }}
+              />
             )}
           </Box>
 
-          {/* Unit Price */}
-          <Box sx={{ minWidth: 60, textAlign: 'center', ml: 1 }}>
-            {canViewPrices ? (
-              editMode && isAdmin ? (
-                <TextField
-                  size="small"
-                  type="number"
-                  value={itemPrice}
-                  onChange={handlePriceChange}
-                  InputProps={{ 
-                    inputProps: { min: 0, step: 0.01 },
-                    sx: { fontSize: '0.8rem' }
-                  }}
-                  sx={{ 
-                    width: 80,
-                    '& .MuiOutlinedInput-root': { height: 32 }
-                  }}
-                />
+          {/* Unit Price - Hidden on Mobile */}
+          {!isMobile && (
+            <Box sx={{ minWidth: 60, textAlign: 'center' }}>
+              {canViewPrices ? (
+                editMode && isAdmin ? (
+                  <TextField
+                    size="small"
+                    type="number"
+                    value={itemPrice}
+                    onChange={handlePriceChange}
+                    InputProps={{ 
+                      inputProps: { min: 0, step: 0.01 },
+                      sx: { fontSize: '0.8rem' }
+                    }}
+                    sx={{ 
+                      width: 80,
+                      '& .MuiOutlinedInput-root': { height: 32 }
+                    }}
+                  />
+                ) : (
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      fontWeight: 500,
+                      fontSize: '0.8rem'
+                    }}
+                  >
+                    ₪{itemPrice.toFixed(2)}
+                  </Typography>
+                )
               ) : (
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    fontWeight: 500,
-                    fontSize: '0.8rem'
-                  }}
-                >
-                  ₪{itemPrice.toFixed(2)}
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                  התחבר לצפייה
                 </Typography>
-              )
-            ) : (
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
-                התחבר לצפייה
-              </Typography>
-            )}
-          </Box>
+              )}
+            </Box>
+          )}
 
           {/* Quantity Controls */}
           <Box sx={{ minWidth: 100 }}>
@@ -191,28 +234,30 @@ const UnifiedCartItem: React.FC<UnifiedCartItemProps> = ({
             />
           </Box>
 
-          {/* Total Price */}
-          <Box sx={{ minWidth: 70, textAlign: 'right' }}>
-            {canViewPrices ? (
-              <Typography 
-                variant="body1" 
-                sx={{ 
-                  fontWeight: 600,
-                  color: 'primary.main',
-                  fontSize: '0.9rem'
-                }}
-              >
-                ₪{(itemPrice * itemQuantity).toFixed(2)}
-              </Typography>
-            ) : (
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
-                התחבר לצפייה
-              </Typography>
-            )}
-          </Box>
+          {/* Total Price - Hidden on Mobile */}
+          {!isMobile && (
+            <Box sx={{ minWidth: 70, textAlign: 'right' }}>
+              {canViewPrices ? (
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    fontWeight: 600,
+                    color: 'primary.main',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  ₪{(itemPrice * itemQuantity).toFixed(2)}
+                </Typography>
+              ) : (
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                  התחבר לצפייה
+                </Typography>
+              )}
+            </Box>
+          )}
 
           {/* Remove Button */}
-          <Box sx={{ minWidth: 32 }}>
+          <Box sx={{ minWidth: 32, textAlign: 'center' }}>
             <IconButton
               onClick={() => onRemove(itemId)}
               size="small"
@@ -429,12 +474,12 @@ const UnifiedCartItem: React.FC<UnifiedCartItemProps> = ({
             <Typography
               variant="subtitle2"
               color="primary"
-              sx={{ fontWeight: 700, textAlign: 'center', minWidth: 50, ml: 1 }}
+              sx={{ fontWeight: 700, textAlign: 'center', minWidth: 50 }}
             >
               ₪{(itemPrice * itemQuantity).toFixed(2)}
             </Typography>
           ) : (
-            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem', textAlign: 'center', minWidth: 50, ml: 1 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem', textAlign: 'center', minWidth: 50 }}>
               התחבר לצפייה
             </Typography>
           )}

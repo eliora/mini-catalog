@@ -13,12 +13,15 @@ import {
   Stack,
   TextField,
   IconButton,
-  Chip
+  Chip,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import {
   Check as CheckIcon,
   Close as CloseIcon
 } from '@mui/icons-material';
+import QuantityInput from '../common/QuantityInput';
 // Legacy cart item interface for backward compatibility
 interface LegacyCartItem {
   ref: string;
@@ -42,6 +45,9 @@ interface ItemData {
 }
 
 const InlineAddItemRow: React.FC<InlineAddItemRowProps> = ({ onAddItem, isVisible }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
   const [itemData, setItemData] = useState<ItemData>({
     ref: '',
     productName: '',
@@ -96,8 +102,8 @@ const InlineAddItemRow: React.FC<InlineAddItemRowProps> = ({ onAddItem, isVisibl
       }}
     >
       <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: 48 }}>
-        {/* Product Ref */}
-        <Box sx={{ minWidth: 80 }}>
+        {/* Product Ref - Responsive width */}
+        <Box sx={{ minWidth: isMobile ? 20 : 80 }}>
           <TextField
             size="small"
             placeholder="מק״ט"
@@ -110,7 +116,7 @@ const InlineAddItemRow: React.FC<InlineAddItemRowProps> = ({ onAddItem, isVisibl
           />
         </Box>
 
-        {/* Product Name */}
+        {/* Product Name with inline price on mobile */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <TextField
             size="small"
@@ -123,61 +129,78 @@ const InlineAddItemRow: React.FC<InlineAddItemRowProps> = ({ onAddItem, isVisibl
               '& .MuiOutlinedInput-root': { height: 32 }
             }}
           />
+          
+          {/* Price input on mobile - below product name */}
+          {isMobile && (
+            <TextField
+              size="small"
+              type="number"
+              placeholder="מחיר"
+              value={itemData.unitPrice}
+              onChange={(e) => setItemData(prev => ({ ...prev, unitPrice: e.target.value }))}
+              InputProps={{ 
+                inputProps: { min: 0, step: 0.01 },
+                sx: { fontSize: '0.75rem' }
+              }}
+              sx={{ 
+                width: 80,
+                mt: 0.5,
+                '& .MuiOutlinedInput-root': { height: 28 }
+              }}
+            />
+          )}
         </Box>
 
-        {/* Unit Price */}
-        <Box sx={{ minWidth: 60, textAlign: 'center', ml: 1 }}>
-          <TextField
-            size="small"
-            type="number"
-            placeholder="מחיר"
-            value={itemData.unitPrice}
-            onChange={(e) => setItemData(prev => ({ ...prev, unitPrice: e.target.value }))}
-            InputProps={{ 
-              inputProps: { min: 0, step: 0.01 },
-              sx: { fontSize: '0.8rem' }
-            }}
-            sx={{ 
-              width: 80,
-              '& .MuiOutlinedInput-root': { height: 32 }
-            }}
-          />
-        </Box>
+        {/* Unit Price - Hidden on Mobile */}
+        {!isMobile && (
+          <Box sx={{ minWidth: 60, textAlign: 'center' }}>
+            <TextField
+              size="small"
+              type="number"
+              placeholder="מחיר"
+              value={itemData.unitPrice}
+              onChange={(e) => setItemData(prev => ({ ...prev, unitPrice: e.target.value }))}
+              InputProps={{ 
+                inputProps: { min: 0, step: 0.01 },
+                sx: { fontSize: '0.8rem' }
+              }}
+              sx={{ 
+                width: 80,
+                '& .MuiOutlinedInput-root': { height: 32 }
+              }}
+            />
+          </Box>
+        )}
 
-        {/* Quantity */}
+        {/* Quantity - Use QuantityInput component */}
         <Box sx={{ minWidth: 100 }}>
-          <TextField
-            size="small"
-            type="number"
+          <QuantityInput
             value={itemData.quantity}
-            onChange={(e) => setItemData(prev => ({ ...prev, quantity: Number(e.target.value) || 1 }))}
-            InputProps={{ 
-              inputProps: { min: 1, max: 99 },
-              sx: { fontSize: '0.8rem' }
-            }}
-            sx={{ 
-              width: '100%',
-              '& .MuiOutlinedInput-root': { height: 32 }
-            }}
+            onChange={(newQuantity) => setItemData(prev => ({ ...prev, quantity: newQuantity }))}
+            size="small"
+            min={1}
+            max={99}
           />
         </Box>
 
-        {/* Total Price Preview */}
-        <Box sx={{ minWidth: 70, textAlign: 'right' }}>
-          <Chip 
-            label={`₪${((Number(itemData.unitPrice) || 0) * (Number(itemData.quantity) || 1)).toFixed(2)}`}
-            variant="outlined"
-            size="small"
-            sx={{ 
-              fontWeight: 600,
-              fontSize: '0.7rem',
-              height: 24
-            }}
-          />
-        </Box>
+        {/* Total Price Preview - Hidden on Mobile */}
+        {!isMobile && (
+          <Box sx={{ minWidth: 70, textAlign: 'right' }}>
+            <Chip 
+              label={`₪${((Number(itemData.unitPrice) || 0) * (Number(itemData.quantity) || 1)).toFixed(2)}`}
+              variant="outlined"
+              size="small"
+              sx={{ 
+                fontWeight: 600,
+                fontSize: '0.7rem',
+                height: 24
+              }}
+            />
+          </Box>
+        )}
 
         {/* Action Buttons */}
-        <Box sx={{ minWidth: 64 }}>
+        <Box sx={{ minWidth: 64, textAlign: 'center' }}>
           <Stack direction="row" spacing={0.5}>
             <IconButton
               onClick={handleAddItem}

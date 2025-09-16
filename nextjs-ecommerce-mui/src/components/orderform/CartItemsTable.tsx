@@ -12,7 +12,9 @@ import {
   Box,
   Typography,
   Stack,
-  IconButton
+  IconButton,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -55,6 +57,8 @@ const CartItemsTable: React.FC<CartItemsTableProps> = ({
   onAddCustomItem
 }) => {
   const [showAddRow, setShowAddRow] = React.useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   return (
     <>
@@ -75,7 +79,7 @@ const CartItemsTable: React.FC<CartItemsTableProps> = ({
       >
         <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: 48 }}>
           {/* Product Ref - Match UnifiedCartItem */}
-          <Box sx={{ minWidth: 80 }}>
+          <Box sx={{ minWidth: isMobile ? 20 : 80 }}>
             <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
               מק"ט
             </Typography>
@@ -88,35 +92,37 @@ const CartItemsTable: React.FC<CartItemsTableProps> = ({
             </Typography>
           </Box>
 
-          {/* Unit Price - Clickable for Admin */}
-          <Box sx={{ minWidth: 60, textAlign: 'center', ml: 1 }}>
-            {isAdmin ? (
-              <Box
-                onClick={onToggleEditMode}
-                sx={{
-                  cursor: 'pointer',
-                  p: 0.5,
-                  borderRadius: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 0.5,
-                  '&:hover': {
-                    bgcolor: 'primary.50'
-                  }
-                }}
-              >
-                <Typography variant="caption" sx={{ fontWeight: 600, color: editMode ? 'primary.main' : 'text.secondary' }}>
+          {/* Unit Price - Hidden on Mobile, Clickable for Admin on Desktop */}
+          {!isMobile && (
+            <Box sx={{ minWidth: 60, textAlign: 'center' }}>
+              {isAdmin ? (
+                <Box
+                  onClick={onToggleEditMode}
+                  sx={{
+                    cursor: 'pointer',
+                    p: 0.5,
+                    borderRadius: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 0.5,
+                    '&:hover': {
+                      bgcolor: 'primary.50'
+                    }
+                  }}
+                >
+                  <Typography variant="caption" sx={{ fontWeight: 600, color: editMode ? 'primary.main' : 'text.secondary' }}>
+                    מחיר יחידה
+                  </Typography>
+                  {editMode ? <SaveIcon sx={{ fontSize: 12 }} /> : <EditIcon sx={{ fontSize: 12 }} />}
+                </Box>
+              ) : (
+                <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
                   מחיר יחידה
                 </Typography>
-                {editMode ? <SaveIcon sx={{ fontSize: 12 }} /> : <EditIcon sx={{ fontSize: 12 }} />}
-              </Box>
-            ) : (
-              <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                מחיר יחידה
-              </Typography>
-            )}
-          </Box>
+              )}
+            </Box>
+          )}
 
           {/* Quantity Controls - Match UnifiedCartItem */}
           <Box sx={{ minWidth: 100, textAlign: 'center' }}>
@@ -125,12 +131,14 @@ const CartItemsTable: React.FC<CartItemsTableProps> = ({
             </Typography>
           </Box>
 
-          {/* Total Price - Match UnifiedCartItem */}
-          <Box sx={{ minWidth: 70, textAlign: 'right' }}>
-            <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-              סה"כ
-            </Typography>
-          </Box>
+          {/* Total Price - Hidden on Mobile */}
+          {!isMobile && (
+            <Box sx={{ minWidth: 70, textAlign: 'right' }}>
+              <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                סה"כ
+              </Typography>
+            </Box>
+          )}
 
           {/* Remove Button - Match UnifiedCartItem */}
           <Box sx={{ minWidth: 32, textAlign: 'center' }}>

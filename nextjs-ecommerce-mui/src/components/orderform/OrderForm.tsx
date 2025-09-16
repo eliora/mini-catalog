@@ -111,27 +111,32 @@ const OrderForm: React.FC = () => {
     updateItemPrice(itemRef, newPrice);
   };
 
-  const handleAddCustomItem = (customItem: LegacyCartItem) => {
-    // Convert LegacyCartItem to minimal Product format for addToCart
-    const productForCart: Product = {
-      id: customItem.ref || '',
-      ref: customItem.ref || '',
-      product_name: customItem.productName,
-      product_name_2: customItem.productName2,
-      size: customItem.size,
-      // Required Product fields with minimal values
-      active_ingredients: null,
-      created_at: new Date().toISOString(),
-      description: null,
-      main_pic: null,
-      pics: null,
-      product_type: null,
-      qty: null,
-      updated_at: new Date().toISOString(),
-      usage_instructions: null
-    };
-    
-    addToCart(productForCart, customItem.quantity);
+  const handleAddCustomItem = async (customItem: LegacyCartItem) => {
+    try {
+      // Convert LegacyCartItem to minimal Product format for addToCart
+      const productForCart: Partial<Product> & { id: string; ref: string; product_name: string } = {
+        id: customItem.ref || '',
+        ref: customItem.ref || '',
+        product_name: customItem.productName,
+        product_name_2: customItem.productName2 || null,
+        size: customItem.size || null,
+        // Add other minimal required fields
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      
+      // Add item to cart first
+      await addToCart(productForCart as Product, customItem.quantity);
+      
+      // Then update the price if a custom price was provided
+      if (customItem.unitPrice > 0) {
+        const itemId = productForCart.id || productForCart.ref || '';
+        await updateItemPrice(itemId, customItem.unitPrice);
+        console.log('✅ Custom item added with price:', customItem.unitPrice);
+      }
+    } catch (error) {
+      console.error('❌ Error adding custom item:', error);
+    }
   };
 
   const handleSubmitOrder = () => {

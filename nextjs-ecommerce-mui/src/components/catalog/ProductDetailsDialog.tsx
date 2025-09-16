@@ -220,13 +220,13 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = React.memo(({
                   </Box>
                 )}
 
-                {shouldRenderContent(product.how_to_use || product.usageInstructions || product.anwendung_he) && (
+                {shouldRenderContent(product.usage_instructions) && (
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                       הוראות שימוש
                     </Typography>
                     <ContentRenderer 
-                      content={product.how_to_use || product.usageInstructions || product.anwendung_he} 
+                      content={product.usage_instructions} 
                       shouldRenderContent={shouldRenderContent} 
                     />
                   </Box>
