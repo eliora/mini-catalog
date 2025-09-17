@@ -28,6 +28,8 @@ const CardSkeleton: React.FC = React.memo(() => (
   </Box>
 ));
 
+CardSkeleton.displayName = 'CardSkeleton';
+
 const ListSkeleton: React.FC = React.memo(() => (
   <Box sx={{ display: 'flex', p: 2, gap: 2, width: '100%' }}>
     <Skeleton variant="rectangular" width={80} height={80} />
@@ -38,6 +40,8 @@ const ListSkeleton: React.FC = React.memo(() => (
     </Box>
   </Box>
 ));
+
+ListSkeleton.displayName = 'ListSkeleton';
 
 const LoadingIndicator: React.FC<LoadingIndicatorProps> = React.memo(({ 
   type, 

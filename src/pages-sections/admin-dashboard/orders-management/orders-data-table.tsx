@@ -232,7 +232,7 @@ export default function OrdersDataTable({
                     direction={orderBy === "total_amount" ? order : "asc"}
                     onClick={() => handleSort("total_amount")}
                   >
-                    סה"כ
+                    סה&quot;כ
                   </TableSortLabel>
                 </TableCell>
               )}

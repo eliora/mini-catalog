@@ -81,7 +81,7 @@ const CartItemsTable: React.FC<CartItemsTableProps> = ({
           {/* Product Ref - Match UnifiedCartItem */}
           <Box sx={{ minWidth: isMobile ? 20 : 80 }}>
             <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-              מק"ט
+              מק&quot;ט
             </Typography>
           </Box>
 
@@ -135,7 +135,7 @@ const CartItemsTable: React.FC<CartItemsTableProps> = ({
           {!isMobile && (
             <Box sx={{ minWidth: 70, textAlign: 'right' }}>
               <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                סה"כ
+                סה&quot;כ
               </Typography>
             </Box>
           )}

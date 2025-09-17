@@ -94,9 +94,11 @@ const mockOrders = [
   }
 ];
 
-interface OrdersManagementViewProps {}
+interface OrdersManagementViewProps {
+  // Props can be added here when needed
+}
 
-export default function OrdersManagementView({}: OrdersManagementViewProps) {
+export default function OrdersManagementView(_props: OrdersManagementViewProps) {
   const [orders, setOrders] = useState(mockOrders);
   const [filteredOrders, setFilteredOrders] = useState(mockOrders);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
@@ -105,7 +107,7 @@ export default function OrdersManagementView({}: OrdersManagementViewProps) {
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [isRevivalDialogOpen, setIsRevivalDialogOpen] = useState(false);
   const [isSqlEditorOpen, setIsSqlEditorOpen] = useState(false);
-  const [editingOrder, setEditingOrder] = useState(null);
+  const [editingOrder, setEditingOrder] = useState<any>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" as "success" | "error" });
 

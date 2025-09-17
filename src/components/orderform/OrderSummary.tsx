@@ -106,7 +106,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
             {/* Tax */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.5 }}>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                מע"מ ({companySettings?.tax_rate || 17}%)
+                מע&quot;מ ({companySettings?.tax_rate || 17}%)
               </Typography>
               <Typography variant="body2" sx={{ fontWeight: 500 }}>
                 {formatCurrency(tax)}
@@ -119,7 +119,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
             {/* Total */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                סה"כ לתשלום
+                סה&quot;כ לתשלום
               </Typography>
               <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'primary.main' }}>
                 {formatCurrency(total)}

@@ -25,7 +25,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const router = useRouter();
   const pathname = usePathname();
   const { cart, getItemCount } = useCart();
-  const { isAdmin, signOut, initializing } = useAuth();
+  const { isAdmin, signOut, isInitializing } = useAuth();
   const { settings: companySettings } = useCompany();
   
   // Search state for header
@@ -50,8 +50,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   // Update document title based on company settings
   useEffect(() => {
-    const companyName = companySettings?.companyName || 'פורטל לקוסמטיקאיות';
-    const companyDescription = companySettings?.companyDescription;
+    const companyName = companySettings?.company_name || 'פורטל לקוסמטיקאיות';
+    const companyDescription = companySettings?.company_description;
     
     if (companyDescription) {
       document.title = `${companyName} - ${companyDescription}`;
@@ -89,7 +89,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   }, [pathname, isAdmin, router]);
 
   // Show loading screen while auth is initializing
-  if (initializing) {
+  if (isInitializing) {
     return (
       <Box 
         sx={{ 
@@ -126,11 +126,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       {/* JDA Style Header */}
       <JDAHeader
         companySettings={companySettings}
-        cartItemCount={hasMounted ? cartCount : 0}
-        searchTerm={headerSearchTerm}
-        onSearchChange={handleHeaderSearchChange}
-        onClearSearch={handleHeaderSearchClear}
-        searchPlaceholder="חיפוש מוצרים..."
       />
 
       <Container maxWidth="xl" sx={{ mt: 2, mb: 2 }}>

@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
 interface AdminContextType {
@@ -27,7 +27,7 @@ const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
   const [isAdminLoading, setIsAdminLoading] = useState(true);
   const [adminPermissions, setAdminPermissions] = useState<string[]>([]);
 
-  const loadAdminPermissions = async () => {
+  const loadAdminPermissions = useCallback(async () => {
     if (!user) {
       setAdminPermissions([]);
       setIsAdminLoading(false);
@@ -58,7 +58,7 @@ const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     } finally {
       setIsAdminLoading(false);
     }
-  };
+  }, [user]);
 
   const hasPermission = (permission: string): boolean => {
     return adminPermissions.includes(permission);
@@ -71,7 +71,7 @@ const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
 
   useEffect(() => {
     loadAdminPermissions();
-  }, [user]);
+  }, [user, loadAdminPermissions]);
 
   const value: AdminContextType = {
     isAdminLoading,

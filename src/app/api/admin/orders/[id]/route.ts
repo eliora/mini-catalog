@@ -5,10 +5,9 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 
 // Import utilities
-import { verifyAdminAccess } from '@/lib/api/admin/auth';
+import { createAuthedAdminClient, AuthError } from '@/lib/api/admin/auth';
 import {
   successResponse,
   errorResponse,
@@ -29,15 +28,7 @@ function extractOrderId(url: string): string {
 // GET - Fetch single order
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
-    // Verify admin access
-    const authResult = await verifyAdminAccess(supabase);
-    if (!authResult.success) {
-      return authResult.error === 'Authentication required' 
-        ? unauthorizedResponse(authResult.error)
-        : forbiddenResponse(authResult.error);
-    }
+    const supabaseAdmin = await createAuthedAdminClient(request);
 
     const orderId = extractOrderId(request.url);
     if (!orderId) {
@@ -45,7 +36,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch order with client details
-    const { data: order, error } = await supabase
+    const { data: order, error } = await supabaseAdmin
       .from('orders')
       .select(`
         *,
@@ -84,15 +75,7 @@ export async function GET(request: NextRequest) {
 // PUT - Update order
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
-    // Verify admin access
-    const authResult = await verifyAdminAccess(supabase);
-    if (!authResult.success) {
-      return authResult.error === 'Authentication required' 
-        ? unauthorizedResponse(authResult.error)
-        : forbiddenResponse(authResult.error);
-    }
+    const supabaseAdmin = await createAuthedAdminClient(request);
 
     const orderId = extractOrderId(request.url);
     if (!orderId) {
@@ -110,14 +93,14 @@ export async function PUT(request: NextRequest) {
     const { client_id, items, total_amount, notes, status } = body;
 
     // Build update object with only provided fields
-    const updateData: Record<string, any> = {
+    const updateData: Record<string, unknown> = {
       updated_at: new Date().toISOString()
     };
 
     // Validate and set fields if provided
     if (client_id !== undefined) {
       // Verify client exists
-      const { data: client, error: clientError } = await supabase
+      const { data: client, error: clientError } = await supabaseAdmin
         .from('users')
         .select('id')
         .eq('id', client_id)
@@ -161,7 +144,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update order
-    const { data: order, error } = await supabase
+    const { data: order, error } = await supabaseAdmin
       .from('orders')
       .update(updateData)
       .eq('id', orderId)
@@ -202,15 +185,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete order
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
-    // Verify admin access
-    const authResult = await verifyAdminAccess(supabase);
-    if (!authResult.success) {
-      return authResult.error === 'Authentication required' 
-        ? unauthorizedResponse(authResult.error)
-        : forbiddenResponse(authResult.error);
-    }
+    const supabaseAdmin = await createAuthedAdminClient(request);
 
     const orderId = extractOrderId(request.url);
     if (!orderId) {
@@ -218,7 +193,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Check if order exists before deletion
-    const { data: existingOrder, error: checkError } = await supabase
+    const { data: existingOrder, error: checkError } = await supabaseAdmin
       .from('orders')
       .select('id, status')
       .eq('id', orderId)
@@ -233,7 +208,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete order
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('orders')
       .delete()
       .eq('id', orderId);

@@ -145,7 +145,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         productName: product.hebrew_name || product.product_name || '',
         productName2: product.english_name || product.product_name_2 || '',
         product_name_2: product.english_name || product.product_name_2 || '',
-        productLine: product.product_line || '',
         unitPrice: 0, // Will be updated with pricing logic
         size: product.size || '',
         // Product details for display
@@ -414,6 +413,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     getTotal,
     hasItem,
     getItem,
+    updateItemPrice,
   ]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

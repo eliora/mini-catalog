@@ -132,15 +132,16 @@ export async function POST(request: NextRequest) {
       message: 'Client created successfully'
     }, 201);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof AuthError) {
       return handleAuthError(error);
     }
     console.error('Client creation API error:', error);
-    if (error.code === '23505') { // Postgres unique constraint violation
+    if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
       return conflictResponse('A user with this email already exists.');
     }
-    return internalErrorResponse('Failed to create client', error.message);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    return internalErrorResponse('Failed to create client', errorMessage);
   }
 }
 
@@ -192,15 +193,16 @@ export async function PUT(request: NextRequest) {
       message: 'Client updated successfully'
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof AuthError) {
       return handleAuthError(error);
     }
     console.error('Client update API error:', error);
-    if (error.code === 'PGRST116') { // Supabase 'not found' error
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'PGRST116') {
       return notFoundResponse('Client not found');
     }
-    return internalErrorResponse('Failed to update client', error.message);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    return internalErrorResponse('Failed to update client', errorMessage);
   }
 }
 
@@ -210,12 +212,12 @@ export async function PUT(request: NextRequest) {
  * - Deletes or updates the user based on the `hard` query parameter.
  */
 export async function DELETE(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+  const hardDelete = searchParams.get('hard') === 'true';
+
   try {
     const supabaseAdmin = await createAuthedAdminClient(request);
-
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-    const hardDelete = searchParams.get('hard') === 'true';
 
     if (!id) {
       return errorResponse('Client ID is required', 400);
@@ -224,14 +226,15 @@ export async function DELETE(request: NextRequest) {
     const result = await deleteClientService(supabaseAdmin, id, hardDelete);
     return successResponse(result);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof AuthError) {
       return handleAuthError(error);
     }
     console.error('Client deletion API error:', error);
-    if (error.message === 'Client not found') {
+    if (error instanceof Error && error.message === 'Client not found') {
       return notFoundResponse('Client not found');
     }
-    return internalErrorResponse(`Failed to ${hardDelete ? 'delete' : 'deactivate'} client`, error.message);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    return internalErrorResponse(`Failed to ${hardDelete ? 'delete' : 'deactivate'} client`, errorMessage);
   }
 }

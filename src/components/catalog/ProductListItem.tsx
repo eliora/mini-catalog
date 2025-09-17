@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Typography,
@@ -185,7 +185,7 @@ const ProductListItem: React.FC<ProductListItemProps> = React.memo(({
             </Box>
             
             {/* Quantity Controls below - Only show if product is in stock, make 15% smaller */}
-            {product.qty > 0 && (
+            {(product.qty ?? 0) > 0 && (
               <Box 
                 className="quantity-controls" 
                 sx={{ 
@@ -221,7 +221,7 @@ const ProductListItem: React.FC<ProductListItemProps> = React.memo(({
             </Box>
             
             {/* Desktop: Quantity Controls - Only show if product is in stock */}
-            {product.qty > 0 && (
+            {(product.qty ?? 0) > 0 && (
               <Box 
                 className="quantity-controls" 
                 sx={{ flexShrink: 0 }}

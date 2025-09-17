@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Card,
@@ -17,7 +17,8 @@ import {
   Checkbox,
   FormControlLabel,
   Alert,
-  Snackbar
+  Snackbar,
+  Typography
 } from "@mui/material";
 import {
   Search,
@@ -34,87 +35,80 @@ import ProductsDataTable from "../products-data-table";
 import ProductFormDialog from "../product-form-dialog";
 import BulkActionsToolbar from "../bulk-actions-toolbar";
 
-// Mock products data
-const mockProducts = [
-  {
-    id: "1",
-    ref: "SER001",
-    name: "סרום ויטמין C",
-    name_en: "Vitamin C Serum",
-    description: "סרום מתקדם עם ויטמין C טהור לחידוש העור",
-    category: "סרומים",
-    price: 189,
-    cost_price: 95,
-    stock: 45,
-    low_stock_threshold: 10,
-    status: "active",
-    images: ["/api/placeholder/200/200"],
-    created_at: "2024-01-15",
-    updated_at: "2024-01-20"
-  },
-  {
-    id: "2", 
-    ref: "CRM002",
-    name: "קרם לחות יום",
-    name_en: "Day Moisturizer",
-    description: "קרם לחות עשיר לעור יבש",
-    category: "קרמים",
-    price: 145,
-    cost_price: 72,
-    stock: 23,
-    low_stock_threshold: 15,
-    status: "active",
-    images: ["/api/placeholder/200/200"],
-    created_at: "2024-01-10",
-    updated_at: "2024-01-18"
-  },
-  {
-    id: "3",
-    ref: "MSK003", 
-    name: "מסכת זהב",
-    name_en: "Gold Face Mask",
-    description: "מסכה יוקרתית עם חלקיקי זהב",
-    category: "מסכות",
-    price: 299,
-    cost_price: 150,
-    stock: 0,
-    low_stock_threshold: 5,
-    status: "out_of_stock",
-    images: ["/api/placeholder/200/200"],
-    created_at: "2024-01-05",
-    updated_at: "2024-01-22"
-  },
-  {
-    id: "4",
-    ref: "OIL004",
-    name: "שמן ארגן",
-    name_en: "Argan Oil", 
-    description: "שמן ארגן טהור למזון ולחות העור",
-    category: "שמנים",
-    price: 89,
-    cost_price: 45,
-    stock: 67,
-    low_stock_threshold: 20,
-    status: "active",
-    images: ["/api/placeholder/200/200"],
-    created_at: "2024-01-12",
-    updated_at: "2024-01-19"
-  }
-];
+// Product interface matching database schema
+interface Product {
+  id: string;
+  ref: string;
+  hebrew_name?: string;
+  english_name?: string;
+  french_name?: string;
+  product_line?: string;
+  product_type?: string;
+  type?: string;
+  size?: string;
+  qty: number;
+  unit_price?: number;
+  description?: string;
+  description_he?: string;
+  main_pic?: string;
+  pics?: any;
+  created_at: string;
+  updated_at: string;
+  // Computed fields
+  display_name?: string;
+  formatted_price?: string;
+  stock_status?: string;
+  stock_status_color?: string;
+  parsed_images?: any;
+}
 
-interface ProductsManagementViewProps {}
+interface ApiResponse {
+  products: Product[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  stats?: {
+    totalProducts: number;
+    inStockCount: number;
+    outOfStockCount: number;
+    lowStockCount: number;
+    productLinesCount: number;
+    avgPrice: number;
+  };
+  filters?: {
+    available_product_lines: string[];
+    available_product_types: string[];
+    available_stock_statuses: string[];
+  };
+}
 
-export default function ProductsManagementView({}: ProductsManagementViewProps) {
-  const [products, setProducts] = useState(mockProducts);
-  const [filteredProducts, setFilteredProducts] = useState(mockProducts);
+interface ProductsManagementViewProps {
+  // Props can be added here when needed
+}
+
+export default function ProductsManagementView(_props: ProductsManagementViewProps) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [productLineFilter, setProductLineFilter] = useState("all");
+  const [stockStatusFilter, setStockStatusFilter] = useState("all");
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" as "success" | "error" });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0
+  });
+  const [stats, setStats] = useState<any>({});
+  const [availableFilters, setAvailableFilters] = useState<any>({});
 
   // Column visibility state
   const [visibleColumns, setVisibleColumns] = useState({
@@ -127,55 +121,121 @@ export default function ProductsManagementView({}: ProductsManagementViewProps) 
     actions: true
   });
 
-  // Filter products based on search and filters
+  // Fetch products from API
+  const fetchProducts = useCallback(async (page = 1, limit = 10, filters: any = {}) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        include_stats: 'true',
+        include_filters: 'true',
+        ...(searchTerm && { search: searchTerm }),
+        ...(productLineFilter !== 'all' && { product_line: productLineFilter }),
+        ...(stockStatusFilter !== 'all' && { stock_status: stockStatusFilter }),
+        ...filters
+      });
+
+      const response = await fetch(`/api/admin/products?${params}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch products');
+      }
+
+      const data: ApiResponse = await response.json();
+      
+      setProducts(data.products);
+      setPagination(data.pagination);
+      
+      if (data.stats) {
+        setStats(data.stats);
+      }
+      
+      if (data.filters) {
+        setAvailableFilters(data.filters);
+      }
+
+    } catch (err) {
+      console.error('Error fetching products:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load products. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, [searchTerm, productLineFilter, stockStatusFilter]);
+
+  // Fetch products on component mount and when filters change
   useEffect(() => {
-    let filtered = products;
+    fetchProducts(pagination.page, pagination.limit);
+  }, [fetchProducts, pagination.page, pagination.limit]);
 
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.ref.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+  // Initial load
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
-    // Category filter
-    if (categoryFilter !== "all") {
-      filtered = filtered.filter(product => product.category === categoryFilter);
-    }
+  const handleProductSave = async (productData: any) => {
+    try {
+      setLoading(true);
+      const url = '/api/admin/products';
+      const method = editingProduct ? 'PUT' : 'POST';
 
-    // Status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(product => product.status === statusFilter);
-    }
-
-    setFilteredProducts(filtered);
-  }, [products, searchTerm, categoryFilter, statusFilter]);
-
-  const handleProductSave = (productData: any) => {
-    if (editingProduct) {
-      // Update existing product
-      setProducts(prev => prev.map(p => p.id === productData.id ? { ...p, ...productData } : p));
-      setSnackbar({ open: true, message: "המוצר עודכן בהצלחה", severity: "success" });
-    } else {
-      // Add new product
-      const newProduct = {
+      const requestData = {
+        ...(editingProduct && { id: editingProduct.id }),
         ...productData,
-        id: Date.now().toString(),
-        created_at: new Date().toISOString().split('T')[0],
-        updated_at: new Date().toISOString().split('T')[0]
       };
-      setProducts(prev => [...prev, newProduct]);
-      setSnackbar({ open: true, message: "המוצר נוסף בהצלחה", severity: "success" });
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to ${editingProduct ? 'update' : 'create'} product`);
+      }
+
+      await fetchProducts(pagination.page, pagination.limit);
+      setSnackbar({ 
+        open: true, 
+        message: editingProduct ? "המוצר עודכן בהצלחה" : "המוצר נוסף בהצלחה", 
+        severity: "success" 
+      });
+      setIsProductDialogOpen(false);
+      setEditingProduct(null);
+    } catch (err: any) {
+      setSnackbar({ open: true, message: err.message || 'שגיאה בשמירת המוצר', severity: "error" });
+    } finally {
+      setLoading(false);
     }
-    setIsProductDialogOpen(false);
-    setEditingProduct(null);
   };
 
-  const handleProductDelete = (productId: string) => {
-    setProducts(prev => prev.filter(p => p.id !== productId));
-    setSnackbar({ open: true, message: "המוצר נמחק בהצלחה", severity: "success" });
+  const handleProductDelete = async (productId: string) => {
+    if (!confirm('האם אתה בטוח שברצונך למחוק את המוצר?')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/admin/products?id=${productId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete product');
+      }
+
+      await fetchProducts(pagination.page, pagination.limit);
+      setSnackbar({ open: true, message: "המוצר נמחק בהצלחה", severity: "success" });
+    } catch (err: any) {
+      setSnackbar({ open: true, message: err.message || 'שגיאה במחיקת המוצר', severity: "error" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBulkDelete = () => {
@@ -185,10 +245,10 @@ export default function ProductsManagementView({}: ProductsManagementViewProps) 
   };
 
   const handleExport = () => {
-    // Mock export functionality
+    // Export products to CSV
     const csvContent = "data:text/csv;charset=utf-8," + 
-      "מק\"ט,שם מוצר,קטגוריה,מחיר,מלאי,סטטוס\n" +
-      filteredProducts.map(p => `${p.ref},${p.name},${p.category},${p.price},${p.stock},${p.status}`).join("\n");
+      "מק\"ט,שם עברי,שם אנגלי,קו מוצרים,סוג,מחיר,מלאי\n" +
+      products.map(p => `${p.ref},"${p.hebrew_name || ''}","${p.english_name || ''}","${p.product_line || ''}","${p.product_type || ''}",${p.unit_price || 0},${p.qty}`).join("\n");
     
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -201,12 +261,11 @@ export default function ProductsManagementView({}: ProductsManagementViewProps) 
     setSnackbar({ open: true, message: "הקובץ יוצא בהצלחה", severity: "success" });
   };
 
-  const categories = Array.from(new Set(products.map(p => p.category)));
-  const statuses = [
-    { value: "active", label: "פעיל" },
-    { value: "draft", label: "טיוטה" },
-    { value: "out_of_stock", label: "אזל מהמלאי" },
-    { value: "discontinued", label: "הופסק" }
+  const productLines = availableFilters.available_product_lines || [];
+  const stockStatuses = [
+    { value: "in_stock", label: "במלאי" },
+    { value: "low_stock", label: "מלאי נמוך" },
+    { value: "out_of_stock", label: "אזל מהמלאי" }
   ];
 
   return (
@@ -240,30 +299,30 @@ export default function ProductsManagementView({}: ProductsManagementViewProps) 
               />
               
               <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel>קטגוריה</InputLabel>
+                <InputLabel>קו מוצרים</InputLabel>
                 <Select
-                  value={categoryFilter}
-                  label="קטגוריה"
-                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  value={productLineFilter}
+                  label="קו מוצרים"
+                  onChange={(e) => setProductLineFilter(e.target.value)}
                   sx={{ borderRadius: 2 }}
                 >
                   <MenuItem value="all">הכל</MenuItem>
-                  {categories.map(category => (
-                    <MenuItem key={category} value={category}>{category}</MenuItem>
+                  {productLines.map((line: string) => (
+                    <MenuItem key={line} value={line}>{line}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
 
               <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel>סטטוס</InputLabel>
+                <InputLabel>מלאי</InputLabel>
                 <Select
-                  value={statusFilter}
-                  label="סטטוס"
-                  onChange={(e) => setStatusFilter(e.target.value)}
+                  value={stockStatusFilter}
+                  label="מלאי"
+                  onChange={(e) => setStockStatusFilter(e.target.value)}
                   sx={{ borderRadius: 2 }}
                 >
                   <MenuItem value="all">הכל</MenuItem>
-                  {statuses.map(status => (
+                  {stockStatuses.map(status => (
                     <MenuItem key={status.value} value={status.value}>{status.label}</MenuItem>
                   ))}
                 </Select>
@@ -310,7 +369,7 @@ export default function ProductsManagementView({}: ProductsManagementViewProps) 
           </FlexBetween>
 
           {/* Active Filters */}
-          {(searchTerm || categoryFilter !== "all" || statusFilter !== "all") && (
+          {(searchTerm || productLineFilter !== "all" || stockStatusFilter !== "all") && (
             <FlexBox gap={1} flexWrap="wrap">
               {searchTerm && (
                 <Chip
@@ -319,17 +378,17 @@ export default function ProductsManagementView({}: ProductsManagementViewProps) 
                   size="small"
                 />
               )}
-              {categoryFilter !== "all" && (
+              {productLineFilter !== "all" && (
                 <Chip
-                  label={`קטגוריה: ${categoryFilter}`}
-                  onDelete={() => setCategoryFilter("all")}
+                  label={`קו מוצרים: ${productLineFilter}`}
+                  onDelete={() => setProductLineFilter("all")}
                   size="small"
                 />
               )}
-              {statusFilter !== "all" && (
+              {stockStatusFilter !== "all" && (
                 <Chip
-                  label={`סטטוס: ${statuses.find(s => s.value === statusFilter)?.label}`}
-                  onDelete={() => setStatusFilter("all")}
+                  label={`מלאי: ${stockStatuses.find(s => s.value === stockStatusFilter)?.label}`}
+                  onDelete={() => setStockStatusFilter("all")}
                   size="small"
                 />
               )}
@@ -349,14 +408,24 @@ export default function ProductsManagementView({}: ProductsManagementViewProps) 
 
       {/* Products Table */}
       <Card sx={{ borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
-        <ProductsDataTable
-          products={filteredProducts}
-          onEdit={(product) => {
-            setEditingProduct(product as any);
-            setIsProductDialogOpen(true);
-          }}
-          onDelete={handleProductDelete}
-        />
+        {loading ? (
+          <Box sx={{ p: 4, textAlign: "center" }}>
+            <Typography>טוען מוצרים...</Typography>
+          </Box>
+        ) : error ? (
+          <Box sx={{ p: 4, textAlign: "center" }}>
+            <Typography color="error">{error}</Typography>
+          </Box>
+        ) : (
+          <ProductsDataTable
+            products={products}
+            onEdit={(product) => {
+              setEditingProduct(product);
+              setIsProductDialogOpen(true);
+            }}
+            onDelete={handleProductDelete}
+          />
+        )}
       </Card>
 
       {/* Column Visibility Menu */}

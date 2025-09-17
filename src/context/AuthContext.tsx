@@ -21,6 +21,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string | undefined>();
 
+  // Load user profile from database
+  const loadUserProfile = useCallback(async (userId: string): Promise<void> => {
+    try {
+      // First check if user exists in users table (for admin role)
+      const { data: userData, error: userError } = await supabaseBrowserClient
+        .from('users')
+        .select('id, email, user_role, created_at, updated_at')
+        .eq('id', userId)
+        .single();
+
+      if (userError && userError.code !== 'PGRST116') {
+        console.error('Error fetching user data:', userError);
+        return;
+      }
+
+      // Create profile object
+      const profileData: UserProfile = userData ? {
+        ...userData,
+        user_role: userData.user_role || 'standard'
+      } : {
+        id: userId,
+        email: user?.email || '',
+        user_role: 'standard',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      setProfile(profileData);
+
+      // Update user object with profile
+      setUser(prev => prev ? {
+        ...prev,
+        profile: profileData
+      } : null);
+
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+    }
+  }, [user?.email]);
+
   // Initialize auth state
   useEffect(() => {
     console.log('🚀 Initializing auth state...');
@@ -115,47 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [queryClient]);
-
-  // Load user profile from database
-  const loadUserProfile = async (userId: string): Promise<void> => {
-    try {
-      // First check if user exists in users table (for admin role)
-      const { data: userData, error: userError } = await supabaseBrowserClient
-        .from('users')
-        .select('id, email, user_role, created_at, updated_at')
-        .eq('id', userId)
-        .single();
-
-      if (userError && userError.code !== 'PGRST116') {
-        console.error('Error fetching user data:', userError);
-        return;
-      }
-
-      // Create profile object
-      const profileData: UserProfile = userData ? {
-        ...userData,
-        user_role: userData.user_role || 'standard'
-      } : {
-        id: userId,
-        email: user?.email || '',
-        user_role: 'standard',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      setProfile(profileData);
-
-      // Update user object with profile
-      setUser(prev => prev ? {
-        ...prev,
-        profile: profileData
-      } : null);
-
-    } catch (error) {
-      console.error('Error loading user profile:', error);
-    }
-  };
+  }, [queryClient, loadUserProfile]);
 
   // Sign in with email and password
   const signIn = useCallback(async (email: string, password: string): Promise<{ error?: string }> => {

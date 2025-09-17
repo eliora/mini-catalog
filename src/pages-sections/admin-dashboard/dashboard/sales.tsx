@@ -49,30 +49,30 @@ const Card2: React.FC<{
 export default function Sales() {
   return (
     <Box>
-      <Grid container spacing={3}>
+      <Grid container {...({} as any)} spacing={3}>
         {/* WEEKLY SALE CHART */}
-        <Grid item lg={3} md={6} xs={12}>
+        <Grid item {...({} as any)} lg={3} md={6} xs={12}>
           <Card2 title="מכירות שבועיות" percentage="25.25%" amount={currency(10240, 0)}>
             <MockChart type="bar" height={100} />
           </Card2>
         </Grid>
 
         {/* PRODUCT SHARE CHART */}
-        <Grid item lg={3} md={6} xs={12}>
+        <Grid item {...({} as any)} lg={3} md={6} xs={12}>
           <Card2 title="חלק מוצרים" percentage="10.25%" amount="39.56%">
             <MockChart type="radialBar" height={130} />
           </Card2>
         </Grid>
 
         {/* TOTAL ORDERS CHART */}
-        <Grid item lg={3} md={6} xs={12}>
+        <Grid item {...({} as any)} lg={3} md={6} xs={12}>
           <Card2 title="סה&quot;כ הזמנות" percentage="2.65%" amount={currency(12260, 0)}>
             <MockChart type="area" height={80} />
           </Card2>
         </Grid>
 
         {/* MARKET SHARE CHART */}
-        <Grid item lg={3} md={6} xs={12}>
+        <Grid item {...({} as any)} lg={3} md={6} xs={12}>
           <Card2 title="נתח שוק" percentage="2.65%" amount={currency(14260, 0)}>
             <MockChart type="radialBar" height={130} />
           </Card2>

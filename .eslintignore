@@ -1,0 +1,17 @@
+# Ignore temp directories
+temp/
+temp-packages/
+
+# Ignore Next.js build output
+.next/
+out/
+
+# Ignore node_modules
+node_modules/
+
+# Ignore generated types
+*.d.ts
+
+# Ignore build outputs
+dist/
+build/

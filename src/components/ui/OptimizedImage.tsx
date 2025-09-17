@@ -146,7 +146,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
       <Box
         ref={containerRef}
         sx={containerStyles}
-        onClick={onClick}
+        onClick={onClick || undefined}
         className={className}
         {...props}
       >
@@ -167,7 +167,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
       <Box
         ref={containerRef}
         sx={containerStyles}
-        onClick={onClick}
+        onClick={onClick || undefined}
         className={className}
         {...props}
       >
@@ -192,7 +192,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     <Box
       ref={containerRef}
       sx={containerStyles}
-      onClick={onClick}
+      onClick={onClick || undefined}
       className={className}
       {...props}
     >

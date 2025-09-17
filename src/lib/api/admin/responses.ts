@@ -47,3 +47,13 @@ export function conflictResponse(message = 'Resource already exists') {
 export function internalErrorResponse(message = 'Internal server error', details?: any) {
   return errorResponse(message, 500, details);
 }
+
+/**
+ * Handles authentication errors from the auth module
+ */
+export function handleAuthError(authError: any) {
+  if (authError.message?.includes('unauthorized') || authError.message?.includes('access denied')) {
+    return forbiddenResponse('Admin access required');
+  }
+  return unauthorizedResponse('Authentication failed');
+}

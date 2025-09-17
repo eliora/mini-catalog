@@ -8,7 +8,9 @@ export type JsonValue = string | number | boolean | null | JsonObject | JsonArra
 export interface JsonObject {
   [key: string]: JsonValue;
 }
-export interface JsonArray extends Array<JsonValue> {}
+export interface JsonArray extends Array<JsonValue> {
+  // This interface extends Array to provide JsonValue typing
+}
 
 export type CurrencyCode = 'ILS' | 'USD' | 'EUR' | 'GBP';
 

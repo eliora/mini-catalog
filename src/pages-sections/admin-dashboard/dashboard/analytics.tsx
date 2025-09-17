@@ -52,14 +52,14 @@ export default function Analytics() {
         </Paragraph>
       </FlexBetween>
       
-      <Grid container spacing={2}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
         {/* Main Chart */}
-        <Grid item xs={12} md={8}>
+        <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 65%' } }}>
           <AnalyticsChart />
-        </Grid>
+        </Box>
         
         {/* Stats Cards */}
-        <Grid item xs={12} md={4}>
+        <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 30%' } }}>
           <FlexBox flexDirection="column" gap={2}>
             <StatCard
               title="ביקורים יומיים"
@@ -89,8 +89,8 @@ export default function Analytics() {
               positive={true}
             />
           </FlexBox>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </Card>
   );
 }

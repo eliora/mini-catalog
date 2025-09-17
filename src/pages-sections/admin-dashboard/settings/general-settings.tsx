@@ -117,9 +117,9 @@ export default function GeneralSettings() {
       >
         {({ values, errors, touched, handleChange, handleBlur, handleSubmit, isSubmitting }) => (
           <form onSubmit={handleSubmit}>
-            <Grid container spacing={3}>
+            <Grid container {...({} as any)} spacing={3}>
               {/* Logo Upload Section */}
-              <Grid item xs={12}>
+              <Grid item {...({} as any)} xs={12}>
                 <Card sx={{ mb: 3, borderRadius: 2, border: "2px dashed", borderColor: "grey.300" }}>
                   <CardContent sx={{ textAlign: "center", py: 4 }}>
                     <FlexBox flexDirection="column" alignItems="center" gap={2}>
@@ -208,12 +208,12 @@ export default function GeneralSettings() {
               </Grid>
 
               {/* Site Information */}
-              <Grid item xs={12}>
+              <Grid item {...({} as any)} xs={12}>
                 <H6 sx={{ mb: 2, fontWeight: 700 }}>מידע כללי על האתר</H6>
                 <Divider sx={{ mb: 3 }} />
               </Grid>
 
-              <Grid item md={6} xs={12}>
+              <Grid item {...({} as any)} md={6} xs={12}>
                 <TextField
                   fullWidth
                   name="siteName"
@@ -227,7 +227,7 @@ export default function GeneralSettings() {
                 />
               </Grid>
 
-              <Grid item md={6} xs={12}>
+              <Grid item {...({} as any)} md={6} xs={12}>
                 <TextField
                   fullWidth
                   name="contactEmail"
@@ -242,7 +242,7 @@ export default function GeneralSettings() {
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid item {...({} as any)} xs={12}>
                 <TextField
                   fullWidth
                   multiline
@@ -258,7 +258,7 @@ export default function GeneralSettings() {
                 />
               </Grid>
 
-              <Grid item md={6} xs={12}>
+              <Grid item {...({} as any)} md={6} xs={12}>
                 <TextField
                   fullWidth
                   name="welcomeMessage"
@@ -272,7 +272,7 @@ export default function GeneralSettings() {
                 />
               </Grid>
 
-              <Grid item md={6} xs={12}>
+              <Grid item {...({} as any)} md={6} xs={12}>
                 <TextField
                   fullWidth
                   name="supportPhone"
@@ -287,7 +287,7 @@ export default function GeneralSettings() {
               </Grid>
 
               {/* Action Buttons */}
-              <Grid item xs={12}>
+              <Grid item {...({} as any)} xs={12}>
                 <Divider sx={{ my: 2 }} />
                 <FlexBetween>
                   <Alert severity="info" sx={{ flex: 1, mr: 2 }}>

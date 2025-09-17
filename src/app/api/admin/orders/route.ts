@@ -5,17 +5,15 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { Order } from '@/types/order';
 
 // Import utilities
-import { verifyAdminAccess } from '@/lib/api/admin/auth';
+import { createAuthedAdminClient } from '@/lib/api/admin/auth';
 import { parsePaginationParams, buildPaginationResponse } from '@/lib/api/admin/query-helpers';
 import {
   successResponse,
   errorResponse,
   validationErrorResponse,
-  unauthorizedResponse,
-  forbiddenResponse,
   internalErrorResponse
 } from '@/lib/api/admin/responses';
 import {
@@ -27,15 +25,7 @@ import {
 // GET - List orders with filtering and pagination
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
-    // Verify admin access
-    const authResult = await verifyAdminAccess(supabase);
-    if (!authResult.success) {
-      return authResult.error === 'Authentication required' 
-        ? unauthorizedResponse(authResult.error)
-        : forbiddenResponse(authResult.error);
-    }
+    const supabaseAdmin = await createAuthedAdminClient(request);
 
     // Parse parameters
     const { searchParams } = new URL(request.url);
@@ -49,7 +39,7 @@ export async function GET(request: NextRequest) {
 
     // Get orders
     try {
-      const result = await getOrders(supabase, filters, pagination);
+      const result = await getOrders(supabaseAdmin, filters, pagination);
       
       return successResponse({
         orders: result.orders,
@@ -62,14 +52,15 @@ export async function GET(request: NextRequest) {
         },
         stats: {
           total: result.total,
-          pending: result.orders.filter(o => o.status === 'pending').length,
-          processing: result.orders.filter(o => o.status === 'processing').length,
-          completed: result.orders.filter(o => ['delivered', 'completed'].includes(o.status)).length,
+          pending: result.orders.filter((o: Order) => o.status === 'pending').length,
+          processing: result.orders.filter((o: Order) => o.status === 'processing').length,
+          completed: result.orders.filter((o: Order) => ['delivered', 'completed'].includes(o.status)).length,
         }
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching orders:', error);
-      return internalErrorResponse('Failed to fetch orders', error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      return internalErrorResponse('Failed to fetch orders', errorMessage);
     }
 
   } catch (error) {
@@ -81,15 +72,7 @@ export async function GET(request: NextRequest) {
 // POST - Create new order
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
-    // Verify admin access
-    const authResult = await verifyAdminAccess(supabase);
-    if (!authResult.success) {
-      return authResult.error === 'Authentication required' 
-        ? unauthorizedResponse(authResult.error)
-        : forbiddenResponse(authResult.error);
-    }
+    const supabaseAdmin = await createAuthedAdminClient(request);
 
     // Parse request body
     let body;
@@ -107,19 +90,20 @@ export async function POST(request: NextRequest) {
 
     // Create order
     try {
-      const order = await createOrder(supabase, body);
+      const order = await createOrder(supabaseAdmin, body);
       return successResponse({
         order,
         message: 'Order created successfully'
       }, 201);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating order:', error);
       
-      if (error.message === 'Invalid client_id') {
+      if (error instanceof Error && error.message === 'Invalid client_id') {
         return errorResponse('Invalid client ID', 400);
       }
       
-      return internalErrorResponse('Failed to create order', error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      return internalErrorResponse('Failed to create order', errorMessage);
     }
 
   } catch (error) {

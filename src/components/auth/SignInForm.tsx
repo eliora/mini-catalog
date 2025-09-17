@@ -42,7 +42,7 @@ const SignInForm: React.FC<SignInFormProps> = ({
   onSwitchToSignUp,
   showSocialLogin = true 
 }) => {
-  const { signIn, isLoading } = useAuth();
+  const { signIn, isLoading, resetPassword } = useAuth();
   const [formData, setFormData] = useState<SignInFormData>({
     email: '',
     password: ''
@@ -112,7 +112,6 @@ const SignInForm: React.FC<SignInFormProps> = ({
     }
 
     try {
-      const { resetPassword } = useAuth();
       const result = await resetPassword(formData.email);
       
       if (result.error) {

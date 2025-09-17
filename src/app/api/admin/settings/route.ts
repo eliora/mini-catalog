@@ -5,15 +5,13 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 
 // Import utilities
-import { verifyAdminAccess } from '@/lib/api/admin/auth';
+import { createAuthedAdminClient, AuthError } from '@/lib/api/admin/auth';
 import {
   successResponse,
   errorResponse,
   validationErrorResponse,
-  unauthorizedResponse,
   forbiddenResponse,
   internalErrorResponse
 } from '@/lib/api/admin/responses';
@@ -26,43 +24,26 @@ import {
 // GET - Retrieve company settings
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
-    // Verify admin access
-    const authResult = await verifyAdminAccess(supabase);
-    if (!authResult.success) {
-      return authResult.error === 'Authentication required' 
-        ? unauthorizedResponse(authResult.error)
-        : forbiddenResponse(authResult.error);
-    }
+    const supabaseAdmin = await createAuthedAdminClient(request);
 
     // Get settings
-    try {
-      const settings = await getSettings(supabase);
-      return successResponse({ settings });
-    } catch (error: any) {
-      console.error('Error fetching settings:', error);
-      return internalErrorResponse('Failed to fetch settings', error.message);
-    }
+    const settings = await getSettings(supabaseAdmin);
+    return successResponse({ settings });
 
-  } catch (error) {
+  } catch (error: unknown) {
+    if (error instanceof AuthError) {
+      return forbiddenResponse('Admin access required');
+    }
     console.error('Settings GET API error:', error);
-    return internalErrorResponse();
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    return internalErrorResponse('Failed to retrieve settings', errorMessage);
   }
 }
 
 // PUT - Update company settings
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
-    // Verify admin access
-    const authResult = await verifyAdminAccess(supabase);
-    if (!authResult.success) {
-      return authResult.error === 'Authentication required' 
-        ? unauthorizedResponse(authResult.error)
-        : forbiddenResponse(authResult.error);
-    }
+    const supabaseAdmin = await createAuthedAdminClient(request);
 
     // Parse request body
     let body;
@@ -79,19 +60,18 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update settings
-    try {
-      const settings = await updateSettings(supabase, body);
-      return successResponse({
-        settings,
-        message: 'Settings updated successfully'
-      });
-    } catch (error: any) {
-      console.error('Error updating settings:', error);
-      return internalErrorResponse('Failed to update settings', error.message);
-    }
+    const settings = await updateSettings(supabaseAdmin, body);
+    return successResponse({
+      settings,
+      message: 'Settings updated successfully'
+    });
 
-  } catch (error) {
+  } catch (error: unknown) {
+    if (error instanceof AuthError) {
+      return forbiddenResponse('Admin access required');
+    }
     console.error('Settings PUT API error:', error);
-    return internalErrorResponse();
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    return internalErrorResponse('Failed to update settings', errorMessage);
   }
 }

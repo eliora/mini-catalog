@@ -175,7 +175,7 @@ export const createDeepTheme = () => {
     palette: {
       ...deepColors,
       mode: 'light',
-    },
+    } as any,
     
     typography: {
       fontFamily: [

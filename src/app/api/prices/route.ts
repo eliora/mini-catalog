@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Convert array to object keyed by product_ref for easy lookup
-    const pricesMap: Record<string, any> = {};
+    const pricesMap: Record<string, unknown> = {};
     if (data) {
       data.forEach(price => {
         pricesMap[price.product_ref] = {

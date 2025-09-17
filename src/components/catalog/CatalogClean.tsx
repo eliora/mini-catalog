@@ -106,8 +106,8 @@ const CatalogClean: React.FC = () => {
     return cartItem ? cartItem.quantity : 0;
   }, [cart]);
 
-  const handleQuantityChange = useCallback((ref: string, value: string) => {
-    const numValue = parseInt(value, 10);
+  const handleQuantityChange = useCallback((ref: string, value: string | number) => {
+    const numValue = typeof value === 'number' ? value : parseInt(value, 10);
     const newQuantity = isNaN(numValue) ? 0 : Math.max(0, numValue);
 
     const product = products.find(p => p.ref === ref);
@@ -128,40 +128,37 @@ const CatalogClean: React.FC = () => {
     }
   }, [products, cart, removeFromCart, updateQuantity, addToCart]);
 
-  const handleIncrement = useCallback((ref: string) => {
-    const product = products.find(p => p.ref === ref);
-    if (!product) return;
-    
-    const current = getCurrentQuantity(ref);
+  const handleIncrement = useCallback((product: Product) => {
+    const current = getCurrentQuantity(product.ref);
     const next = Math.min(99, current + 1);
     
     if (current > 0) {
-      updateQuantity(ref, next);
+      updateQuantity(product.ref, next);
     } else {
       // For new items, add with quantity 1, not next (which would be 1 + existing 0 = 1)
       addToCart(product, 1);
     }
-  }, [products, getCurrentQuantity, updateQuantity, addToCart]);
+  }, [getCurrentQuantity, updateQuantity, addToCart]);
 
-  const handleDecrement = useCallback((ref: string) => {
-    const current = getCurrentQuantity(ref);
+  const handleDecrement = useCallback((product: Product) => {
+    const current = getCurrentQuantity(product.ref);
     if (current > 1) {
-      updateQuantity(ref, current - 1);
+      updateQuantity(product.ref, current - 1);
     } else if (current === 1) {
-      removeFromCart(ref);
+      removeFromCart(product.ref);
     }
   }, [getCurrentQuantity, updateQuantity, removeFromCart]);
 
   // Dialog-specific handlers that don't need ref
   const handleDialogIncrement = useCallback(() => {
     if (selectedProduct) {
-      handleIncrement(selectedProduct.ref);
+      handleIncrement(selectedProduct);
     }
   }, [selectedProduct, handleIncrement]);
 
   const handleDialogDecrement = useCallback(() => {
     if (selectedProduct) {
-      handleDecrement(selectedProduct.ref);
+      handleDecrement(selectedProduct);
     }
   }, [selectedProduct, handleDecrement]);
 

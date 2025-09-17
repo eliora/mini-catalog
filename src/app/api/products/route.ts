@@ -29,7 +29,7 @@ interface FilterOptions {
 }
 
 // Request deduplication cache to prevent duplicate API calls
-const requestCache = new Map<string, { promise: Promise<any>; timestamp: number }>();
+const requestCache = new Map<string, { promise: Promise<unknown>; timestamp: number }>();
 const REQUEST_CACHE_TTL = 30000; // 30 seconds
 
 // Helper function to add timeout to any promise
@@ -43,7 +43,7 @@ const withTimeout = <T>(promise: Promise<T>, timeoutMs = 10000, operation = 'Ope
 };
 
 // Request deduplication helper
-const getCacheKey = (operation: string, params: any): string => {
+const getCacheKey = (operation: string, params: unknown): string => {
   return `${operation}:${JSON.stringify(params)}`;
 };
 
@@ -259,7 +259,7 @@ async function getProductsInternal(
     },
     2,
     800
-  ) as { data: any[] | null; error: any };
+  ) as { data: unknown[] | null; error: unknown };
   
   const { data, error } = result;
   

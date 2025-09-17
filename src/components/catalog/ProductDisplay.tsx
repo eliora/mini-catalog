@@ -54,9 +54,9 @@ interface ProductDisplayProps {
   products: Product[];
   viewMode?: string;
   getCurrentQuantity: (ref: string) => number;
-  onDecrement: (ref: string) => void;
-  onIncrement: (ref: string) => void;
-  onQuantityChange: (ref: string, value: string) => void;
+  onDecrement: (product: Product) => void;
+  onIncrement: (product: Product) => void;
+  onQuantityChange: (ref: string, value: string | number) => void;
   onProductInfoClick: (product: Product) => void;
   onImageClick: (src: string) => void;
   shouldRenderContent: (content: any) => boolean;

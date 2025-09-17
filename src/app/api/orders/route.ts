@@ -54,12 +54,9 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Prepare order data with proper snake_case field mapping
+    // Prepare order data according to the database schema
     const orderData: OrderInsert = {
-      customer_name: body.customerName,
-      customer_email: body.customerEmail || null,
-      customer_phone: body.customerPhone || null,
-      customer_address: body.customerAddress || null,
+      client_id: body.client_id, // Required - must be provided from frontend
       total_amount: parseFloat(body.total),
       items: body.items, // JSON field
       status: body.status || 'pending',
@@ -113,12 +110,9 @@ export async function PUT(request: NextRequest) {
       );
     }
     
-    // Prepare update data with proper snake_case field mapping
+    // Prepare update data according to the database schema
     const updateData: OrderUpdate = {
-      customer_name: body.customerName,
-      customer_email: body.customerEmail,
-      customer_phone: body.customerPhone,
-      customer_address: body.customerAddress,
+      client_id: body.client_id,
       total_amount: body.total ? parseFloat(body.total) : undefined,
       items: body.items,
       status: body.status,

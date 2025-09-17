@@ -2,10 +2,15 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   eslint: {
-    // Allow production builds to successfully complete even if
-    // there are ESLint errors. This unblocks Vercel while we
-    // iteratively fix lint issues across the migrated codebase.
-    ignoreDuringBuilds: true,
+    // Enable ESLint during builds to fix all issues properly
+    ignoreDuringBuilds: false,
+  },
+  typescript: {
+    // Ignore TypeScript errors in temp folders during builds
+    ignoreBuildErrors: false,
+  },
+  experimental: {
+    typedRoutes: false,
   },
   images: {
     remotePatterns: [

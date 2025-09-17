@@ -6,8 +6,8 @@
  */
 'use client';
 import React from 'react';
-import { DataGrid, GridColDef, GridValueGetterParams, GridActionsCellItem } from '@mui/x-data-grid';
-import { Box, Chip, Typography, Tooltip, Avatar } from '@mui/material';
+import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
+import { Box, Chip, Typography, Avatar } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Person as PersonIcon, Business as BusinessIcon } from '@mui/icons-material';
 import { format } from 'date-fns';
 
@@ -174,12 +174,14 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({ clients, onEdit, onDe
       width: 80,
       getActions: (params) => [
         <GridActionsCellItem
+          key="edit"
           icon={<EditIcon />}
           label="עריכה"
           onClick={() => onEdit(params.row as Client)}
           showInMenu
         />,
         <GridActionsCellItem
+          key="delete"
           icon={<DeleteIcon />}
           label="מחיקה"
           onClick={() => onDelete(params.id as string)}
@@ -204,7 +206,6 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({ clients, onEdit, onDe
         disableRowSelectionOnClick
         autoHeight={false}
         rowHeight={52}
-        headerHeight={48}
         sx={{
           '& .MuiDataGrid-cell': {
             borderBottom: '1px solid #f0f0f0',

@@ -79,7 +79,7 @@ const UnifiedCartItem: React.FC<UnifiedCartItemProps> = ({
   const itemName = item.productName || item.product_name || '';
   const itemName2 = item.productName2 || item.product_name_2 || '';
   const itemSize = item.size || '';
-  const itemLine = item.productLine || item.product?.product_line || '';
+  const itemLine = item.product?.product_line || '';
   const itemPrice = item.unit_price || item.unitPrice || 0;
   const itemQuantity = item.quantity || 0;
 
@@ -353,7 +353,7 @@ const UnifiedCartItem: React.FC<UnifiedCartItemProps> = ({
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
             {isAdmin && canViewPrices && (
               <Typography variant="subtitle2" color="success.main" sx={{ fontWeight: 700, fontSize: '0.875rem' }}>
-                סה"כ: ₪{(itemPrice * itemQuantity).toFixed(2)}
+                סה&quot;כ: ₪{(itemPrice * itemQuantity).toFixed(2)}
               </Typography>
             )}
             <IconButton

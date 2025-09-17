@@ -14,7 +14,6 @@ import {
   Typography,
   Card,
   CardContent,
-  Grid,
   Stack,
   Table,
   TableHead,
@@ -86,20 +85,20 @@ const OrderSuccessView = forwardRef<HTMLDivElement, OrderSuccessViewProps>(({
               פרטי ההזמנה
             </Typography>
             
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+              <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 45%' } }}>
                 <Typography variant="subtitle2" sx={{ color: '#7D879C', mb: 0.5 }}>לקוח:</Typography>
                 <Typography variant="body1" sx={{ fontWeight: 600, mb: 2 }}>
                   {orderSummary.customerName}
                 </Typography>
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 45%' } }}>
                 <Typography variant="subtitle2" sx={{ color: '#7D879C', mb: 0.5 }}>תאריך:</Typography>
                 <Typography variant="body1" sx={{ fontWeight: 600, mb: 2 }}>
                   {new Date().toLocaleDateString('he-IL')}
                 </Typography>
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
 
             {/* Order Items Table */}
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 3, mb: 2 }}>
@@ -113,7 +112,7 @@ const OrderSuccessView = forwardRef<HTMLDivElement, OrderSuccessViewProps>(({
                   <TableCell align="center" sx={{ fontWeight: 700, color: '#2B3445' }}>גודל</TableCell>
                   <TableCell align="center" sx={{ fontWeight: 700, color: '#2B3445' }}>מחיר יחידה</TableCell>
                   <TableCell align="center" sx={{ fontWeight: 700, color: '#2B3445' }}>כמות</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700, color: '#2B3445' }}>סה"כ</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700, color: '#2B3445' }}>סה&quot;כ</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -152,32 +151,32 @@ const OrderSuccessView = forwardRef<HTMLDivElement, OrderSuccessViewProps>(({
 
             {/* Order Summary */}
             <Box sx={{ mt: 3, pt: 2, borderTop: '2px solid #E3E9EF' }}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={8}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 65%' } }}>
                   <Typography variant="body2" sx={{ color: '#7D879C' }}>
                     תודה על ההזמנה! נציגנו יצור איתך קשר בקרוב.
                   </Typography>
-                </Grid>
-                <Grid item xs={12} md={4}>
+                </Box>
+                <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 30%' } }}>
                   <Stack spacing={1}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Typography variant="body2">סכום ביניים:</Typography>
                       <Typography variant="body2">{formatCurrency(orderSummary.subtotal)}</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2">מע"מ:</Typography>
+                      <Typography variant="body2">מע&quot;מ:</Typography>
                       <Typography variant="body2">{formatCurrency(orderSummary.tax)}</Typography>
                     </Box>
                     <Divider />
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="h6" sx={{ fontWeight: 700 }}>סה"כ:</Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 700 }}>סה&quot;כ:</Typography>
                       <Typography variant="h6" sx={{ fontWeight: 700, color: 'success.main' }}>
                         {formatCurrency(orderSummary.total)}
                       </Typography>
                     </Box>
                   </Stack>
-                </Grid>
-              </Grid>
+                </Box>
+              </Box>
             </Box>
           </CardContent>
         </Card>

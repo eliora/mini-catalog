@@ -36,7 +36,7 @@ export const DEFAULT_SETTINGS: CompanySettings = {
     postal_code: '',
     country: 'Israel'
   },
-  logo_url: null,
+  logo_url: undefined,
   primary_color: '#1976d2',
   secondary_color: '#dc004e',
   tax_rate: 18,

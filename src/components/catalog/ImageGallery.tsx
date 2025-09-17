@@ -183,4 +183,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = React.memo(({
   );
 });
 
+ImageGallery.displayName = 'ImageGallery';
+
 export default ImageGallery;

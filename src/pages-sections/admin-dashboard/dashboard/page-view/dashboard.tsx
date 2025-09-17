@@ -1,4 +1,4 @@
-import { Grid, Box } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import { 
   ShoppingCart, 
   AttachMoney, 
@@ -64,14 +64,14 @@ const cardData = [
 export default function DashboardPageView() {
   return (
     <Box sx={{ p: 3, bgcolor: "#f8fafc", minHeight: "100vh" }}>
-      <Grid container spacing={3}>
+      <Grid container spacing={3} {...({} as any)}>
         {/* WELCOME CARD SECTION */}
-        <Grid item lg={8} md={7} xs={12}>
+        <Grid item xs={12} md={7} lg={8} {...({} as any)}>
           <WelcomeCard />
         </Grid>
 
         {/* QUICK STATS */}
-        <Grid item lg={4} md={5} xs={12}>
+        <Grid item xs={12} md={5} lg={4} {...({} as any)}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2, height: "100%" }}>
             <Card1
               title="התראות חדשות"
@@ -95,9 +95,9 @@ export default function DashboardPageView() {
         </Grid>
 
         {/* ALL TRACKING CARDS */}
-        <Grid container item xs={12} spacing={3}>
+        <Grid container spacing={3} {...({} as any)}>
           {cardData.map((item) => (
-            <Grid item lg={3} md={6} sm={6} xs={12} key={item.id}>
+            <Grid item lg={3} md={6} sm={6} xs={12} key={item.id} {...({} as any)}>
               <Card1
                 title={item.title}
                 color={item.color}
@@ -112,24 +112,24 @@ export default function DashboardPageView() {
         </Grid>
 
         {/* SALES AREA */}
-        <Grid item xs={12}>
+        <Grid item xs={12} {...({} as any)}>
           <Sales />
         </Grid>
 
         {/* ANALYTICS AREA */}
-        <Grid item xs={12}>
+        <Grid item xs={12} {...({} as any)}>
           <Analytics />
         </Grid>
 
         {/* RECENT PURCHASE AND STOCK ALERTS */}
-        <Grid container item xs={12} spacing={3}>
+        <Grid container spacing={3} {...({} as any)}>
           {/* RECENT PURCHASE AREA */}
-          <Grid item lg={8} md={7} xs={12}>
+          <Grid item xs={12} md={7} lg={8} {...({} as any)}>
             <RecentPurchase />
           </Grid>
 
           {/* STOCK OUT PRODUCTS */}
-          <Grid item lg={4} md={5} xs={12}>
+          <Grid item xs={12} md={5} lg={4} {...({} as any)}>
             <StockOutProducts />
           </Grid>
         </Grid>

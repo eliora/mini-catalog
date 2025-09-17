@@ -176,7 +176,7 @@ const InlineAddItemRow: React.FC<InlineAddItemRowProps> = ({ onAddItem, isVisibl
         <Box sx={{ minWidth: 100 }}>
           <QuantityInput
             value={itemData.quantity}
-            onChange={(newQuantity) => setItemData(prev => ({ ...prev, quantity: newQuantity }))}
+            onChange={(newQuantity) => setItemData(prev => ({ ...prev, quantity: parseInt(newQuantity, 10) || 1 }))}
             size="small"
             min={1}
             max={99}

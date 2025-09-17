@@ -95,7 +95,7 @@ const OrderForm: React.FC = () => {
     if (isAdmin() && (editMode || addItemDialog)) {
       loadProducts();
     }
-  }, [editMode, addItemDialog]);
+  }, [editMode, addItemDialog, isAdmin]);
 
   const loadProducts = async () => {
     try {

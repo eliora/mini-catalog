@@ -5,10 +5,9 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 
 // Import utilities
-import { verifyAdminAccess } from '@/lib/api/admin/auth';
+import { createAuthedAdminClient, AuthError } from '@/lib/api/admin/auth';
 import {
   successResponse,
   errorResponse,
@@ -35,15 +34,7 @@ function canReviveOrder(status: string): boolean {
 // POST - Revive order
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
-    // Verify admin access
-    const authResult = await verifyAdminAccess(supabase);
-    if (!authResult.success) {
-      return authResult.error === 'Authentication required' 
-        ? unauthorizedResponse(authResult.error)
-        : forbiddenResponse(authResult.error);
-    }
+    const supabaseAdmin = await createAuthedAdminClient(request);
 
     // Extract order ID from URL
     const orderId = extractOrderId(request.url);
@@ -74,7 +65,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify client exists
-    const { data: client, error: clientError } = await supabase
+    const { data: client, error: clientError } = await supabaseAdmin
       .from('users')
       .select('id')
       .eq('id', client_id)
@@ -85,7 +76,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if order exists and get current status
-    const { data: existingOrder, error: orderCheckError } = await supabase
+    const { data: existingOrder, error: orderCheckError } = await supabaseAdmin
       .from('orders')
       .select('id, status')
       .eq('id', orderId)
@@ -113,7 +104,7 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString()
     };
 
-    const { data: revivedOrder, error: reviveError } = await supabase
+    const { data: revivedOrder, error: reviveError } = await supabaseAdmin
       .from('orders')
       .update(updateData)
       .eq('id', orderId)
@@ -146,8 +137,12 @@ export async function POST(request: NextRequest) {
       previousStatus: existingOrder.status
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
+    if (error instanceof AuthError) {
+      return forbiddenResponse('Admin access required');
+    }
     console.error('Revive order API error:', error);
-    return internalErrorResponse();
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    return internalErrorResponse('Failed to revive order', errorMessage);
   }
 }

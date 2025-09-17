@@ -105,13 +105,6 @@ const ClientManagementView: React.FC = () => {
           clients={clients}
           onEdit={handleEditClient}
           onDelete={handleDeleteClient}
-          onBulkAction={() => {}}
-          canEdit={canWrite}
-          canDelete={canDelete}
-          pagination={pagination}
-          onPageChange={(page) => fetchClients(page, pagination.limit)}
-          availableFilters={availableFilters}
-          onFilter={(filters) => fetchClients(1, pagination.limit, filters)}
           // getStatusChip and getRoleChip can be moved inside ClientDataTable or passed as props
         />
       </Card>

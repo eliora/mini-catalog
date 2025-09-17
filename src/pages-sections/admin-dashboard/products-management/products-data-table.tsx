@@ -12,18 +12,27 @@ import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 interface Product {
   id: string;
   ref: string;
-  name: string;
-  name_en?: string;
+  hebrew_name?: string;
+  english_name?: string;
+  french_name?: string;
+  product_line?: string;
+  product_type?: string;
+  type?: string;
+  size?: string;
+  qty: number;
+  unit_price?: number;
   description?: string;
-  category: string;
-  price: number;
-  cost_price?: number;
-  stock: number;
-  low_stock_threshold?: number;
-  status: 'active' | 'draft' | 'out_of_stock' | 'discontinued';
-  images?: string[];
+  description_he?: string;
+  main_pic?: string;
+  pics?: any;
   created_at: string;
   updated_at: string;
+  // Computed fields from helper functions
+  display_name?: string;
+  formatted_price?: string;
+  stock_status?: string;
+  stock_status_color?: string;
+  parsed_images?: any;
 }
 
 interface ProductDataTableProps {
@@ -37,70 +46,89 @@ const ProductDataTable: React.FC<ProductDataTableProps> = ({ products, onEdit, o
   const columns: GridColDef[] = [
     // Product Name - Single Line with Avatar
     {
-      field: 'name',
+      field: 'display_name',
       headerName: 'שם מוצר',
       minWidth: 200,
       flex: 2,
       renderCell: (params) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Avatar src={params.row.images?.[0]} variant="rounded" sx={{ width: 32, height: 32 }}>
-            {params.row.name?.charAt(0)}
+          <Avatar src={params.row.main_pic || params.row.parsed_images?.main} variant="rounded" sx={{ width: 32, height: 32 }}>
+            {(params.row.hebrew_name || params.row.english_name || params.row.ref)?.charAt(0)}
           </Avatar>
-          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-            {params.value}
-          </Typography>
+          <Box>
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              {params.row.hebrew_name || params.row.english_name || params.row.ref}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {params.row.ref}
+            </Typography>
+          </Box>
         </Box>
       ),
     },
-    // Product Ref - Single Line
+    // Product Line - Single Line Chip
     {
-      field: 'ref',
-      headerName: 'מק"ט',
-      minWidth: 100,
-      flex: 0.8,
-    },
-    // Category - Single Line Chip
-    {
-      field: 'category',
-      headerName: 'קטגוריה',
+      field: 'product_line',
+      headerName: 'קו מוצרים',
       minWidth: 120,
       flex: 1,
       renderCell: (params) => (
-        <Chip
-          label={params.value}
-          size="small"
-          variant="outlined"
-          color="primary"
-        />
+        params.value ? (
+          <Chip
+            label={params.value}
+            size="small"
+            variant="outlined"
+            color="primary"
+          />
+        ) : (
+          <Typography variant="body2" color="text.secondary">-</Typography>
+        )
+      ),
+    },
+    // Product Type - Single Line
+    {
+      field: 'product_type',
+      headerName: 'סוג',
+      minWidth: 100,
+      flex: 0.8,
+      renderCell: (params) => (
+        <Typography variant="body2">
+          {params.value || '-'}
+        </Typography>
       ),
     },
     // Price - Single Line Only
     {
-      field: 'price',
+      field: 'unit_price',
       headerName: 'מחיר',
       minWidth: 80,
       flex: 0.8,
       renderCell: (params) => (
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-          ₪{params.value}
+          {params.value ? `₪${params.value}` : '-'}
         </Typography>
       ),
     },
-    // Stock - Single Line with Color
+    // Stock - Single Line with Color Based on Status
     {
-      field: 'stock',
+      field: 'qty',
       headerName: 'מלאי',
       minWidth: 80,
       flex: 0.7,
       renderCell: (params) => {
-        const isLowStock = params.value <= (params.row.low_stock_threshold || 0);
-        const isOutOfStock = params.value === 0;
+        const stockStatus = params.row.stock_status;
+        let color = 'text.primary';
+        
+        if (stockStatus === 'out_of_stock') color = 'error.main';
+        else if (stockStatus === 'low_stock') color = 'warning.main';
+        else if (stockStatus === 'in_stock') color = 'success.main';
+
         return (
           <Typography 
             variant="body2" 
             sx={{ 
               fontWeight: 600,
-              color: isOutOfStock ? 'error.main' : isLowStock ? 'warning.main' : 'text.primary'
+              color: color
             }}
           >
             {params.value}
@@ -108,22 +136,17 @@ const ProductDataTable: React.FC<ProductDataTableProps> = ({ products, onEdit, o
         );
       },
     },
-    // Status - Single Line Chip
+    // Size - Single Line
     {
-      field: 'status',
-      headerName: 'סטטוס',
-      minWidth: 100,
-      flex: 0.9,
-      renderCell: (params) => {
-        const statusConfig: { [key: string]: { label: string; color: any } } = {
-          active: { label: 'פעיל', color: 'success' },
-          draft: { label: 'טיוטה', color: 'warning' },
-          out_of_stock: { label: 'אזל', color: 'error' },
-          discontinued: { label: 'הופסק', color: 'default' },
-        };
-        const config = statusConfig[params.value] || { label: params.value, color: 'default' };
-        return <Chip label={config.label} color={config.color} size="small" />;
-      },
+      field: 'size',
+      headerName: 'גודל',
+      minWidth: 70,
+      flex: 0.6,
+      renderCell: (params) => (
+        <Typography variant="body2">
+          {params.value || '-'}
+        </Typography>
+      ),
     },
     // Created Date - Single Line Short Format
     {
@@ -149,12 +172,14 @@ const ProductDataTable: React.FC<ProductDataTableProps> = ({ products, onEdit, o
       width: 80,
       getActions: (params) => [
         <GridActionsCellItem
+          key="edit"
           icon={<EditIcon />}
           label="עריכה"
           onClick={() => onEdit(params.row as Product)}
           showInMenu
         />,
         <GridActionsCellItem
+          key="delete"
           icon={<DeleteIcon />}
           label="מחיקה"
           onClick={() => onDelete(params.id as string)}
@@ -179,7 +204,6 @@ const ProductDataTable: React.FC<ProductDataTableProps> = ({ products, onEdit, o
         disableRowSelectionOnClick
         autoHeight={false}
         rowHeight={52}
-        headerHeight={48}
         sx={{
           '& .MuiDataGrid-cell': {
             borderBottom: '1px solid #f0f0f0',

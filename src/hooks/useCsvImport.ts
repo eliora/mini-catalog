@@ -144,7 +144,7 @@ const useCsvImport = (onImportComplete?: () => void): UseCsvImportResult => {
 
       const products = uniqueCsvData
         .map(transformProduct)
-        .filter(p => p.ref && p.ref.trim());
+        .filter(p => (p as any).ref && (p as any).ref.trim());
 
       const { validProducts, errors } = validateProductData(products);
       
@@ -181,7 +181,7 @@ const useCsvImport = (onImportComplete?: () => void): UseCsvImportResult => {
 
         const { error } = await supabaseBrowserClient
           .from('products')
-          .insert(batch);
+          .insert(batch as any);
 
         if (error) {
           console.error(`Error in batch ${batchCount}:`, error);

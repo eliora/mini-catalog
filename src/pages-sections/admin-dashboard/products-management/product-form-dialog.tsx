@@ -161,24 +161,24 @@ export default function ProductFormDialog({
       </DialogTitle>
 
       <DialogContent>
-        <Grid container spacing={3} sx={{ mt: 1 }}>
+        <Grid container {...({} as any)} spacing={3} sx={{ mt: 1 }}>
           {/* Basic Information */}
-          <Grid item xs={12}>
+          <Grid item {...({} as any)} xs={12}>
             <H6 sx={{ mb: 2, fontWeight: 700 }}>מידע בסיסי</H6>
             <Divider sx={{ mb: 2 }} />
           </Grid>
 
-          <Grid item md={6} xs={12}>
+          <Grid item {...({} as any)} md={6} xs={12}>
             <TextField
               fullWidth
-              label="מק\"ט"
+              label={'מק"ט'}
               value={formData.ref}
               onChange={(e) => setFormData(prev => ({ ...prev, ref: e.target.value }))}
               sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             />
           </Grid>
 
-          <Grid item md={6} xs={12}>
+          <Grid item {...({} as any)} md={6} xs={12}>
             <FormControl fullWidth>
               <InputLabel>קטגוריה</InputLabel>
               <Select
@@ -194,7 +194,7 @@ export default function ProductFormDialog({
             </FormControl>
           </Grid>
 
-          <Grid item md={6} xs={12}>
+          <Grid item {...({} as any)} md={6} xs={12}>
             <TextField
               fullWidth
               label="שם המוצר (עברית)"
@@ -204,7 +204,7 @@ export default function ProductFormDialog({
             />
           </Grid>
 
-          <Grid item md={6} xs={12}>
+          <Grid item {...({} as any)} md={6} xs={12}>
             <TextField
               fullWidth
               label="שם המוצר (אנגלית)"
@@ -214,7 +214,7 @@ export default function ProductFormDialog({
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid item {...({} as any)} xs={12}>
             <TextField
               fullWidth
               multiline
@@ -227,12 +227,12 @@ export default function ProductFormDialog({
           </Grid>
 
           {/* Pricing & Inventory */}
-          <Grid item xs={12}>
+          <Grid item {...({} as any)} xs={12}>
             <H6 sx={{ mb: 2, fontWeight: 700 }}>מחירים ומלאי</H6>
             <Divider sx={{ mb: 2 }} />
           </Grid>
 
-          <Grid item md={6} xs={12}>
+          <Grid item {...({} as any)} md={6} xs={12}>
             <TextField
               fullWidth
               type="number"
@@ -243,7 +243,7 @@ export default function ProductFormDialog({
             />
           </Grid>
 
-          <Grid item md={6} xs={12}>
+          <Grid item {...({} as any)} md={6} xs={12}>
             <TextField
               fullWidth
               type="number"
@@ -254,7 +254,7 @@ export default function ProductFormDialog({
             />
           </Grid>
 
-          <Grid item md={6} xs={12}>
+          <Grid item {...({} as any)} md={6} xs={12}>
             <TextField
               fullWidth
               type="number"
@@ -265,7 +265,7 @@ export default function ProductFormDialog({
             />
           </Grid>
 
-          <Grid item md={6} xs={12}>
+          <Grid item {...({} as any)} md={6} xs={12}>
             <TextField
               fullWidth
               type="number"
@@ -277,12 +277,12 @@ export default function ProductFormDialog({
           </Grid>
 
           {/* Images */}
-          <Grid item xs={12}>
+          <Grid item {...({} as any)} xs={12}>
             <H6 sx={{ mb: 2, fontWeight: 700 }}>תמונות מוצר</H6>
             <Divider sx={{ mb: 2 }} />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid item {...({} as any)} xs={12}>
             <Box
               sx={{
                 border: "2px dashed",
@@ -347,12 +347,12 @@ export default function ProductFormDialog({
           </Grid>
 
           {/* Status */}
-          <Grid item xs={12}>
+          <Grid item {...({} as any)} xs={12}>
             <H6 sx={{ mb: 2, fontWeight: 700 }}>סטטוס</H6>
             <Divider sx={{ mb: 2 }} />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid item {...({} as any)} xs={12}>
             <FormControl fullWidth>
               <InputLabel>סטטוס מוצר</InputLabel>
               <Select

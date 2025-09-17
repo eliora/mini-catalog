@@ -53,8 +53,8 @@ const PriceDisplay: React.FC<PriceDisplayProps> = ({
       priceValue = null;
     } else {
       priceValue = typeof price === 'object' && price !== null 
-        ? (price.discountPrice || price.unitPrice) 
-        : Number(price);
+        ? (price.discountPrice || price.unitPrice || null)
+        : Number(price) || null;
     }
   }
   

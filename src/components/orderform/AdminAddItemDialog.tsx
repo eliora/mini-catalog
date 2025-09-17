@@ -77,8 +77,8 @@ const AdminAddItemDialog: React.FC<AdminAddItemDialogProps> = ({
 
     const customItem: LegacyCartItem = {
       ref: product.ref,
-      productName: product.name_he || product.productName || '',
-      productName2: product.name_en || product.productName2 || '',
+      productName: product.hebrew_name || product.productName || '',
+      productName2: product.english_name || product.productName2 || '',
       size: product.size || '',
       unitPrice: Number(customPrice) || Number(product.unit_price) || 0,
       quantity: Number(customQuantity) || 1
@@ -116,7 +116,7 @@ const AdminAddItemDialog: React.FC<AdminAddItemDialogProps> = ({
             >
               {Array.isArray(products) && products.map((product) => (
                 <MenuItem key={product.ref} value={product.ref}>
-                  #{product.ref} - {product.name_he || product.productName}
+                  #{product.ref} - {product.hebrew_name || product.productName}
                   {product.size && ` (${product.size})`}
                 </MenuItem>
               ))}

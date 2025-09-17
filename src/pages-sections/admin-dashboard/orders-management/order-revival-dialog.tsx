@@ -177,9 +177,9 @@ export default function OrderRevivalDialog({
           החיית הזמנה מאפשרת לערוך הזמנה שהושלמה או בוטלה ולהחזירה למצב פעיל
         </Alert>
 
-        <Grid container spacing={3}>
+        <Grid container {...({} as any)} spacing={3}>
           {/* Customer Information */}
-          <Grid item xs={12}>
+          <Grid item {...({} as any)} xs={12}>
             <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "primary.200" }}>
               <CardContent>
                 <FlexBox alignItems="center" gap={2} mb={2}>
@@ -187,8 +187,8 @@ export default function OrderRevivalDialog({
                   <H6 sx={{ fontWeight: 700 }}>פרטי הלקוח</H6>
                 </FlexBox>
                 
-                <Grid container spacing={2}>
-                  <Grid item md={4} xs={12}>
+                <Grid container {...({} as any)} spacing={2}>
+                  <Grid item {...({} as any)} md={4} xs={12}>
                     <TextField
                       fullWidth
                       label="שם הלקוח"
@@ -207,7 +207,7 @@ export default function OrderRevivalDialog({
                     />
                   </Grid>
 
-                  <Grid item md={4} xs={12}>
+                  <Grid item {...({} as any)} md={4} xs={12}>
                     <TextField
                       fullWidth
                       label="אימייל"
@@ -227,7 +227,7 @@ export default function OrderRevivalDialog({
                     />
                   </Grid>
 
-                  <Grid item md={4} xs={12}>
+                  <Grid item {...({} as any)} md={4} xs={12}>
                     <TextField
                       fullWidth
                       label="טלפון"
@@ -252,7 +252,7 @@ export default function OrderRevivalDialog({
           </Grid>
 
           {/* Order Items */}
-          <Grid item xs={12}>
+          <Grid item {...({} as any)} xs={12}>
             <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "success.200" }}>
               <CardContent>
                 <FlexBetween mb={2}>
@@ -261,7 +261,7 @@ export default function OrderRevivalDialog({
                     <H6 sx={{ fontWeight: 700 }}>פריטי ההזמנה</H6>
                   </FlexBox>
                   <Typography variant="h6" color="success.main" fontWeight={700}>
-                    סה"כ: {currency(totalAmount)}
+                    סה&quot;כ: {currency(totalAmount)}
                   </Typography>
                 </FlexBetween>
 
@@ -273,7 +273,7 @@ export default function OrderRevivalDialog({
                         <TableCell>מוצר</TableCell>
                         <TableCell>כמות</TableCell>
                         <TableCell>מחיר יחידה</TableCell>
-                        <TableCell>סה"כ</TableCell>
+                        <TableCell>סה&quot;כ</TableCell>
                         <TableCell align="center">פעולות</TableCell>
                       </TableRow>
                     </TableHead>
@@ -376,7 +376,7 @@ export default function OrderRevivalDialog({
           </Grid>
 
           {/* Order Status */}
-          <Grid item xs={12}>
+          <Grid item {...({} as any)} xs={12}>
             <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "warning.200" }}>
               <CardContent>
                 <FlexBox alignItems="center" gap={2} mb={2}>
@@ -384,8 +384,8 @@ export default function OrderRevivalDialog({
                   <H6 sx={{ fontWeight: 700 }}>סטטוס ההזמנה</H6>
                 </FlexBox>
                 
-                <Grid container spacing={2}>
-                  <Grid item md={6} xs={12}>
+                <Grid container {...({} as any)} spacing={2}>
+                  <Grid item {...({} as any)} md={6} xs={12}>
                     <FormControl fullWidth>
                       <InputLabel>סטטוס הזמנה</InputLabel>
                       <Select
@@ -401,14 +401,14 @@ export default function OrderRevivalDialog({
                     </FormControl>
                   </Grid>
 
-                  <Grid item md={6} xs={12}>
+                  <Grid item {...({} as any)} md={6} xs={12}>
                     <TextField
                       fullWidth
                       label="הערות"
                       multiline
                       rows={2}
-                      value={formData.notes || ''}
-                      onChange={(e) => setFormData(prev => prev ? { ...prev, notes: e.target.value } : null)}
+                      value={(formData as any).notes || ''}
+                      onChange={(e) => setFormData(prev => prev ? { ...prev, notes: e.target.value } as any : null)}
                       sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                       placeholder="הערות נוספות להזמנה..."
                     />
@@ -416,7 +416,7 @@ export default function OrderRevivalDialog({
                 </Grid>
 
                 <Alert severity="warning" sx={{ mt: 2 }}>
-                  החיית הזמנה תשנה את הסטטוס ל"מעובד" ותאפשר המשך עיבוד ההזמנה
+                  החיית הזמנה תשנה את הסטטוס ל&quot;מעובד&quot; ותאפשר המשך עיבוד ההזמנה
                 </Alert>
               </CardContent>
             </Card>

@@ -103,9 +103,9 @@ export default function CompanySettings() {
       >
         {({ values, errors, touched, handleChange, handleBlur, handleSubmit, setFieldValue, isSubmitting }) => (
           <form onSubmit={handleSubmit}>
-            <Grid container spacing={3}>
+            <Grid container {...({} as any)} spacing={3}>
               {/* Company Information */}
-              <Grid item xs={12}>
+              <Grid item {...({} as any)} xs={12}>
                 <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "primary.200" }}>
                   <CardContent>
                     <FlexBox alignItems="center" gap={2} mb={2}>
@@ -113,8 +113,8 @@ export default function CompanySettings() {
                       <H6 sx={{ fontWeight: 700 }}>מידע עסקי</H6>
                     </FlexBox>
                     
-                    <Grid container spacing={2}>
-                      <Grid item md={6} xs={12}>
+                    <Grid container {...({} as any)} spacing={2}>
+                      <Grid item {...({} as any)} md={6} xs={12}>
                         <TextField
                           fullWidth
                           name="companyName"
@@ -128,7 +128,7 @@ export default function CompanySettings() {
                         />
                       </Grid>
 
-                      <Grid item md={6} xs={12}>
+                      <Grid item {...({} as any)} md={6} xs={12}>
                         <FormControl fullWidth>
                           <InputLabel>סוג עסק</InputLabel>
                           <Select
@@ -146,7 +146,7 @@ export default function CompanySettings() {
                         </FormControl>
                       </Grid>
 
-                      <Grid item md={6} xs={12}>
+                      <Grid item {...({} as any)} md={6} xs={12}>
                         <TextField
                           fullWidth
                           name="businessNumber"
@@ -160,7 +160,7 @@ export default function CompanySettings() {
                         />
                       </Grid>
 
-                      <Grid item md={6} xs={12}>
+                      <Grid item {...({} as any)} md={6} xs={12}>
                         <TextField
                           fullWidth
                           name="vatNumber"
@@ -174,7 +174,7 @@ export default function CompanySettings() {
                         />
                       </Grid>
 
-                      <Grid item xs={12}>
+                      <Grid item {...({} as any)} xs={12}>
                         <FormControlLabel
                           control={
                             <Switch
@@ -192,7 +192,7 @@ export default function CompanySettings() {
               </Grid>
 
               {/* Address Information */}
-              <Grid item xs={12}>
+              <Grid item {...({} as any)} xs={12}>
                 <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "info.200" }}>
                   <CardContent>
                     <FlexBox alignItems="center" gap={2} mb={2}>
@@ -200,8 +200,8 @@ export default function CompanySettings() {
                       <H6 sx={{ fontWeight: 700 }}>כתובת</H6>
                     </FlexBox>
                     
-                    <Grid container spacing={2}>
-                      <Grid item xs={12}>
+                    <Grid container {...({} as any)} spacing={2}>
+                      <Grid item {...({} as any)} xs={12}>
                         <TextField
                           fullWidth
                           name="address"
@@ -215,7 +215,7 @@ export default function CompanySettings() {
                         />
                       </Grid>
 
-                      <Grid item md={4} xs={12}>
+                      <Grid item {...({} as any)} md={4} xs={12}>
                         <TextField
                           fullWidth
                           name="city"
@@ -229,7 +229,7 @@ export default function CompanySettings() {
                         />
                       </Grid>
 
-                      <Grid item md={4} xs={12}>
+                      <Grid item {...({} as any)} md={4} xs={12}>
                         <TextField
                           fullWidth
                           name="zipCode"
@@ -243,7 +243,7 @@ export default function CompanySettings() {
                         />
                       </Grid>
 
-                      <Grid item md={4} xs={12}>
+                      <Grid item {...({} as any)} md={4} xs={12}>
                         <TextField
                           fullWidth
                           name="country"
@@ -260,7 +260,7 @@ export default function CompanySettings() {
               </Grid>
 
               {/* Contact Information */}
-              <Grid item xs={12}>
+              <Grid item {...({} as any)} xs={12}>
                 <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "success.200" }}>
                   <CardContent>
                     <FlexBox alignItems="center" gap={2} mb={2}>
@@ -268,8 +268,8 @@ export default function CompanySettings() {
                       <H6 sx={{ fontWeight: 700 }}>פרטי יצירת קשר</H6>
                     </FlexBox>
                     
-                    <Grid container spacing={2}>
-                      <Grid item md={6} xs={12}>
+                    <Grid container {...({} as any)} spacing={2}>
+                      <Grid item {...({} as any)} md={6} xs={12}>
                         <TextField
                           fullWidth
                           name="phone"
@@ -283,7 +283,7 @@ export default function CompanySettings() {
                         />
                       </Grid>
 
-                      <Grid item md={6} xs={12}>
+                      <Grid item {...({} as any)} md={6} xs={12}>
                         <TextField
                           fullWidth
                           name="email"
@@ -298,7 +298,7 @@ export default function CompanySettings() {
                         />
                       </Grid>
 
-                      <Grid item xs={12}>
+                      <Grid item {...({} as any)} xs={12}>
                         <TextField
                           fullWidth
                           name="website"
@@ -310,7 +310,7 @@ export default function CompanySettings() {
                         />
                       </Grid>
 
-                      <Grid item xs={12}>
+                      <Grid item {...({} as any)} xs={12}>
                         <TextField
                           fullWidth
                           multiline
@@ -329,7 +329,7 @@ export default function CompanySettings() {
               </Grid>
 
               {/* Action Buttons */}
-              <Grid item xs={12}>
+              <Grid item {...({} as any)} xs={12}>
                 <Divider sx={{ my: 2 }} />
                 <FlexBetween>
                   <Alert severity="warning" sx={{ flex: 1, mr: 2 }}>
