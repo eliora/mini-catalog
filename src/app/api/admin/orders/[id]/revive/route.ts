@@ -1,87 +1,132 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+/**
+ * Order Revival API Route - REFACTORED VERSION
+ * 
+ * Handles order revival using modular utilities.
+ */
 
+import { NextRequest } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+
+// Import utilities
+import { verifyAdminAccess } from '@/lib/api/admin/auth';
+import {
+  successResponse,
+  errorResponse,
+  validationErrorResponse,
+  unauthorizedResponse,
+  forbiddenResponse,
+  notFoundResponse,
+  internalErrorResponse
+} from '@/lib/api/admin/responses';
+import { transformOrder, validateOrder } from '@/lib/api/admin/orders-service';
+
+// Helper function to extract order ID from URL
+function extractOrderId(url: string): string {
+  const pathSegments = url.split('/');
+  const reviveIndex = pathSegments.findIndex(segment => segment === 'revive');
+  return pathSegments[reviveIndex - 1] || '';
+}
+
+// Helper function to validate order can be revived
+function canReviveOrder(status: string): boolean {
+  return ['completed', 'cancelled', 'delivered'].includes(status);
+}
+
+// POST - Revive order
 export async function POST(request: NextRequest) {
-  // Extract id from URL path
-  const url = new URL(request.url);
-  const pathSegments = url.pathname.split('/');
-  const id = pathSegments[pathSegments.length - 2]; // Get id from /admin/orders/[id]/revive
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = await createClient();
     
-    // Check authentication
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Verify admin access
+    const authResult = await verifyAdminAccess(supabase);
+    if (!authResult.success) {
+      return authResult.error === 'Authentication required' 
+        ? unauthorizedResponse(authResult.error)
+        : forbiddenResponse(authResult.error);
     }
 
-    const body = await request.json();
-    const { 
-      client_id, 
-      items, 
-      total_amount, 
-      notes, 
-      payment_status = 'pending' 
-    } = body;
+    // Extract order ID from URL
+    const orderId = extractOrderId(request.url);
+    if (!orderId) {
+      return errorResponse('Invalid order ID in URL', 400);
+    }
+
+    // Parse and validate request body
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      return errorResponse('Invalid JSON in request body', 400);
+    }
+
+    const { client_id, items, total_amount, notes } = body;
 
     // Validate required fields
-    if (!client_id || !items || !total_amount) {
-      return NextResponse.json({ 
-        error: 'Missing required fields for order revival: client_id, items, total_amount' 
-      }, { status: 400 });
+    if (!client_id || !items || !Array.isArray(items) || typeof total_amount !== 'number') {
+      return errorResponse(
+        'Missing or invalid required fields: client_id (string), items (array), total_amount (number)', 
+        400
+      );
+    }
+
+    if (items.length === 0) {
+      return errorResponse('Order must contain at least one item', 400);
     }
 
     // Verify client exists
     const { data: client, error: clientError } = await supabase
-      .from('profiles')
+      .from('users')
       .select('id')
       .eq('id', client_id)
       .single();
 
     if (clientError || !client) {
-      return NextResponse.json({ error: 'Invalid client_id' }, { status: 400 });
+      return errorResponse('Client not found or invalid client_id', 400);
     }
 
-    // Check if order exists and can be revived
+    // Check if order exists and get current status
     const { data: existingOrder, error: orderCheckError } = await supabase
       .from('orders')
       .select('id, status')
-      .eq('id', id)
+      .eq('id', orderId)
       .single();
 
     if (orderCheckError || !existingOrder) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      return notFoundResponse('Order not found');
     }
 
-    // Only allow revival of completed or cancelled orders
-    if (!['completed', 'cancelled'].includes(existingOrder.status)) {
-      return NextResponse.json({ 
-        error: 'Only completed or cancelled orders can be revived' 
-      }, { status: 400 });
+    // Validate order can be revived
+    if (!canReviveOrder(existingOrder.status)) {
+      return errorResponse(
+        `Cannot revive order with status '${existingOrder.status}'. Only completed, cancelled, or delivered orders can be revived.`,
+        400
+      );
     }
 
-    // Update order with new data and set status to processing
+    // Update order with new data
+    const updateData = {
+      client_id,
+      items: JSON.stringify(items),
+      total_amount,
+      notes: notes || null,
+      status: 'processing', // Revival automatically sets to processing
+      updated_at: new Date().toISOString()
+    };
+
     const { data: revivedOrder, error: reviveError } = await supabase
       .from('orders')
-      .update({
-        client_id,
-        items: JSON.stringify(items),
-        total_amount,
-        notes,
-        status: 'processing', // Revival automatically sets to processing
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
+      .update(updateData)
+      .eq('id', orderId)
       .select(`
         *,
-        client:profiles!orders_client_id_fkey (
+        client:users!orders_client_id_fkey (
           id,
-          name,
+          full_name,
           email,
           phone_number,
           business_name,
           address,
-          user_roles,
+          user_role,
           status
         )
       `)
@@ -89,28 +134,20 @@ export async function POST(request: NextRequest) {
 
     if (reviveError) {
       console.error('Error reviving order:', reviveError);
-      return NextResponse.json({ error: 'Failed to revive order' }, { status: 500 });
+      return internalErrorResponse('Failed to revive order', reviveError.message);
     }
 
-    // Process revived order data
-    const processedOrder = {
-      ...revivedOrder,
-      parsedItems: Array.isArray(revivedOrder.items) ? revivedOrder.items : JSON.parse(revivedOrder.items || '[]'),
-      formattedTotal: new Intl.NumberFormat('he-IL', {
-        style: 'currency',
-        currency: 'ILS'
-      }).format(revivedOrder.total_amount),
-      statusLabel: 'מעובד' // Processing in Hebrew
-    };
+    // Format and return successful response
+    const processedOrder = transformOrder(revivedOrder);
 
-    return NextResponse.json({ 
+    return successResponse({
       order: processedOrder,
-      message: 'Order revived successfully and set to processing status'
+      message: 'Order revived successfully and set to processing status',
+      previousStatus: existingOrder.status
     });
 
   } catch (error) {
     console.error('Revive order API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return internalErrorResponse();
   }
 }
-

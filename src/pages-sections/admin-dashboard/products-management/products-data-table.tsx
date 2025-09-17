@@ -1,37 +1,13 @@
-"use client";
-
-import { useState } from "react";
-import {
-  Card,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TableSortLabel,
-  Checkbox,
-  IconButton,
-  Avatar,
-  Chip,
-  Switch,
-  Menu,
-  MenuItem,
-  Box,
-  Typography,
-  Pagination,
-  Stack
-} from "@mui/material";
-import {
-  Edit,
-  Delete,
-  MoreVert,
-  Visibility,
-  ContentCopy
-} from "@mui/icons-material";
-import { FlexBox } from "@/components/flex-box";
-import { Paragraph } from "@/components/Typography";
-import { currency } from "@/lib/currency";
+/**
+ * @file Product Data Table (DataGrid Version)
+ * @description Renders a professional data grid for displaying and managing products.
+ * Built with @mui/x-data-grid.
+ */
+'use client';
+import React from 'react';
+import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
+import { Box, Chip, Typography, Avatar } from '@mui/material';
+import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 
 interface Product {
   id: string;
@@ -44,387 +20,189 @@ interface Product {
   cost_price?: number;
   stock: number;
   low_stock_threshold?: number;
-  status: string;
+  status: 'active' | 'draft' | 'out_of_stock' | 'discontinued';
   images?: string[];
   created_at: string;
   updated_at: string;
 }
 
-interface ProductsDataTableProps {
+interface ProductDataTableProps {
   products: Product[];
-  selectedProducts: string[];
-  onSelectionChange: (selected: string[]) => void;
-  visibleColumns: Record<string, boolean>;
   onEdit: (product: Product) => void;
   onDelete: (productId: string) => void;
-  onStatusChange: (productId: string, status: string) => void;
+  // Future props for server-side operations can be added here
 }
 
-export default function ProductsDataTable({
-  products,
-  selectedProducts,
-  onSelectionChange,
-  visibleColumns,
-  onEdit,
-  onDelete,
-  onStatusChange
-}: ProductsDataTableProps) {
-  const [page, setPage] = useState(1);
-  const [rowsPerPage] = useState(10);
-  const [orderBy, setOrderBy] = useState("name");
-  const [order, setOrder] = useState<"asc" | "desc">("asc");
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedProductForMenu, setSelectedProductForMenu] = useState<Product | null>(null);
-
-  const handleSort = (property: string) => {
-    const isAsc = orderBy === property && order === "asc";
-    setOrder(isAsc ? "desc" : "asc");
-    setOrderBy(property);
-  };
-
-  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.checked) {
-      onSelectionChange(products.map(p => p.id));
-    } else {
-      onSelectionChange([]);
-    }
-  };
-
-  const handleSelectOne = (productId: string) => {
-    const selectedIndex = selectedProducts.indexOf(productId);
-    let newSelected: string[] = [];
-
-    if (selectedIndex === -1) {
-      newSelected = [...selectedProducts, productId];
-    } else {
-      newSelected = selectedProducts.filter(id => id !== productId);
-    }
-
-    onSelectionChange(newSelected);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active": return "success";
-      case "draft": return "warning";
-      case "out_of_stock": return "error";
-      case "discontinued": return "default";
-      default: return "default";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "active": return "פעיל";
-      case "draft": return "טיוטה";
-      case "out_of_stock": return "אזל מהמלאי";
-      case "discontinued": return "הופסק";
-      default: return status;
-    }
-  };
-
-  // Sort products
-  const sortedProducts = [...products].sort((a, b) => {
-    if (order === "asc") {
-      return a[orderBy as keyof Product] < b[orderBy as keyof Product] ? -1 : 1;
-    }
-    return a[orderBy as keyof Product] > b[orderBy as keyof Product] ? -1 : 1;
-  });
-
-  // Paginate products
-  const paginatedProducts = sortedProducts.slice(
-    (page - 1) * rowsPerPage,
-    page * rowsPerPage
-  );
-
-  const isSelected = (productId: string) => selectedProducts.indexOf(productId) !== -1;
-  const isAllSelected = products.length > 0 && selectedProducts.length === products.length;
-  const isIndeterminate = selectedProducts.length > 0 && selectedProducts.length < products.length;
+const ProductDataTable: React.FC<ProductDataTableProps> = ({ products, onEdit, onDelete }) => {
+  const columns: GridColDef[] = [
+    // Product Name - Single Line with Avatar
+    {
+      field: 'name',
+      headerName: 'שם מוצר',
+      minWidth: 200,
+      flex: 2,
+      renderCell: (params) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Avatar src={params.row.images?.[0]} variant="rounded" sx={{ width: 32, height: 32 }}>
+            {params.row.name?.charAt(0)}
+          </Avatar>
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            {params.value}
+          </Typography>
+        </Box>
+      ),
+    },
+    // Product Ref - Single Line
+    {
+      field: 'ref',
+      headerName: 'מק"ט',
+      minWidth: 100,
+      flex: 0.8,
+    },
+    // Category - Single Line Chip
+    {
+      field: 'category',
+      headerName: 'קטגוריה',
+      minWidth: 120,
+      flex: 1,
+      renderCell: (params) => (
+        <Chip
+          label={params.value}
+          size="small"
+          variant="outlined"
+          color="primary"
+        />
+      ),
+    },
+    // Price - Single Line Only
+    {
+      field: 'price',
+      headerName: 'מחיר',
+      minWidth: 80,
+      flex: 0.8,
+      renderCell: (params) => (
+        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+          ₪{params.value}
+        </Typography>
+      ),
+    },
+    // Stock - Single Line with Color
+    {
+      field: 'stock',
+      headerName: 'מלאי',
+      minWidth: 80,
+      flex: 0.7,
+      renderCell: (params) => {
+        const isLowStock = params.value <= (params.row.low_stock_threshold || 0);
+        const isOutOfStock = params.value === 0;
+        return (
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              fontWeight: 600,
+              color: isOutOfStock ? 'error.main' : isLowStock ? 'warning.main' : 'text.primary'
+            }}
+          >
+            {params.value}
+          </Typography>
+        );
+      },
+    },
+    // Status - Single Line Chip
+    {
+      field: 'status',
+      headerName: 'סטטוס',
+      minWidth: 100,
+      flex: 0.9,
+      renderCell: (params) => {
+        const statusConfig: { [key: string]: { label: string; color: any } } = {
+          active: { label: 'פעיל', color: 'success' },
+          draft: { label: 'טיוטה', color: 'warning' },
+          out_of_stock: { label: 'אזל', color: 'error' },
+          discontinued: { label: 'הופסק', color: 'default' },
+        };
+        const config = statusConfig[params.value] || { label: params.value, color: 'default' };
+        return <Chip label={config.label} color={config.color} size="small" />;
+      },
+    },
+    // Created Date - Single Line Short Format
+    {
+      field: 'created_at',
+      headerName: 'נוצר',
+      minWidth: 90,
+      flex: 0.7,
+      renderCell: (params) => (
+        <Typography variant="body2">
+          {new Date(params.value).toLocaleDateString('he-IL', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: '2-digit' 
+          })}
+        </Typography>
+      ),
+    },
+    // Actions Column
+    {
+      field: 'actions',
+      type: 'actions',
+      headerName: 'פעולות',
+      width: 80,
+      getActions: (params) => [
+        <GridActionsCellItem
+          icon={<EditIcon />}
+          label="עריכה"
+          onClick={() => onEdit(params.row as Product)}
+          showInMenu
+        />,
+        <GridActionsCellItem
+          icon={<DeleteIcon />}
+          label="מחיקה"
+          onClick={() => onDelete(params.id as string)}
+          showInMenu
+        />,
+      ],
+    },
+  ];
 
   return (
-    <Card sx={{ borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell padding="checkbox">
-                <Checkbox
-                  indeterminate={isIndeterminate}
-                  checked={isAllSelected}
-                  onChange={handleSelectAll}
-                />
-              </TableCell>
-              
-              {visibleColumns.ref && (
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === "ref"}
-                    direction={orderBy === "ref" ? order : "asc"}
-                    onClick={() => handleSort("ref")}
-                  >
-                    מק"ט
-                  </TableSortLabel>
-                </TableCell>
-              )}
-
-              {visibleColumns.name && (
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === "name"}
-                    direction={orderBy === "name" ? order : "asc"}
-                    onClick={() => handleSort("name")}
-                  >
-                    שם המוצר
-                  </TableSortLabel>
-                </TableCell>
-              )}
-
-              {visibleColumns.category && (
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === "category"}
-                    direction={orderBy === "category" ? order : "asc"}
-                    onClick={() => handleSort("category")}
-                  >
-                    קטגוריה
-                  </TableSortLabel>
-                </TableCell>
-              )}
-
-              {visibleColumns.price && (
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === "price"}
-                    direction={orderBy === "price" ? order : "asc"}
-                    onClick={() => handleSort("price")}
-                  >
-                    מחיר
-                  </TableSortLabel>
-                </TableCell>
-              )}
-
-              {visibleColumns.stock && (
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === "stock"}
-                    direction={orderBy === "stock" ? order : "asc"}
-                    onClick={() => handleSort("stock")}
-                  >
-                    מלאי
-                  </TableSortLabel>
-                </TableCell>
-              )}
-
-              {visibleColumns.status && (
-                <TableCell>סטטוס</TableCell>
-              )}
-
-              {visibleColumns.actions && (
-                <TableCell align="center">פעולות</TableCell>
-              )}
-            </TableRow>
-          </TableHead>
-
-          <TableBody>
-            {paginatedProducts.map((product) => (
-              <TableRow
-                key={product.id}
-                hover
-                selected={isSelected(product.id)}
-              >
-                <TableCell padding="checkbox">
-                  <Checkbox
-                    checked={isSelected(product.id)}
-                    onChange={() => handleSelectOne(product.id)}
-                  />
-                </TableCell>
-
-                {visibleColumns.ref && (
-                  <TableCell>
-                    <Typography variant="body2" fontWeight={600}>
-                      {product.ref}
-                    </Typography>
-                  </TableCell>
-                )}
-
-                {visibleColumns.name && (
-                  <TableCell>
-                    <FlexBox alignItems="center" gap={2}>
-                      <Avatar
-                        src={product.images?.[0] || "/api/placeholder/40/40"}
-                        sx={{ width: 40, height: 40, borderRadius: 2 }}
-                      />
-                      <Box>
-                        <Typography variant="body2" fontWeight={600}>
-                          {product.name}
-                        </Typography>
-                        {product.name_en && (
-                          <Typography variant="caption" color="text.secondary">
-                            {product.name_en}
-                          </Typography>
-                        )}
-                      </Box>
-                    </FlexBox>
-                  </TableCell>
-                )}
-
-                {visibleColumns.category && (
-                  <TableCell>
-                    <Chip
-                      label={product.category}
-                      size="small"
-                      variant="outlined"
-                      sx={{ borderRadius: 2 }}
-                    />
-                  </TableCell>
-                )}
-
-                {visibleColumns.price && (
-                  <TableCell>
-                    <Box>
-                      <Typography variant="body2" fontWeight={600}>
-                        {currency(product.price)}
-                      </Typography>
-                      {product.cost_price && (
-                        <Typography variant="caption" color="text.secondary">
-                          עלות: {currency(product.cost_price)}
-                        </Typography>
-                      )}
-                    </Box>
-                  </TableCell>
-                )}
-
-                {visibleColumns.stock && (
-                  <TableCell>
-                    <Box>
-                      <Typography 
-                        variant="body2" 
-                        fontWeight={600}
-                        color={product.stock <= (product.low_stock_threshold || 0) ? "error.main" : "text.primary"}
-                      >
-                        {product.stock}
-                      </Typography>
-                      {product.stock <= (product.low_stock_threshold || 0) && (
-                        <Typography variant="caption" color="error.main">
-                          מלאי נמוך
-                        </Typography>
-                      )}
-                    </Box>
-                  </TableCell>
-                )}
-
-                {visibleColumns.status && (
-                  <TableCell>
-                    <Chip
-                      label={getStatusText(product.status)}
-                      color={getStatusColor(product.status) as any}
-                      size="small"
-                      sx={{ borderRadius: 2 }}
-                    />
-                  </TableCell>
-                )}
-
-                {visibleColumns.actions && (
-                  <TableCell align="center">
-                    <FlexBox gap={0.5}>
-                      <IconButton
-                        size="small"
-                        onClick={() => onEdit(product)}
-                        sx={{ color: "primary.main" }}
-                      >
-                        <Edit fontSize="small" />
-                      </IconButton>
-
-                      <IconButton
-                        size="small"
-                        sx={{ color: "info.main" }}
-                      >
-                        <Visibility fontSize="small" />
-                      </IconButton>
-
-                      <IconButton
-                        size="small"
-                        sx={{ color: "secondary.main" }}
-                      >
-                        <ContentCopy fontSize="small" />
-                      </IconButton>
-
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          setAnchorEl(e.currentTarget);
-                          setSelectedProductForMenu(product);
-                        }}
-                      >
-                        <MoreVert fontSize="small" />
-                      </IconButton>
-                    </FlexBox>
-                  </TableCell>
-                )}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* Pagination */}
-      <Box sx={{ p: 3, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Typography variant="body2" color="text.secondary">
-          מציג {((page - 1) * rowsPerPage) + 1}-{Math.min(page * rowsPerPage, products.length)} מתוך {products.length} מוצרים
-        </Typography>
-        
-        <Stack spacing={2}>
-          <Pagination
-            count={Math.ceil(products.length / rowsPerPage)}
-            page={page}
-            onChange={(_, newPage) => setPage(newPage)}
-            color="primary"
-          />
-        </Stack>
-      </Box>
-
-      {/* Context Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={() => {
-          setAnchorEl(null);
-          setSelectedProductForMenu(null);
+    <Box sx={{ height: 600, width: '100%' }}>
+      <DataGrid
+        rows={products}
+        columns={columns}
+        initialState={{
+          pagination: {
+            paginationModel: { page: 0, pageSize: 10 },
+          },
         }}
-      >
-        <MenuItem onClick={() => {
-          if (selectedProductForMenu) {
-            onEdit(selectedProductForMenu);
-          }
-          setAnchorEl(null);
-        }}>
-          <Edit sx={{ mr: 1, fontSize: 20 }} />
-          ערוך
-        </MenuItem>
-        
-        <MenuItem onClick={() => {
-          if (selectedProductForMenu) {
-            onStatusChange(selectedProductForMenu.id, selectedProductForMenu.status === "active" ? "draft" : "active");
-          }
-          setAnchorEl(null);
-        }}>
-          <Switch sx={{ mr: 1 }} />
-          {selectedProductForMenu?.status === "active" ? "השבת" : "הפעל"}
-        </MenuItem>
-        
-        <MenuItem 
-          onClick={() => {
-            if (selectedProductForMenu) {
-              onDelete(selectedProductForMenu.id);
-            }
-            setAnchorEl(null);
-          }}
-          sx={{ color: "error.main" }}
-        >
-          <Delete sx={{ mr: 1, fontSize: 20 }} />
-          מחק
-        </MenuItem>
-      </Menu>
-    </Card>
+        pageSizeOptions={[10, 25, 50]}
+        checkboxSelection
+        disableRowSelectionOnClick
+        autoHeight={false}
+        rowHeight={52}
+        headerHeight={48}
+        sx={{
+          '& .MuiDataGrid-cell': {
+            borderBottom: '1px solid #f0f0f0',
+            padding: '8px 16px',
+            display: 'flex',
+            alignItems: 'center',
+          },
+          '& .MuiDataGrid-columnHeaders': {
+            backgroundColor: '#fafafa',
+            borderBottom: '2px solid #e0e0e0',
+            fontSize: '0.875rem',
+            fontWeight: 600,
+          },
+          '& .MuiDataGrid-row:hover': {
+            backgroundColor: '#f5f5f5',
+          },
+          '& .MuiDataGrid-columnHeaderTitle': {
+            fontWeight: 600,
+          },
+        }}
+      />
+    </Box>
   );
-}
+};
+
+export default ProductDataTable;

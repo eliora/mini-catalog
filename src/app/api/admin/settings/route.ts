@@ -1,68 +1,53 @@
 /**
- * Settings Management API Routes
+ * Settings Management API Routes - REFACTORED VERSION
  * 
- * Handles company settings and configuration.
+ * Handles company settings and configuration using modular utilities.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+
+// Import utilities
+import { verifyAdminAccess } from '@/lib/api/admin/auth';
+import {
+  successResponse,
+  errorResponse,
+  validationErrorResponse,
+  unauthorizedResponse,
+  forbiddenResponse,
+  internalErrorResponse
+} from '@/lib/api/admin/responses';
+import {
+  getSettings,
+  updateSettings,
+  validateSettings
+} from '@/lib/api/admin/settings-service';
 
 // GET - Retrieve company settings
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     
-    // Check authentication and admin permissions
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Verify admin access
+    const authResult = await verifyAdminAccess(supabase);
+    if (!authResult.success) {
+      return authResult.error === 'Authentication required' 
+        ? unauthorizedResponse(authResult.error)
+        : forbiddenResponse(authResult.error);
     }
 
-    // Fetch company settings
-    const { data: settings, error } = await supabase
-      .from('company_settings')
-      .select('*')
-      .single();
-
-    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+    // Get settings
+    try {
+      const settings = await getSettings(supabase);
+      return successResponse({ settings });
+    } catch (error: any) {
       console.error('Error fetching settings:', error);
-      return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
+      return internalErrorResponse('Failed to fetch settings', error.message);
     }
-
-    // Return default settings if none exist
-    const defaultSettings = {
-      company_name: 'Your Company',
-      tagline: '',
-      description: '',
-      email: '',
-      phone: '',
-      address: {
-        street: '',
-        city: '',
-        state: '',
-        postal_code: '',
-        country: 'Israel'
-      },
-      logo_url: null,
-      primary_color: '#1976d2',
-      secondary_color: '#dc004e',
-      tax_rate: 17,
-      currency: 'ILS',
-      timezone: 'Asia/Jerusalem',
-      enable_reviews: true,
-      enable_wishlist: true,
-      enable_notifications: true,
-      maintenance_mode: false,
-      debug_mode: false
-    };
-
-    return NextResponse.json({
-      settings: settings || defaultSettings
-    });
 
   } catch (error) {
-    console.error('Settings API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Settings GET API error:', error);
+    return internalErrorResponse();
   }
 }
 
@@ -71,74 +56,42 @@ export async function PUT(request: NextRequest) {
   try {
     const supabase = await createClient();
     
-    // Check authentication and admin permissions
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Verify admin access
+    const authResult = await verifyAdminAccess(supabase);
+    if (!authResult.success) {
+      return authResult.error === 'Authentication required' 
+        ? unauthorizedResponse(authResult.error)
+        : forbiddenResponse(authResult.error);
     }
 
-    const body = await request.json();
-    const {
-      company_name,
-      tagline,
-      description,
-      email,
-      phone,
-      address,
-      logo_url,
-      primary_color,
-      secondary_color,
-      tax_rate,
-      currency,
-      timezone,
-      enable_reviews,
-      enable_wishlist,
-      enable_notifications,
-      maintenance_mode,
-      debug_mode
-    } = body;
-
-    // Validate required fields
-    if (!company_name) {
-      return NextResponse.json({ error: 'Company name is required' }, { status: 400 });
+    // Parse request body
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      return errorResponse('Invalid JSON in request body', 400);
     }
 
-    // Upsert settings (insert or update)
-    const { data: settings, error } = await supabase
-      .from('company_settings')
-      .upsert({
-        id: 1, // Single settings record
-        company_name,
-        tagline,
-        description,
-        email,
-        phone,
-        address,
-        logo_url,
-        primary_color,
-        secondary_color,
-        tax_rate,
-        currency,
-        timezone,
-        enable_reviews,
-        enable_wishlist,
-        enable_notifications,
-        maintenance_mode,
-        debug_mode,
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
+    // Validate settings
+    const validation = validateSettings(body);
+    if (!validation.isValid) {
+      return validationErrorResponse(validation.errors);
+    }
 
-    if (error) {
+    // Update settings
+    try {
+      const settings = await updateSettings(supabase, body);
+      return successResponse({
+        settings,
+        message: 'Settings updated successfully'
+      });
+    } catch (error: any) {
       console.error('Error updating settings:', error);
-      return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
+      return internalErrorResponse('Failed to update settings', error.message);
     }
-
-    return NextResponse.json({ settings });
 
   } catch (error) {
-    console.error('Settings update API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Settings PUT API error:', error);
+    return internalErrorResponse();
   }
 }

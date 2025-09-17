@@ -42,23 +42,20 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectUrl);
     }
 
-    // For now, allow any authenticated user to access admin for testing
-    // TODO: Implement proper role checking when user roles are set up
-    /*
+    // Check if the user has an admin role from the `users` table
     const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
+      .from('users')
+      .select('user_role')
       .eq('id', user.id)
       .single();
 
-    if (!profile || profile.role !== 'admin') {
-      // Redirect if user doesn't have admin role
+    if (!profile || profile.user_role !== 'admin') {
+      // Redirect non-admin users to the home page or an unauthorized page
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = '/';
       redirectUrl.searchParams.set('message', 'Admin access required');
       return NextResponse.redirect(redirectUrl);
     }
-    */
   }
 
   // Handle auth callback

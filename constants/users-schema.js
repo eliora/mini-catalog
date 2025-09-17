@@ -22,12 +22,6 @@ export const USERS_TABLE = {
       nullable: false,
       unique: true
     },
-    role: {
-      type: 'text',
-      nullable: false,
-      default: 'user',
-      enum: ['user', 'admin']
-    },
     full_name: {
       type: 'text',
       nullable: true
@@ -102,10 +96,6 @@ export const USERS_TABLE = {
 
   // Enums for validation
   enums: {
-    ROLES: {
-      USER: 'user',
-      ADMIN: 'admin'
-    },
     USER_ROLES: {
       STANDARD: 'standard',
       VERIFIED_MEMBERS: 'verified_members',
@@ -133,7 +123,7 @@ export const USERS_TABLE = {
 // Helper functions for working with users
 export const USERS_HELPERS = {
   // Check if user is admin
-  isAdmin: (user) => user?.role === USERS_TABLE.enums.ROLES.ADMIN,
+  isAdmin: (user) => user?.user_role === USERS_TABLE.enums.USER_ROLES.ADMIN,
   
   // Check if user is verified member
   isVerifiedMember: (user) => user?.user_role === USERS_TABLE.enums.USER_ROLES.VERIFIED_MEMBERS,
@@ -150,7 +140,6 @@ export const USERS_HELPERS = {
     const parts = [];
     if (address.street) parts.push(address.street);
     if (address.city) parts.push(address.city);
-    if (address.state) parts.push(address.state);
     if (address.postal_code) parts.push(address.postal_code);
     if (address.country) parts.push(address.country);
     return parts.join(', ');

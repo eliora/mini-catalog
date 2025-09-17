@@ -1,47 +1,22 @@
 /**
- * Client Data Table Component
- * 
- * Data table for displaying and managing clients with sorting, pagination, and actions.
+ * @file Client Data Table (DataGrid Version)
+ * @description Renders a professional data grid for displaying and managing clients,
+ * featuring sorting, pagination, selection, and custom cell rendering.
+ * Built with @mui/x-data-grid.
  */
-
 'use client';
-
-import React, { useState } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Checkbox,
-  IconButton,
-  Menu,
-  MenuItem,
-  Chip,
-  Typography,
-  Box,
-  Avatar,
-  Tooltip,
-  ListItemIcon,
-  ListItemText
-} from '@mui/material';
-import {
-  MoreVert as MoreVertIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Person as PersonIcon,
-  Business as BusinessIcon
-} from '@mui/icons-material';
+import React from 'react';
+import { DataGrid, GridColDef, GridValueGetterParams, GridActionsCellItem } from '@mui/x-data-grid';
+import { Box, Chip, Typography, Tooltip, Avatar } from '@mui/material';
+import { Edit as EditIcon, Delete as DeleteIcon, Person as PersonIcon, Business as BusinessIcon } from '@mui/icons-material';
 import { format } from 'date-fns';
 
+// Complete Client interface matching database schema
 interface Client {
   id: string;
   email: string;
-  role: 'user' | 'admin';
-  full_name: string;        // Changed from 'name' to 'full_name'
-  user_role: 'standard' | 'verified_members' | 'customer' | 'admin';  // Single enum, not array
+  full_name: string;
+  user_role: 'standard' | 'verified_members' | 'customer' | 'admin';
   business_name?: string;
   phone_number?: string;
   address?: any;
@@ -49,7 +24,6 @@ interface Client {
   created_at: string;
   updated_at: string;
   last_login?: string;
-  // Helper fields added by API
   display_name?: string;
   formatted_address?: string;
   is_admin?: boolean;
@@ -61,328 +35,197 @@ interface ClientDataTableProps {
   clients: Client[];
   onEdit: (client: Client) => void;
   onDelete: (clientId: string) => void;
-  onBulkAction: (action: string, clientIds: string[]) => void;
-  canEdit?: boolean;
-  canDelete?: boolean;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-  onPageChange: (page: number) => void;
+  // ... other props like pagination, loading state etc. will be handled by DataGrid
 }
 
-const ClientDataTable: React.FC<ClientDataTableProps> = ({
-  clients,
-  onEdit,
-  onDelete,
-  onBulkAction,
-  canEdit = true,
-  canDelete = true,
-  pagination,
-  onPageChange
-}) => {
-  const [selectedClients, setSelectedClients] = useState<string[]>([]);
-  const [actionMenuAnchor, setActionMenuAnchor] = useState<null | HTMLElement>(null);
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-
-  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.checked) {
-      setSelectedClients(clients.map(client => client.id));
-    } else {
-      setSelectedClients([]);
-    }
-  };
-
-  const handleSelectClient = (clientId: string) => {
-    setSelectedClients(prev => {
-      if (prev.includes(clientId)) {
-        return prev.filter(id => id !== clientId);
-      } else {
-        return [...prev, clientId];
-      }
-    });
-  };
-
-  const handleActionMenuOpen = (event: React.MouseEvent<HTMLElement>, client: Client) => {
-    setActionMenuAnchor(event.currentTarget);
-    setSelectedClient(client);
-  };
-
-  const handleActionMenuClose = () => {
-    setActionMenuAnchor(null);
-    setSelectedClient(null);
-  };
-
-  const handleEdit = () => {
-    if (selectedClient) {
-      onEdit(selectedClient);
-    }
-    handleActionMenuClose();
-  };
-
-  const handleDelete = () => {
-    if (selectedClient) {
-      onDelete(selectedClient.id);
-    }
-    handleActionMenuClose();
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'success';
-      case 'inactive':
-        return 'default';
-      case 'suspended':
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'פעיל';
-      case 'inactive':
-        return 'לא פעיל';
-      case 'suspended':
-        return 'מושעה';
-      default:
-        return status;
-    }
-  };
-
-  const getUserRoleLabel = (userRole: string) => {
-    switch (userRole) {
-      case 'standard':
-        return 'לקוח רגיל';
-      case 'verified_members':
-        return 'חבר מאומת';
-      case 'customer':
-        return 'לקוח';
-      case 'admin':
-        return 'מנהל';
-      default:
-        return userRole || 'לא מוגדר';
-    }
-  };
-
-  const getUserRoleColor = (userRole: string) => {
-    switch (userRole) {
-      case 'admin':
-        return 'error';
-      case 'verified_members':
-        return 'primary';
-      case 'customer':
-        return 'secondary';
-      case 'standard':
-        return 'default';
-      default:
-        return 'default';
-    }
-  };
+const ClientDataTable: React.FC<ClientDataTableProps> = ({ clients, onEdit, onDelete }) => {
+  const columns: GridColDef[] = [
+    // Client Name with Avatar - Single Line
+    {
+      field: 'full_name',
+      headerName: 'שם מלא',
+      minWidth: 180,
+      flex: 1.5,
+      renderCell: (params) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Avatar sx={{ width: 32, height: 32 }}>
+            {params.row.business_name ? <BusinessIcon /> : <PersonIcon />}
+          </Avatar>
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            {params.value || params.row.email?.split('@')[0] || 'ללא שם'}
+          </Typography>
+        </Box>
+      ),
+    },
+    // Email - Single Line
+    {
+      field: 'email',
+      headerName: 'אימייל',
+      minWidth: 200,
+      flex: 1.5,
+    },
+    // Business Name - Single Line
+    {
+      field: 'business_name',
+      headerName: 'עסק',
+      minWidth: 120,
+      flex: 1,
+      renderCell: (params) => (
+        <Typography variant="body2">
+          {params.value || 'פרטי'}
+        </Typography>
+      ),
+    },
+    // Phone - Single Line
+    {
+      field: 'phone_number',
+      headerName: 'טלפון',
+      minWidth: 120,
+      flex: 1,
+      renderCell: (params) => (
+        <Typography variant="body2" dir="ltr">
+          {params.value || '-'}
+        </Typography>
+      ),
+    },
+    // Address - Single Line with Tooltip
+    {
+      field: 'formatted_address',
+      headerName: 'כתובת',
+      minWidth: 150,
+      flex: 1.3,
+      renderCell: (params) => (
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            maxWidth: '100%',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}
+          title={params.value || 'לא הוזנה כתובת'}
+        >
+          {params.value || 'לא הוזנה כתובת'}
+        </Typography>
+      ),
+    },
+    // Role - Single Line Chip
+    {
+      field: 'user_role',
+      headerName: 'תפקיד',
+      minWidth: 110,
+      flex: 0.8,
+      renderCell: (params) => {
+        const roleLabels: { [key: string]: string } = {
+          standard: 'רגיל',
+          verified_members: 'מאומת',
+          customer: 'לקוח',
+          admin: 'מנהל',
+        };
+        const roleColors: { [key: string]: 'error' | 'primary' | 'secondary' | 'default' } = {
+          admin: 'error',
+          verified_members: 'primary',
+          customer: 'secondary',
+          standard: 'default',
+        };
+        return (
+          <Chip
+            label={roleLabels[params.value] || params.value}
+            color={roleColors[params.value] || 'default'}
+            variant={params.value === 'admin' ? 'filled' : 'outlined'}
+            size="small"
+          />
+        );
+      },
+    },
+    // Status - Single Line Chip
+    {
+      field: 'status',
+      headerName: 'סטטוס',
+      minWidth: 90,
+      flex: 0.7,
+      renderCell: (params) => {
+        const statusConfig: { [key: string]: { label: string; color: 'success' | 'default' | 'error' } } = {
+          active: { label: 'פעיל', color: 'success' },
+          inactive: { label: 'לא פעיל', color: 'default' },
+          suspended: { label: 'מושעה', color: 'error' },
+        };
+        const config = statusConfig[params.value] || { label: params.value, color: 'default' };
+        return <Chip label={config.label} color={config.color} size="small" />;
+      },
+    },
+    // Created Date - Single Line Only
+    {
+      field: 'created_at',
+      headerName: 'נוצר',
+      minWidth: 100,
+      flex: 0.8,
+      renderCell: (params) => (
+        <Typography variant="body2">
+          {format(new Date(params.value), 'dd/MM/yy')}
+        </Typography>
+      ),
+    },
+    // Actions Column
+    {
+      field: 'actions',
+      type: 'actions',
+      headerName: 'פעולות',
+      width: 80,
+      getActions: (params) => [
+        <GridActionsCellItem
+          icon={<EditIcon />}
+          label="עריכה"
+          onClick={() => onEdit(params.row as Client)}
+          showInMenu
+        />,
+        <GridActionsCellItem
+          icon={<DeleteIcon />}
+          label="מחיקה"
+          onClick={() => onDelete(params.id as string)}
+          showInMenu
+        />,
+      ],
+    },
+  ];
 
   return (
-    <Box>
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell padding="checkbox">
-                <Checkbox
-                  indeterminate={selectedClients.length > 0 && selectedClients.length < clients.length}
-                  checked={clients.length > 0 && selectedClients.length === clients.length}
-                  onChange={handleSelectAll}
-                />
-              </TableCell>
-              <TableCell>לקוח</TableCell>
-              <TableCell>פרטי קשר</TableCell>
-              <TableCell>תפקיד משתמש</TableCell>
-              <TableCell>תפקיד מערכת</TableCell>
-              <TableCell>סטטוס</TableCell>
-              <TableCell>כתובת</TableCell>
-              <TableCell>נוצר</TableCell>
-              <TableCell>עודכן</TableCell>
-              <TableCell>כניסה אחרונה</TableCell>
-              <TableCell align="right">פעולות</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {clients.map((client) => (
-              <TableRow
-                key={client.id}
-                selected={selectedClients.includes(client.id)}
-                hover
-              >
-                <TableCell padding="checkbox">
-                  <Checkbox
-                    checked={selectedClients.includes(client.id)}
-                    onChange={() => handleSelectClient(client.id)}
-                  />
-                </TableCell>
-                
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ width: 40, height: 40 }}>
-                      {client.business_name ? (
-                        <BusinessIcon />
-                      ) : (
-                        <PersonIcon />
-                      )}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                        {client.display_name || client.full_name || 'ללא שם'}
-                      </Typography>
-                      {client.business_name && (
-                        <Typography variant="caption" color="text.secondary">
-                          {client.business_name}
-                        </Typography>
-                      )}
-                      {client.is_admin && (
-                        <Chip label="מנהל" size="small" color="error" sx={{ ml: 1 }} />
-                      )}
-                      {client.is_verified && (
-                        <Chip label="מאומת" size="small" color="primary" sx={{ ml: 1 }} />
-                      )}
-                    </Box>
-                  </Box>
-                </TableCell>
-                
-                <TableCell>
-                  <Box>
-                    <Typography variant="body2">
-                      {client.email}
-                    </Typography>
-                    {client.phone_number && (
-                      <Typography variant="caption" color="text.secondary">
-                        {client.phone_number}
-                      </Typography>
-                    )}
-                  </Box>
-                </TableCell>
-                
-                <TableCell>
-                  <Chip
-                    label={getUserRoleLabel(client.user_role)}
-                    size="small"
-                    color={getUserRoleColor(client.user_role) as any}
-                    variant="outlined"
-                  />
-                </TableCell>
-                
-                <TableCell>
-                  <Chip
-                    label={client.role === 'admin' ? 'מנהל' : 'משתמש'}
-                    size="small"
-                    color={client.role === 'admin' ? 'error' : 'default'}
-                  />
-                </TableCell>
-                
-                <TableCell>
-                  <Chip
-                    label={getStatusLabel(client.status)}
-                    size="small"
-                    color={getStatusColor(client.status) as any}
-                  />
-                </TableCell>
-                
-                <TableCell>
-                  <Box>
-                    <Typography variant="body2">
-                      {client.formatted_address || 'לא הוזנה כתובת'}
-                    </Typography>
-                  </Box>
-                </TableCell>
-                
-                <TableCell>
-                  <Typography variant="body2">
-                    {format(new Date(client.created_at), 'dd/MM/yyyy')}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {format(new Date(client.created_at), 'HH:mm')}
-                  </Typography>
-                </TableCell>
-                
-                <TableCell>
-                  <Typography variant="body2">
-                    {client.updated_at 
-                      ? format(new Date(client.updated_at), 'dd/MM/yyyy')
-                      : 'לא עודכן'
-                    }
-                  </Typography>
-                  {client.updated_at && (
-                    <Typography variant="caption" color="text.secondary">
-                      {format(new Date(client.updated_at), 'HH:mm')}
-                    </Typography>
-                  )}
-                </TableCell>
-                
-                <TableCell>
-                  <Typography variant="body2" color="text.secondary">
-                    {client.last_login 
-                      ? format(new Date(client.last_login), 'dd/MM/yyyy')
-                      : 'אף פעם'
-                    }
-                  </Typography>
-                  {client.last_login && (
-                    <Typography variant="caption" color="text.secondary">
-                      {format(new Date(client.last_login), 'HH:mm')}
-                    </Typography>
-                  )}
-                </TableCell>
-                
-                <TableCell align="right">
-                  <IconButton
-                    onClick={(e) => handleActionMenuOpen(e, client)}
-                    size="small"
-                  >
-                    <MoreVertIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      <TablePagination
-        component="div"
-        count={pagination.total}
-        page={pagination.page - 1}
-        onPageChange={(_, newPage) => onPageChange(newPage + 1)}
-        rowsPerPage={pagination.limit}
-        onRowsPerPageChange={() => {}} // TODO: Implement rows per page change
-        rowsPerPageOptions={[10, 25, 50]}
+    <Box sx={{ height: 600, width: '100%' }}>
+      <DataGrid
+        rows={clients}
+        columns={columns}
+        initialState={{
+          pagination: {
+            paginationModel: { page: 0, pageSize: 10 },
+          },
+        }}
+        pageSizeOptions={[10, 25, 50]}
+        checkboxSelection
+        disableRowSelectionOnClick
+        autoHeight={false}
+        rowHeight={52}
+        headerHeight={48}
+        sx={{
+          '& .MuiDataGrid-cell': {
+            borderBottom: '1px solid #f0f0f0',
+            padding: '8px 16px',
+            display: 'flex',
+            alignItems: 'center',
+          },
+          '& .MuiDataGrid-columnHeaders': {
+            backgroundColor: '#fafafa',
+            borderBottom: '2px solid #e0e0e0',
+            fontSize: '0.875rem',
+            fontWeight: 600,
+          },
+          '& .MuiDataGrid-row:hover': {
+            backgroundColor: '#f5f5f5',
+          },
+          '& .MuiDataGrid-columnHeaderTitle': {
+            fontWeight: 600,
+          },
+        }}
       />
-
-      {/* Action Menu */}
-      <Menu
-        anchorEl={actionMenuAnchor}
-        open={Boolean(actionMenuAnchor)}
-        onClose={handleActionMenuClose}
-      >
-        {canEdit && (
-          <MenuItem onClick={handleEdit}>
-            <ListItemIcon>
-              <EditIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>עריכה</ListItemText>
-          </MenuItem>
-        )}
-        
-        {canDelete && (
-          <MenuItem onClick={handleDelete}>
-            <ListItemIcon>
-              <DeleteIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>מחיקה</ListItemText>
-          </MenuItem>
-        )}
-      </Menu>
     </Box>
   );
 };

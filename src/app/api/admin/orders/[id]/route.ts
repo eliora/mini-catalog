@@ -1,130 +1,180 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+/**
+ * Individual Order Management API Routes - REFACTORED VERSION
+ * 
+ * Handles single order operations using modular utilities.
+ */
 
+import { NextRequest } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+
+// Import utilities
+import { verifyAdminAccess } from '@/lib/api/admin/auth';
+import {
+  successResponse,
+  errorResponse,
+  validationErrorResponse,
+  unauthorizedResponse,
+  forbiddenResponse,
+  notFoundResponse,
+  internalErrorResponse
+} from '@/lib/api/admin/responses';
+import { transformOrder, validateOrder } from '@/lib/api/admin/orders-service';
+
+// Helper function to extract order ID from URL
+function extractOrderId(url: string): string {
+  const pathSegments = url.split('/');
+  return pathSegments[pathSegments.length - 1] || '';
+}
+
+// GET - Fetch single order
 export async function GET(request: NextRequest) {
-  // Extract id from URL path
-  const url = new URL(request.url);
-  const pathSegments = url.pathname.split('/');
-  const id = pathSegments[pathSegments.length - 1]; // Get id from /admin/orders/[id]
-  
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = await createClient();
     
-    // Check authentication
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Verify admin access
+    const authResult = await verifyAdminAccess(supabase);
+    if (!authResult.success) {
+      return authResult.error === 'Authentication required' 
+        ? unauthorizedResponse(authResult.error)
+        : forbiddenResponse(authResult.error);
     }
 
+    const orderId = extractOrderId(request.url);
+    if (!orderId) {
+      return errorResponse('Invalid order ID in URL', 400);
+    }
+
+    // Fetch order with client details
     const { data: order, error } = await supabase
       .from('orders')
       .select(`
         *,
-        client:profiles!orders_client_id_fkey (
+        client:users!orders_client_id_fkey (
           id,
-          name,
+          full_name,
           email,
           phone_number,
           business_name,
           address,
-          user_roles,
+          user_role,
           status
         )
       `)
-      .eq('id', id)
+      .eq('id', orderId)
       .single();
 
     if (error) {
       console.error('Error fetching order:', error);
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      if (error.code === 'PGRST116') {
+        return notFoundResponse('Order not found');
+      }
+      return internalErrorResponse('Failed to fetch order', error.message);
     }
 
-    // Process order data
-    const processedOrder = {
-      ...order,
-      parsedItems: Array.isArray(order.items) ? order.items : JSON.parse(order.items || '[]'),
-      formattedTotal: new Intl.NumberFormat('he-IL', {
-        style: 'currency',
-        currency: 'ILS'
-      }).format(order.total_amount),
-      statusLabel: getStatusLabel(order.status)
-    };
-
-    return NextResponse.json({ order: processedOrder });
+    return successResponse({ 
+      order: transformOrder(order)
+    });
 
   } catch (error) {
     console.error('Get order API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return internalErrorResponse();
   }
 }
 
+// PUT - Update order
 export async function PUT(request: NextRequest) {
-  // Extract id from URL path
-  const url = new URL(request.url);
-  const pathSegments = url.pathname.split('/');
-  const id = pathSegments[pathSegments.length - 1]; // Get id from /admin/orders/[id]
-  
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = await createClient();
     
-    // Check authentication
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Verify admin access
+    const authResult = await verifyAdminAccess(supabase);
+    if (!authResult.success) {
+      return authResult.error === 'Authentication required' 
+        ? unauthorizedResponse(authResult.error)
+        : forbiddenResponse(authResult.error);
     }
 
-    const body = await request.json();
+    const orderId = extractOrderId(request.url);
+    if (!orderId) {
+      return errorResponse('Invalid order ID in URL', 400);
+    }
+
+    // Parse request body
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      return errorResponse('Invalid JSON in request body', 400);
+    }
+
     const { client_id, items, total_amount, notes, status } = body;
 
     // Build update object with only provided fields
-    const updateData: any = {
+    const updateData: Record<string, any> = {
       updated_at: new Date().toISOString()
     };
 
+    // Validate and set fields if provided
     if (client_id !== undefined) {
-      // Verify client exists if client_id is being updated
+      // Verify client exists
       const { data: client, error: clientError } = await supabase
-        .from('profiles')
+        .from('users')
         .select('id')
         .eq('id', client_id)
         .single();
 
       if (clientError || !client) {
-        return NextResponse.json({ error: 'Invalid client_id' }, { status: 400 });
+        return errorResponse('Invalid client ID', 400);
       }
       updateData.client_id = client_id;
     }
 
     if (items !== undefined) {
+      if (!Array.isArray(items)) {
+        return errorResponse('Items must be an array', 400);
+      }
       updateData.items = JSON.stringify(items);
     }
 
     if (total_amount !== undefined) {
+      if (typeof total_amount !== 'number' || total_amount < 0) {
+        return errorResponse('Total amount must be a non-negative number', 400);
+      }
       updateData.total_amount = total_amount;
     }
 
     if (notes !== undefined) {
-      updateData.notes = notes;
+      updateData.notes = notes || null;
     }
 
     if (status !== undefined) {
+      const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'completed', 'cancelled'];
+      if (!validStatuses.includes(status)) {
+        return errorResponse(`Invalid status. Must be one of: ${validStatuses.join(', ')}`, 400);
+      }
       updateData.status = status;
     }
 
+    // Check if there's anything to update
+    if (Object.keys(updateData).length === 1) { // Only updated_at
+      return errorResponse('No valid fields provided for update', 400);
+    }
+
+    // Update order
     const { data: order, error } = await supabase
       .from('orders')
       .update(updateData)
-      .eq('id', id)
+      .eq('id', orderId)
       .select(`
         *,
-        client:profiles!orders_client_id_fkey (
+        client:users!orders_client_id_fkey (
           id,
-          name,
+          full_name,
           email,
           phone_number,
           business_name,
           address,
-          user_roles,
+          user_role,
           status
         )
       `)
@@ -132,59 +182,74 @@ export async function PUT(request: NextRequest) {
 
     if (error) {
       console.error('Error updating order:', error);
-      return NextResponse.json({ error: 'Failed to update order' }, { status: 500 });
+      if (error.code === 'PGRST116') {
+        return notFoundResponse('Order not found');
+      }
+      return internalErrorResponse('Failed to update order', error.message);
     }
 
-    return NextResponse.json({ order });
+    return successResponse({
+      order: transformOrder(order),
+      message: 'Order updated successfully'
+    });
 
   } catch (error) {
     console.error('Update order API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return internalErrorResponse();
   }
 }
 
+// DELETE - Delete order
 export async function DELETE(request: NextRequest) {
-  // Extract id from URL path
-  const url = new URL(request.url);
-  const pathSegments = url.pathname.split('/');
-  const id = pathSegments[pathSegments.length - 1]; // Get id from /admin/orders/[id]
-  
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = await createClient();
     
-    // Check authentication
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Verify admin access
+    const authResult = await verifyAdminAccess(supabase);
+    if (!authResult.success) {
+      return authResult.error === 'Authentication required' 
+        ? unauthorizedResponse(authResult.error)
+        : forbiddenResponse(authResult.error);
     }
 
+    const orderId = extractOrderId(request.url);
+    if (!orderId) {
+      return errorResponse('Invalid order ID in URL', 400);
+    }
+
+    // Check if order exists before deletion
+    const { data: existingOrder, error: checkError } = await supabase
+      .from('orders')
+      .select('id, status')
+      .eq('id', orderId)
+      .single();
+
+    if (checkError) {
+      if (checkError.code === 'PGRST116') {
+        return notFoundResponse('Order not found');
+      }
+      console.error('Error checking order existence:', checkError);
+      return internalErrorResponse('Failed to verify order existence');
+    }
+
+    // Delete order
     const { error } = await supabase
       .from('orders')
       .delete()
-      .eq('id', id);
+      .eq('id', orderId);
 
     if (error) {
       console.error('Error deleting order:', error);
-      return NextResponse.json({ error: 'Failed to delete order' }, { status: 500 });
+      return internalErrorResponse('Failed to delete order', error.message);
     }
 
-    return NextResponse.json({ message: 'Order deleted successfully' });
+    return successResponse({
+      message: 'Order deleted successfully',
+      deletedOrderId: orderId
+    });
 
   } catch (error) {
     console.error('Delete order API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return internalErrorResponse();
   }
 }
-
-function getStatusLabel(status: string): string {
-  const statusLabels: Record<string, string> = {
-    pending: 'ממתין',
-    processing: 'מעובד',
-    shipped: 'נשלח',
-    delivered: 'נמסר',
-    completed: 'הושלם',
-    cancelled: 'בוטל'
-  };
-  return statusLabels[status] || status;
-}
-

@@ -1,192 +1,129 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+/**
+ * Orders Management API Routes - REFACTORED VERSION
+ * 
+ * Handles order listing and creation using modular utilities.
+ */
 
+import { NextRequest } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+
+// Import utilities
+import { verifyAdminAccess } from '@/lib/api/admin/auth';
+import { parsePaginationParams, buildPaginationResponse } from '@/lib/api/admin/query-helpers';
+import {
+  successResponse,
+  errorResponse,
+  validationErrorResponse,
+  unauthorizedResponse,
+  forbiddenResponse,
+  internalErrorResponse
+} from '@/lib/api/admin/responses';
+import {
+  getOrders,
+  createOrder,
+  validateOrder
+} from '@/lib/api/admin/orders-service';
+
+// GET - List orders with filtering and pagination
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = await createClient();
     
-    // Check authentication
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Verify admin access
+    const authResult = await verifyAdminAccess(supabase);
+    if (!authResult.success) {
+      return authResult.error === 'Authentication required' 
+        ? unauthorizedResponse(authResult.error)
+        : forbiddenResponse(authResult.error);
     }
 
-    // Get query parameters
+    // Parse parameters
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const status = searchParams.get('status');
-    const clientId = searchParams.get('client_id');
-    const search = searchParams.get('search');
+    const pagination = parsePaginationParams(searchParams);
+    
+    const filters = {
+      status: searchParams.get('status') || undefined,
+      client_id: searchParams.get('client_id') || undefined,
+      search: searchParams.get('search')?.trim() || undefined,
+    };
 
-    // Calculate offset
-    const offset = (page - 1) * limit;
-
-    // Build query with client information joined
-    let query = supabase
-      .from('orders')
-      .select(`
-        *,
-        client:profiles!orders_client_id_fkey (
-          id,
-          name,
-          email,
-          phone_number,
-          business_name,
-          address,
-          user_roles,
-          status
-        )
-      `)
-      .range(offset, offset + limit - 1)
-      .order('created_at', { ascending: false });
-
-    // Apply filters
-    if (status && status !== 'all') {
-      query = query.eq('status', status);
+    // Get orders
+    try {
+      const result = await getOrders(supabase, filters, pagination);
+      
+      return successResponse({
+        orders: result.orders,
+        pagination: buildPaginationResponse(pagination, result.total),
+        filters: {
+          applied: filters,
+          available: {
+            statuses: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'completed', 'cancelled']
+          }
+        },
+        stats: {
+          total: result.total,
+          pending: result.orders.filter(o => o.status === 'pending').length,
+          processing: result.orders.filter(o => o.status === 'processing').length,
+          completed: result.orders.filter(o => ['delivered', 'completed'].includes(o.status)).length,
+        }
+      });
+    } catch (error: any) {
+      console.error('Error fetching orders:', error);
+      return internalErrorResponse('Failed to fetch orders', error.message);
     }
-
-    if (clientId) {
-      query = query.eq('client_id', clientId);
-    }
-
-    if (search) {
-      // Search in client name or email
-      query = query.or(`client.name.ilike.%${search}%, client.email.ilike.%${search}%`);
-    }
-
-    const { data: orders, error: ordersError } = await query;
-
-    if (ordersError) {
-      console.error('Error fetching orders:', ordersError);
-      return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
-    }
-
-    // Get total count for pagination
-    let countQuery = supabase
-      .from('orders')
-      .select('count', { count: 'exact' });
-
-    if (status && status !== 'all') {
-      countQuery = countQuery.eq('status', status);
-    }
-
-    if (clientId) {
-      countQuery = countQuery.eq('client_id', clientId);
-    }
-
-    const { count, error: countError } = await countQuery;
-
-    if (countError) {
-      console.error('Error fetching orders count:', countError);
-      return NextResponse.json({ error: 'Failed to fetch orders count' }, { status: 500 });
-    }
-
-    // Process orders data
-    const processedOrders = orders?.map(order => ({
-      ...order,
-      parsedItems: Array.isArray(order.items) ? order.items : JSON.parse(order.items || '[]'),
-      formattedTotal: new Intl.NumberFormat('he-IL', {
-        style: 'currency',
-        currency: 'ILS'
-      }).format(order.total_amount),
-      statusLabel: getStatusLabel(order.status)
-    })) || [];
-
-    return NextResponse.json({
-      orders: processedOrders,
-      pagination: {
-        page,
-        limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit)
-      }
-    });
 
   } catch (error) {
-    console.error('Orders API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Orders GET API error:', error);
+    return internalErrorResponse();
   }
 }
 
+// POST - Create new order
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = await createClient();
     
-    // Check authentication
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Verify admin access
+    const authResult = await verifyAdminAccess(supabase);
+    if (!authResult.success) {
+      return authResult.error === 'Authentication required' 
+        ? unauthorizedResponse(authResult.error)
+        : forbiddenResponse(authResult.error);
     }
 
-    const body = await request.json();
-    const { client_id, items, total_amount, notes, status = 'pending' } = body;
-
-    // Validate required fields
-    if (!client_id || !items || !total_amount) {
-      return NextResponse.json({ 
-        error: 'Missing required fields: client_id, items, total_amount' 
-      }, { status: 400 });
+    // Parse request body
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      return errorResponse('Invalid JSON in request body', 400);
     }
 
-    // Verify client exists
-    const { data: client, error: clientError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', client_id)
-      .single();
-
-    if (clientError || !client) {
-      return NextResponse.json({ error: 'Invalid client_id' }, { status: 400 });
+    // Validate order data
+    const validation = validateOrder(body);
+    if (!validation.isValid) {
+      return validationErrorResponse(validation.errors);
     }
 
     // Create order
-    const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        client_id,
-        items: JSON.stringify(items),
-        total_amount,
-        notes,
-        status
-      })
-      .select(`
-        *,
-        client:profiles!orders_client_id_fkey (
-          id,
-          name,
-          email,
-          phone_number,
-          business_name,
-          address,
-          user_roles,
-          status
-        )
-      `)
-      .single();
-
-    if (orderError) {
-      console.error('Error creating order:', orderError);
-      return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
+    try {
+      const order = await createOrder(supabase, body);
+      return successResponse({
+        order,
+        message: 'Order created successfully'
+      }, 201);
+    } catch (error: any) {
+      console.error('Error creating order:', error);
+      
+      if (error.message === 'Invalid client_id') {
+        return errorResponse('Invalid client ID', 400);
+      }
+      
+      return internalErrorResponse('Failed to create order', error.message);
     }
 
-    return NextResponse.json({ order }, { status: 201 });
-
   } catch (error) {
-    console.error('Create order API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Order creation API error:', error);
+    return internalErrorResponse();
   }
 }
-
-function getStatusLabel(status: string): string {
-  const statusLabels: Record<string, string> = {
-    pending: 'ממתין',
-    processing: 'מעובד',
-    shipped: 'נשלח',
-    delivered: 'נמסר',
-    completed: 'הושלם',
-    cancelled: 'בוטל'
-  };
-  return statusLabels[status] || status;
-}
-

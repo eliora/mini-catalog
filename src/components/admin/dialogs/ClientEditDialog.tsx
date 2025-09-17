@@ -48,7 +48,6 @@ import { SelectChangeEvent } from '@mui/material/Select';
 interface Client {
   id: string;
   email: string;
-  role: 'user' | 'admin';
   full_name: string;
   user_role: 'standard' | 'verified_members' | 'customer' | 'admin';
   business_name?: string;
@@ -75,14 +74,13 @@ interface UserRole {
 interface FormData {
   email: string;
   name: string;
-  role: 'user' | 'admin';
+  password: string;
   user_role: 'standard' | 'verified_members' | 'customer' | 'admin';
   business_name: string;
   phone_number: string;
   address: {
     street: string;
     city: string;
-    state: string;
     postal_code: string;
     country: string;
   };
@@ -107,21 +105,16 @@ const HEBREW_LABELS = {
   fields: {
     email: 'כתובת אימייל',
     fullName: 'שם מלא',
+    password: 'סיסמה',
     businessName: 'שם עסק',
     phoneNumber: 'מספר טלפון',
-    role: 'תפקיד מערכת',
     userRole: 'תפקיד משתמש',
     status: 'סטטוס',
     address: 'כתובת',
     street: 'רחוב',
     city: 'עיר',
-    state: 'מחוז/אזור',
     postalCode: 'מיקוד',
     country: 'מדינה',
-  },
-  roles: {
-    user: 'משתמש',
-    admin: 'מנהל מערכת',
   },
   userRoles: {
     standard: 'לקוח רגיל',
@@ -148,11 +141,11 @@ const HEBREW_LABELS = {
   placeholders: {
     email: 'הזן כתובת אימייל',
     fullName: 'הזן שם מלא',
+    password: 'לפחות 6 תווים',
     businessName: 'הזן שם עסק (אופציונלי)',
     phoneNumber: 'הזן מספר טלפון',
     street: 'רחוב ומספר בית',
     city: 'עיר',
-    state: 'מחוז או אזור',
     postalCode: 'מיקוד',
   },
   sections: {
@@ -162,12 +155,6 @@ const HEBREW_LABELS = {
     address: 'כתובת',
   }
 };
-
-const ISRAELI_CITIES = [
-  'תל אביב', 'ירושלים', 'חיפה', 'ראשון לציון', 'פתח תקווה', 'אשדוד', 'נתניה', 
-  'באר שבע', 'בני ברק', 'רמת גן', 'אשקלון', 'חולון', 'בת ים', 'רחובות', 'כפר סבא',
-  'הרצליה', 'חדרה', 'מודיעין', 'נצרת', 'לוד', 'רמלה', 'רעננה', 'אילת', 'טבריה'
-];
 
 const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
   client,
@@ -184,14 +171,13 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
   const [formData, setFormData] = useState<FormData>({
     email: '',
     name: '',
-    role: 'user',
+    password: '',
     user_role: 'standard',
     business_name: '',
     phone_number: '',
     address: {
       street: '',
       city: '',
-      state: '',
       postal_code: '',
       country: 'ישראל'
     },
@@ -204,14 +190,13 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
       setFormData({
         email: client.email || '',
         name: client.full_name || client.display_name || '',
-        role: client.role || 'user',
+        password: '', // Never populate password for security
         user_role: client.user_role || 'standard',
         business_name: client.business_name || '',
         phone_number: client.phone_number || '',
         address: {
           street: client.address?.street || '',
           city: client.address?.city || '',
-          state: client.address?.state || '',
           postal_code: client.address?.postal_code || '',
           country: client.address?.country || 'ישראל'
         },
@@ -222,14 +207,13 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
       setFormData({
         email: '',
         name: '',
-        role: 'user',
+        password: '',
         user_role: 'standard',
         business_name: '',
         phone_number: '',
         address: {
           street: '',
           city: '',
-          state: '',
           postal_code: '',
           country: 'ישראל'
         },
@@ -253,6 +237,11 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
     // Name validation
     if (!formData.name.trim()) {
       errors.name = HEBREW_LABELS.validation.nameRequired;
+    }
+
+    // Password validation (only for new users)
+    if (mode === 'create' && (!formData.password || formData.password.length < 6)) {
+      errors.password = 'סיסמה חייבת להכיל לפחות 6 תווים';
     }
 
     // Phone validation (optional but if provided must be valid)
@@ -318,7 +307,7 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
         ...(client && { id: client.id }),
         email: formData.email.trim(),
         full_name: formData.name.trim(),
-        role: formData.role,
+        ...(mode === 'create' && { password: formData.password }), // Only include password for new users
         user_role: formData.user_role,
         business_name: formData.business_name.trim(),
         phone_number: formData.phone_number.trim(),
@@ -345,7 +334,7 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
     }
   };
 
-  const isAdmin = formData.role === 'admin';
+  const isAdmin = formData.user_role === 'admin';
 
   return (
     <Dialog 
@@ -426,6 +415,22 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                 />
               </Box>
+
+              {/* Password field - only for new users */}
+              {mode === 'create' && (
+                <TextField
+                  fullWidth
+                  type="password"
+                  label={HEBREW_LABELS.fields.password}
+                  placeholder={HEBREW_LABELS.placeholders.password}
+                  value={formData.password}
+                  onChange={handleInputChange('password')}
+                  error={!!validationErrors.password}
+                  helperText={validationErrors.password}
+                  required
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+              )}
             </CardContent>
           </Card>
 
@@ -488,33 +493,12 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
                 />
                 
                 <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-                  <Autocomplete
-                    freeSolo
-                    options={ISRAELI_CITIES}
-                    value={formData.address.city}
-                    onChange={(_, value) => {
-                      setFormData(prev => ({
-                        ...prev,
-                        address: { ...prev.address, city: value || '' }
-                      }));
-                    }}
-                    sx={{ flex: 1 }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label={HEBREW_LABELS.fields.city}
-                        placeholder={HEBREW_LABELS.placeholders.city}
-                        onChange={handleInputChange('address.city')}
-                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-                      />
-                    )}
-                  />
-                  
                   <TextField
-                    label={HEBREW_LABELS.fields.state}
-                    placeholder={HEBREW_LABELS.placeholders.state}
-                    value={formData.address.state}
-                    onChange={handleInputChange('address.state')}
+                    fullWidth
+                    label={HEBREW_LABELS.fields.city}
+                    placeholder={HEBREW_LABELS.placeholders.city}
+                    value={formData.address.city}
+                    onChange={handleInputChange('address.city')}
                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 }, flex: 1 }}
                   />
                   
@@ -541,19 +525,6 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
               </Box>
               
               <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-                <FormControl fullWidth>
-                  <InputLabel>{HEBREW_LABELS.fields.role}</InputLabel>
-                  <Select
-                    value={formData.role}
-                    onChange={handleSelectChange('role')}
-                    label={HEBREW_LABELS.fields.role}
-                    sx={{ borderRadius: 2 }}
-                  >
-                    <MenuItem value="user">{HEBREW_LABELS.roles.user}</MenuItem>
-                    <MenuItem value="admin">{HEBREW_LABELS.roles.admin}</MenuItem>
-                  </Select>
-                </FormControl>
-                
                 <FormControl fullWidth>
                   <InputLabel>{HEBREW_LABELS.fields.userRole}</InputLabel>
                   <Select

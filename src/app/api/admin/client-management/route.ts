@@ -1,515 +1,237 @@
 /**
- * Client Management API Routes - FIXED VERSION
- * 
- * Handles CRUD operations for client management using proper database schema.
- * Integrates with constants and uses correct table/field names.
+ * @file Client Management API Route
+ * @description Handles all CRUD (Create, Read, Update, Delete) operations for users/clients
+ * from the admin panel. Each handler is protected and uses a privileged Supabase client
+ * obtained from the centralized `createAuthedAdminClient` utility.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { createServiceClient } from '@/lib/supabase/service';
-import { USERS_TABLE, USERS_HELPERS, USERS_QUERIES } from '@/constants/users-schema.js';
+import { NextRequest } from 'next/server';
+import { AuthError, createAuthedAdminClient } from '@/lib/api/admin/auth';
+import { validateCreateClient, validateUpdateClient } from '@/lib/api/admin/validation';
+import { 
+  parsePaginationParams, 
+  parseFilterParams, 
+  parseSortParams,
+  transformClient,
+  buildClientQuery,
+  calculateStats,
+  buildPaginationResponse,
+  buildFiltersResponse
+} from '@/lib/api/admin/query-helpers';
+import {
+  successResponse,
+  errorResponse,
+  validationErrorResponse,
+  unauthorizedResponse,
+  forbiddenResponse,
+  notFoundResponse,
+  conflictResponse,
+  internalErrorResponse
+} from '@/lib/api/admin/responses';
+import {
+  checkEmailExists,
+  createClient as createClientService,
+  updateClient as updateClientService,
+  deleteClient as deleteClientService
+} from '@/lib/api/admin/client-service';
 
-// Type definitions matching database schema
-interface Client {
-  id: string;
-  email: string;
-  role: 'user' | 'admin';
-  full_name: string;
-  user_role: 'standard' | 'verified_members' | 'customer' | 'admin';
-  business_name?: string;
-  phone_number?: string;
-  address?: any;
-  status: 'active' | 'inactive' | 'suspended';
-  created_at: string;
-  updated_at: string;
-  last_login?: string;
+/**
+ * Handles AuthError by returning the appropriate HTTP response.
+ * @param error The AuthError instance.
+ * @returns A NextResponse object.
+ */
+function handleAuthError(error: AuthError) {
+  if (error.statusCode === 401) {
+    return unauthorizedResponse(error.message);
+  }
+  return forbiddenResponse(error.message);
 }
 
-// Helper function to check admin permissions
-async function checkAdminPermissions(supabase: any, session: any) {
-  if (!session?.user?.email) {
-    return { isAdmin: false, error: 'No session found' };
-  }
-
-  try {
-    // Check if user is admin using constants
-    const { data: user, error } = await supabase
-      .from(USERS_TABLE.name)
-      .select('role, user_role, status')
-      .eq('email', session.user.email)
-      .single();
-
-    if (error || !user) {
-      return { isAdmin: false, error: 'User not found' };
-    }
-
-    const isAdmin = USERS_HELPERS.isAdmin(user);
-    const isActive = USERS_HELPERS.isActive(user);
-
-    if (!isActive) {
-      return { isAdmin: false, error: 'User account is not active' };
-    }
-
-    return { isAdmin, user };
-  } catch (error) {
-    return { isAdmin: false, error: 'Permission check failed' };
-  }
-}
-
-// GET - List clients with pagination and filtering
+/**
+ * GET handler for listing and searching clients.
+ * - Authenticates the request as an admin.
+ * - Parses pagination, filtering, and sorting parameters from the URL.
+ * - Queries the database and returns a list of clients with metadata.
+ */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
-    // Check authentication and admin permissions
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const supabaseAdmin = await createAuthedAdminClient(request);
 
-    const { isAdmin, error: permError } = await checkAdminPermissions(supabase, session);
-    if (!isAdmin) {
-      return NextResponse.json({ error: permError || 'Admin access required' }, { status: 403 });
-    }
-
-    // Get query parameters
+    // Parse parameters from the request URL
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const search = searchParams.get('search') || '';
-    const role = searchParams.get('role') || '';
-    const user_role = searchParams.get('user_role') || '';
-    const status = searchParams.get('status') || '';
+    const pagination = parsePaginationParams(searchParams);
+    const filters = parseFilterParams(searchParams);
+    const sort = parseSortParams(searchParams);
 
-    const offset = (page - 1) * limit;
-
-    // Build query using correct table and field names
-    let query = supabase
-      .from(USERS_TABLE.name)  // Use 'users' table, not 'profiles'
-      .select(`
-        id,
-        email,
-        role,
-        full_name,
-        user_role,
-        business_name,
-        phone_number,
-        address,
-        status,
-        created_at,
-        updated_at,
-        last_login
-      `, { count: 'exact' });
-
-    // Apply filters
-    if (search) {
-      query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,business_name.ilike.%${search}%`);
-    }
-
-    if (role && USERS_TABLE.enums.ROLES[role.toUpperCase()]) {
-      query = query.eq('role', role);
-    }
-
-    if (user_role && USERS_TABLE.enums.USER_ROLES[user_role.toUpperCase()]) {
-      query = query.eq('user_role', user_role);
-    }
-
-    if (status && USERS_TABLE.enums.STATUS[status.toUpperCase()]) {
-      query = query.eq('status', status);
-    }
-
-    // Apply pagination
-    query = query
-      .range(offset, offset + limit - 1)
-      .order('created_at', { ascending: false });
-
+    // Build and execute the database query using the authenticated admin client
+    const query = buildClientQuery(supabaseAdmin, filters, sort, pagination);
     const { data: clients, error: queryError, count } = await query;
 
     if (queryError) {
       console.error('Error fetching clients:', queryError);
-      return NextResponse.json({ error: 'Failed to fetch clients' }, { status: 500 });
+      return internalErrorResponse('Failed to fetch clients', queryError.message);
     }
 
-    // Transform data using helpers
-    const transformedClients = clients?.map(client => ({
-      ...client,
-      display_name: USERS_HELPERS.getDisplayName(client),
-      formatted_address: USERS_HELPERS.formatAddress(client.address),
-      is_admin: USERS_HELPERS.isAdmin(client),
-      is_verified: USERS_HELPERS.isVerifiedMember(client),
-      is_active: USERS_HELPERS.isActive(client)
-    })) || [];
+    // Transform data for the response
+    const transformedClients = clients?.map(transformClient) || [];
+    const stats = calculateStats(transformedClients);
 
-    return NextResponse.json({
+    return successResponse({
       clients: transformedClients,
-      pagination: {
-        page,
-        limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit)
-      },
-      filters: {
-        available_roles: Object.values(USERS_TABLE.enums.ROLES),
-        available_user_roles: Object.values(USERS_TABLE.enums.USER_ROLES),
-        available_statuses: Object.values(USERS_TABLE.enums.STATUS)
-      }
+      pagination: buildPaginationResponse(pagination, count || 0),
+      filters: buildFiltersResponse(filters),
+      sorting: { sortBy: sort.sortBy, sortOrder: sort.sortOrder },
+      stats,
     });
 
   } catch (error) {
-    console.error('Client management API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    if (error instanceof AuthError) {
+      return handleAuthError(error);
+    }
+    console.error('Client management GET API error:', error);
+    return internalErrorResponse();
   }
 }
 
-// POST - Create new client
+/**
+ * POST handler for creating a new client.
+ * - Authenticates the request as an admin.
+ * - Validates the incoming request body.
+ * - Checks for email conflicts.
+ * - Creates the new user in the database.
+ */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabaseAdmin = await createAuthedAdminClient(request);
     
-    // Check authentication and admin permissions
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Parse and validate the request body
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      return errorResponse('Invalid JSON in request body', 400);
     }
 
-    const { isAdmin, error: permError } = await checkAdminPermissions(supabase, session);
-    if (!isAdmin) {
-      return NextResponse.json({ error: permError || 'Admin access required' }, { status: 403 });
+    const validation = validateCreateClient(body);
+    if (!validation.isValid) {
+      return validationErrorResponse(validation.errors);
+    }
+    
+    const { email } = validation.cleanData!;
+    
+    // Check if a user with this email already exists
+    const emailExists = await checkEmailExists(supabaseAdmin, email);
+    if (emailExists) {
+      return conflictResponse('A user with this email already exists.');
     }
 
-    const body = await request.json();
-    const {
-      email,
-      full_name,  // Use correct field name
-      role = 'user',
-      user_role = 'standard',
-      business_name,
-      phone_number,
-      address,
-      status = 'active'
-    } = body;
+    // Create the new client in the database
+    const client = await createClientService(supabaseAdmin, validation.cleanData);
+    return successResponse({
+      client,
+      message: 'Client created successfully'
+    }, 201);
 
-    // Validate required fields
-    if (!email || !full_name) {
-      return NextResponse.json({ error: 'Email and full name are required' }, { status: 400 });
+  } catch (error: any) {
+    if (error instanceof AuthError) {
+      return handleAuthError(error);
     }
-
-    // Validate enum values using constants
-    if (!Object.values(USERS_TABLE.enums.ROLES).includes(role)) {
-      return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
-    }
-
-    if (!Object.values(USERS_TABLE.enums.USER_ROLES).includes(user_role)) {
-      return NextResponse.json({ error: 'Invalid user role' }, { status: 400 });
-    }
-
-    if (!Object.values(USERS_TABLE.enums.STATUS).includes(status)) {
-      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
-    }
-
-    // Check if user already exists
-    const { data: existingUser } = await supabase
-      .from(USERS_TABLE.name)
-      .select('id')
-      .eq('email', email)
-      .single();
-
-    if (existingUser) {
-      return NextResponse.json({ error: 'User with this email already exists' }, { status: 409 });
-    }
-
-    // Create client using correct table and field names
-    const { data: client, error } = await supabase
-      .from(USERS_TABLE.name)  // Use 'users' table
-      .insert({
-        email,
-        full_name,      // Use correct field name
-        role,
-        user_role,
-        business_name,
-        phone_number,
-        address,
-        status
-      })
-      .select(`
-        id,
-        email,
-        role,
-        full_name,
-        user_role,
-        business_name,
-        phone_number,
-        address,
-        status,
-        created_at,
-        updated_at,
-        last_login
-      `)
-      .single();
-
-    if (error) {
-      console.error('Error creating client:', error);
-      
-      // Handle specific database errors
-      if (error.code === '23505') {  // Unique constraint violation
-        return NextResponse.json({ error: 'User with this email already exists' }, { status: 409 });
-      }
-      
-      return NextResponse.json({ error: 'Failed to create client' }, { status: 500 });
-    }
-
-    // Transform response using helpers
-    const transformedClient = {
-      ...client,
-      display_name: USERS_HELPERS.getDisplayName(client),
-      formatted_address: USERS_HELPERS.formatAddress(client.address),
-      is_admin: USERS_HELPERS.isAdmin(client),
-      is_verified: USERS_HELPERS.isVerifiedMember(client),
-      is_active: USERS_HELPERS.isActive(client)
-    };
-
-    return NextResponse.json({ client: transformedClient }, { status: 201 });
-
-  } catch (error) {
     console.error('Client creation API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    if (error.code === '23505') { // Postgres unique constraint violation
+      return conflictResponse('A user with this email already exists.');
+    }
+    return internalErrorResponse('Failed to create client', error.message);
   }
 }
 
-// PUT - Update existing client
+/**
+ * PUT handler for updating an existing client.
+ * - Authenticates the request as an admin.
+ * - Validates the incoming request body.
+ * - Checks for email conflicts if the email is being changed.
+ * - Updates the user in the database by their ID.
+ */
 export async function PUT(request: NextRequest) {
   try {
-    console.log('PUT request received');
-    const supabase = await createClient();
-    
-    // For admin operations, we might need service role
-    // Let's first try with regular client and add debugging
-    
-    // Check authentication and admin permissions
-    const { data: { session } } = await supabase.auth.getSession();
-    console.log('Session check:', !!session, session?.user?.email);
-    
-    if (!session) {
-      console.log('No session found, returning 401');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const supabaseAdmin = await createAuthedAdminClient(request);
 
-    const { isAdmin, error: permError } = await checkAdminPermissions(supabase, session);
-    console.log('Admin check:', isAdmin, permError);
-    
-    if (!isAdmin) {
-      console.log('Not admin, returning 403:', permError);
-      return NextResponse.json({ error: permError || 'Admin access required' }, { status: 403 });
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      return errorResponse('Invalid JSON in request body', 400);
     }
-
-    const body = await request.json();
-    console.log('Request body:', body);
     
     const { id, ...updateData } = body;
-    console.log('Update data:', updateData);
-    console.log('Client ID:', id);
-
     if (!id) {
-      console.log('No client ID provided');
-      return NextResponse.json({ error: 'Client ID is required' }, { status: 400 });
+      return errorResponse('Client ID is required for updates', 400);
     }
 
-    // Validate enum values if provided
-    if (updateData.role && !Object.values(USERS_TABLE.enums.ROLES).includes(updateData.role)) {
-      return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
+    // Validate the update data
+    const validation = validateUpdateClient(updateData);
+    if (!validation.isValid) {
+      return validationErrorResponse(validation.errors);
     }
 
-    if (updateData.user_role && !Object.values(USERS_TABLE.enums.USER_ROLES).includes(updateData.user_role)) {
-      return NextResponse.json({ error: 'Invalid user role' }, { status: 400 });
+    if (Object.keys(validation.cleanData!).length === 0) {
+      return errorResponse('No valid fields were provided for update', 400);
     }
 
-    if (updateData.status && !Object.values(USERS_TABLE.enums.STATUS).includes(updateData.status)) {
-      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+    // If email is being updated, check if the new email is already taken
+    if (validation.cleanData!.email) {
+      const emailExists = await checkEmailExists(supabaseAdmin, validation.cleanData!.email, id);
+      if (emailExists) {
+        return conflictResponse('The new email is already in use by another user.');
+      }
     }
 
-    // Update client
-    console.log('Updating client with data:', updateData);
-    
-    // Convert empty strings to null for database consistency, but preserve non-empty values
-    const cleanUpdateData = Object.fromEntries(
-      Object.entries(updateData).map(([key, value]) => [
-        key,
-        (value === '' || value === undefined) ? null : value
-      ])
-    );
-    
-    console.log('Cleaned update data:', cleanUpdateData);
-    console.log('Phone number specifically:', {
-      original: updateData.phone_number,
-      cleaned: cleanUpdateData.phone_number,
-      type: typeof cleanUpdateData.phone_number
+    // Perform the update
+    const client = await updateClientService(supabaseAdmin, id, validation.cleanData);
+    return successResponse({
+      client,
+      message: 'Client updated successfully'
     });
-    
-    // Use service-role client for admin updates to bypass RLS safely
-    const serviceSupabase = createServiceClient();
 
-    // Test: Try updating just phone number first (service client)
-    const { error: phoneUpdateError, count: phoneCount } = await serviceSupabase
-      .from(USERS_TABLE.name)
-      .update({
-        phone_number: cleanUpdateData.phone_number,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id);
-
-    console.log('Phone-only update result:', { phoneUpdateError, phoneCount });
-
-    // Then, full update (service client)
-    const { error: updateError, count } = await serviceSupabase
-      .from(USERS_TABLE.name)
-      .update({
-        ...cleanUpdateData,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id);
-
-    console.log('Full update operation result:', { updateError, count });
-
-    console.log('Supabase update error:', updateError);
-
-    if (updateError) {
-      console.error('Error updating client:', updateError);
-      return NextResponse.json({ 
-        error: 'Failed to update client', 
-        details: updateError.message,
-        code: updateError.code 
-      }, { status: 500 });
+  } catch (error: any) {
+    if (error instanceof AuthError) {
+      return handleAuthError(error);
     }
-
-    // Finally, fetch the updated client (service client to ensure consistency)
-    const { data: client, error: selectError } = await serviceSupabase
-      .from(USERS_TABLE.name)
-      .select(`
-        id,
-        email,
-        role,
-        full_name,
-        user_role,
-        business_name,
-        phone_number,
-        address,
-        status,
-        created_at,
-        updated_at,
-        last_login
-      `)
-      .eq('id', id)
-      .single();
-
-    console.log('Supabase select result:', { client, selectError });
-
-    if (selectError) {
-      console.error('Error fetching updated client:', selectError);
-      return NextResponse.json({ 
-        error: 'Failed to fetch updated client', 
-        details: selectError.message,
-        code: selectError.code 
-      }, { status: 500 });
-    }
-
-    if (!client) {
-      return NextResponse.json({ error: 'Client not found after update' }, { status: 404 });
-    }
-
-    // Transform response using helpers
-    const transformedClient = {
-      ...client,
-      display_name: USERS_HELPERS.getDisplayName(client),
-      formatted_address: USERS_HELPERS.formatAddress(client.address),
-      is_admin: USERS_HELPERS.isAdmin(client),
-      is_verified: USERS_HELPERS.isVerifiedMember(client),
-      is_active: USERS_HELPERS.isActive(client)
-    };
-
-    return NextResponse.json({ client: transformedClient });
-
-  } catch (error) {
     console.error('Client update API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    if (error.code === 'PGRST116') { // Supabase 'not found' error
+      return notFoundResponse('Client not found');
+    }
+    return internalErrorResponse('Failed to update client', error.message);
   }
 }
 
-// DELETE - Remove client (soft delete by setting status to inactive)
+/**
+ * DELETE handler for deactivating (soft delete) or permanently deleting a client.
+ * - Authenticates the request as an admin.
+ * - Deletes or updates the user based on the `hard` query parameter.
+ */
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
-    // Check authentication and admin permissions
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { isAdmin, error: permError } = await checkAdminPermissions(supabase, session);
-    if (!isAdmin) {
-      return NextResponse.json({ error: permError || 'Admin access required' }, { status: 403 });
-    }
+    const supabaseAdmin = await createAuthedAdminClient(request);
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
+    const hardDelete = searchParams.get('hard') === 'true';
 
     if (!id) {
-      return NextResponse.json({ error: 'Client ID is required' }, { status: 400 });
+      return errorResponse('Client ID is required', 400);
     }
 
-    // Soft delete by setting status to inactive (recommended)
-    // Hard delete is commented out for safety
-    const serviceSupabase = createServiceClient();
+    const result = await deleteClientService(supabaseAdmin, id, hardDelete);
+    return successResponse(result);
 
-    const { data: client, error } = await serviceSupabase
-      .from(USERS_TABLE.name)
-      .update({ 
-        status: 'inactive',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .select(`
-        id,
-        email,
-        role,
-        full_name,
-        user_role,
-        business_name,
-        phone_number,
-        address,
-        status,
-        created_at,
-        updated_at,
-        last_login
-      `)
-      .single();
-
-    // Hard delete option (uncomment if needed):
-    // const { data: client, error } = await supabase
-    //   .from(USERS_TABLE.name)
-    //   .delete()
-    //   .eq('id', id)
-    //   .select()
-    //   .single();
-
-    if (error) {
-      console.error('Error deleting client:', error);
-      return NextResponse.json({ error: 'Failed to delete client' }, { status: 500 });
+  } catch (error: any) {
+    if (error instanceof AuthError) {
+      return handleAuthError(error);
     }
-
-    if (!client) {
-      return NextResponse.json({ error: 'Client not found' }, { status: 404 });
-    }
-
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Client deactivated successfully',
-      client 
-    });
-
-  } catch (error) {
     console.error('Client deletion API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    if (error.message === 'Client not found') {
+      return notFoundResponse('Client not found');
+    }
+    return internalErrorResponse(`Failed to ${hardDelete ? 'delete' : 'deactivate'} client`, error.message);
   }
 }

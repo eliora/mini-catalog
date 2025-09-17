@@ -347,13 +347,16 @@ export default function ProductsManagementView({}: ProductsManagementViewProps) 
         />
       )}
 
-      {/* Products Table - Placeholder for now */}
+      {/* Products Table */}
       <Card sx={{ borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
-        <Box sx={{ p: 4, textAlign: "center" }}>
-          <Alert severity="info">
-            טבלת המוצרים תיווסף בשלב הבא. הממשק מוכן לחיבור עם רכיבי הטבלה המתקדמים.
-          </Alert>
-        </Box>
+        <ProductsDataTable
+          products={filteredProducts}
+          onEdit={(product) => {
+            setEditingProduct(product as any);
+            setIsProductDialogOpen(true);
+          }}
+          onDelete={handleProductDelete}
+        />
       </Card>
 
       {/* Column Visibility Menu */}
