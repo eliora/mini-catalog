@@ -9,9 +9,7 @@ const nextConfig: NextConfig = {
     // Ignore TypeScript errors in temp folders during builds
     ignoreBuildErrors: false,
   },
-  experimental: {
-    typedRoutes: false,
-  },
+  typedRoutes: false, // Moved from experimental
   images: {
     remotePatterns: [
       {
