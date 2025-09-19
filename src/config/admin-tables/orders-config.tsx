@@ -109,24 +109,29 @@ export const ordersTableColumns: GridColDef[] = [
     ),
   },
   
-  // Items count and preview
+  // Customer phone
   {
-    field: 'items_count',
-    headerName: 'מוצרים',
-    minWidth: 100,
-    flex: 0.8,
+    field: 'customer_phone',
+    headerName: 'טלפון',
+    minWidth: 120,
+    flex: 1,
     renderCell: (params) => (
-      <Box>
-        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-          {params.row.items?.length || 0} פריטים
-        </Typography>
-        {params.row.items && params.row.items.length > 0 && (
-          <Typography variant="caption" color="text.secondary">
-            {params.row.items[0].product_name}
-            {params.row.items.length > 1 && ` +${params.row.items.length - 1}`}
-          </Typography>
-        )}
-      </Box>
+      <Typography variant="body2" color="text.secondary">
+        {params.value || '-'}
+      </Typography>
+    ),
+  },
+  
+  // Customer email
+  {
+    field: 'customer_email',
+    headerName: 'אימייל',
+    minWidth: 180,
+    flex: 1.2,
+    renderCell: (params) => (
+      <Typography variant="body2" color="text.secondary">
+        {params.value || '-'}
+      </Typography>
     ),
   },
   

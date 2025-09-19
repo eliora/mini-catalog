@@ -59,8 +59,8 @@ const AdminDataTable = <T extends { id: string }>({
   onSelectionChange,
   customActions = [],
   permissions = { canEdit: true, canDelete: true },
-  pageSize = 10,
-  pageSizeOptions = [10, 25, 50],
+  pageSize = 20,
+  pageSizeOptions = [10, 20, 50, 100],
   checkboxSelection = true,
   disableRowSelectionOnClick = true,
   height = 600,
@@ -141,12 +141,14 @@ const AdminDataTable = <T extends { id: string }>({
         rows={data}
         columns={columns}
         loading={loading}
-        initialState={{
-          pagination: {
-            paginationModel: { page: 0, pageSize },
+        {...(autoHeight ? {} : {
+          initialState: {
+            pagination: {
+              paginationModel: { page: 0, pageSize },
+            },
           },
-        }}
-        pageSizeOptions={pageSizeOptions}
+          pageSizeOptions: pageSizeOptions,
+        })}
         checkboxSelection={checkboxSelection}
         disableRowSelectionOnClick={disableRowSelectionOnClick}
         disableMultipleRowSelection={true}

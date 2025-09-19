@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Grid,
   Button,
@@ -12,7 +12,8 @@ import {
   CardContent,
   Divider,
   Avatar,
-  LinearProgress
+  LinearProgress,
+  Snackbar
 } from "@mui/material";
 import { 
   CloudUpload, 
@@ -25,6 +26,7 @@ import { H5, H6, Paragraph } from "@/components/Typography";
 import { FlexBetween, FlexBox } from "@/components/flex-box";
 import { Formik } from "formik";
 import * as yup from "yup";
+import { useCompany } from "@/context/CompanyContext";
 
 // Form validation schema
 const validationSchema = yup.object().shape({
@@ -45,16 +47,18 @@ interface GeneralSettingsFormValues {
 }
 
 export default function GeneralSettings() {
+  const { settings, updateSettings, isLoading } = useCompany();
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
   const initialValues: GeneralSettingsFormValues = {
-    siteName: "פורטל לקוסמטיקאיות",
-    siteDescription: "מערכת הזמנות מתקדמת לקוסמטיקאיות עם קטלוג מוצרים, מערכת תשלומים ופאנל ניהול",
-    welcomeMessage: "ברוכים הבאים לפורטל הקוסמטיקה המתקדם שלנו",
-    contactEmail: "info@cosmetics-portal.co.il",
-    supportPhone: "03-1234567"
+    siteName: settings?.company_name || "פורטל לקוסמטיקאיות",
+    siteDescription: settings?.company_description || "מערכת הזמנות מתקדמת לקוסמטיקאיות עם קטלוג מוצרים, מערכת תשלומים ופאנל ניהול",
+    welcomeMessage: settings?.company_description || "ברוכים הבאים לפורטל הקוסמטיקה המתקדם שלנו",
+    contactEmail: settings?.contact_email || "info@cosmetics-portal.co.il",
+    supportPhone: settings?.contact_phone || "03-1234567"
   };
 
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,13 +94,38 @@ export default function GeneralSettings() {
 
   const handleFormSubmit = async (values: GeneralSettingsFormValues) => {
     try {
-      // Simulate API call
       console.log("Saving general settings:", values);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert("ההגדרות נשמרו בהצלחה!");
+      
+      // Map form values to database fields
+      const updates = {
+        company_name: values.siteName,
+        company_description: values.siteDescription,
+        contact_email: values.contactEmail,
+        contact_phone: values.supportPhone,
+      };
+
+      const result = await updateSettings(updates);
+      
+      if (result.error) {
+        setSnackbar({
+          open: true,
+          message: `שגיאה בשמירת ההגדרות: ${result.error}`,
+          severity: 'error'
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: "ההגדרות נשמרו בהצלחה!",
+          severity: 'success'
+        });
+      }
     } catch (error) {
       console.error("Error saving settings:", error);
-      alert("שגיאה בשמירת ההגדרות");
+      setSnackbar({
+        open: true,
+        message: "שגיאה בשמירת ההגדרות",
+        severity: 'error'
+      });
     }
   };
 
@@ -113,6 +142,7 @@ export default function GeneralSettings() {
         initialValues={initialValues}
         validationSchema={validationSchema}
         onSubmit={handleFormSubmit}
+        enableReinitialize={true}
       >
         {({ values, errors, touched, handleChange, handleBlur, handleSubmit, isSubmitting }) => (
           <form onSubmit={handleSubmit}>
@@ -321,6 +351,22 @@ export default function GeneralSettings() {
           </form>
         )}
       </Formik>
+
+      {/* Success/Error Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} 
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

@@ -86,6 +86,8 @@ const OrdersManagementView: React.FC = () => {
           onDelete={handleDeleteOrder}
           onSelectionChange={handleSelectionChange}
           permissions={{ canEdit: canWrite, canDelete: canDelete }}
+          pageSize={20}
+          pageSizeOptions={[10, 20, 50, 100]}
         />
       </Card>
 

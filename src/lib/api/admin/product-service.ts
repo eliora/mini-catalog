@@ -174,7 +174,7 @@ export async function deleteProduct(supabase: SupabaseClient, id: string): Promi
 export async function getProducts(supabase: SupabaseClient, params: Record<string, unknown> = {}) {
   const {
     page = 1,
-    limit = 10,
+    limit = 20, // Default 20 rows per page
     search = '',
     product_line = '',
     product_type = '',

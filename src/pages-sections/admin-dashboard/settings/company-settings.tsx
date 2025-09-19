@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Grid,
   Button,
@@ -12,10 +12,7 @@ import {
   Divider,
   Switch,
   FormControlLabel,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel
+  Snackbar
 } from "@mui/material";
 import { 
   Save, 
@@ -28,6 +25,7 @@ import { H5, H6, Paragraph } from "@/components/Typography";
 import { FlexBetween, FlexBox } from "@/components/flex-box";
 import { Formik } from "formik";
 import * as yup from "yup";
+import { useCompany } from "@/context/CompanyContext";
 
 // Form validation schema
 const validationSchema = yup.object().shape({
@@ -35,8 +33,6 @@ const validationSchema = yup.object().shape({
   businessNumber: yup.string().required("מספר עסק הוא שדה חובה"),
   vatNumber: yup.string().required("מספר עוסק מורשה הוא שדה חובה"),
   address: yup.string().required("כתובת החברה הוא שדה חובה"),
-  city: yup.string().required("עיר הוא שדה חובה"),
-  zipCode: yup.string().required("מיקוד הוא שדה חובה"),
   phone: yup.string().required("טלפון הוא שדה חובה"),
   email: yup.string().email("כתובת אימייל לא תקינה").required("אימייל הוא שדה חובה"),
 });
@@ -46,42 +42,68 @@ interface CompanySettingsFormValues {
   businessNumber: string;
   vatNumber: string;
   address: string;
-  city: string;
-  zipCode: string;
-  country: string;
   phone: string;
   email: string;
   website: string;
   description: string;
   isVatRegistered: boolean;
-  businessType: string;
 }
 
 export default function CompanySettings() {
+  const { settings, updateSettings, isLoading } = useCompany();
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+
   const initialValues: CompanySettingsFormValues = {
-    companyName: 'פורטל לקוסמטיקאיות בע"מ',
-    businessNumber: "516123456",
-    vatNumber: "123456789",
-    address: "רחוב הברושים 15",
-    city: "תל אביב",
-    zipCode: "6473925",
-    country: "ישראל",
-    phone: "03-1234567",
-    email: "info@cosmetics-portal.co.il",
-    website: "https://www.cosmetics-portal.co.il",
-    description: "חברה מובילה בתחום הקוסמטיקה והיופי",
-    isVatRegistered: true,
-    businessType: "retail"
+    companyName: settings?.company_name || '',
+    businessNumber: settings?.registration_number || '',
+    vatNumber: settings?.tax_id || '',
+    address: settings?.company_address || '',
+    phone: settings?.company_phone || '',
+    email: settings?.company_email || '',
+    website: settings?.website || '',
+    description: settings?.company_description || '',
+    isVatRegistered: settings?.is_vat_registered || false,
   };
 
   const handleFormSubmit = async (values: CompanySettingsFormValues) => {
     try {
       console.log("Saving company settings:", values);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert("פרטי החברה נשמרו בהצלחה!");
+      
+      // Map form values to database fields
+      const updates = {
+        company_name: values.companyName,
+        registration_number: values.businessNumber,
+        tax_id: values.vatNumber,
+        company_address: values.address,
+        company_phone: values.phone,
+        company_email: values.email,
+        website: values.website,
+        company_description: values.description,
+        is_vat_registered: values.isVatRegistered,
+      };
+
+      const result = await updateSettings(updates);
+      
+      if (result.error) {
+        setSnackbar({
+          open: true,
+          message: `שגיאה בשמירת פרטי החברה: ${result.error}`,
+          severity: 'error'
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: "פרטי החברה נשמרו בהצלחה!",
+          severity: 'success'
+        });
+      }
     } catch (error) {
       console.error("Error saving company settings:", error);
-      alert("שגיאה בשמירת פרטי החברה");
+      setSnackbar({
+        open: true,
+        message: "שגיאה בשמירת פרטי החברה",
+        severity: 'error'
+      });
     }
   };
 
@@ -98,6 +120,7 @@ export default function CompanySettings() {
         initialValues={initialValues}
         validationSchema={validationSchema}
         onSubmit={handleFormSubmit}
+        enableReinitialize={true}
       >
         {({ values, errors, touched, handleChange, handleBlur, handleSubmit, setFieldValue, isSubmitting }) => (
           <form onSubmit={handleSubmit}>
@@ -108,10 +131,11 @@ export default function CompanySettings() {
                   <CardContent>
                     <FlexBox alignItems="center" gap={2} mb={2}>
                       <Business color="primary" />
-                      <H6 sx={{ fontWeight: 700 }}>מידע עסקי</H6>
+                      <H6 sx={{ fontWeight: 700 }}>מידע כללי על החברה</H6>
                     </FlexBox>
-                    
-                    <Grid container spacing={2}>
+                    <Divider sx={{ mb: 3 }} />
+
+                    <Grid container spacing={3}>
                       <Grid size={{ md: 6, xs: 12 }}>
                         <TextField
                           fullWidth
@@ -124,24 +148,6 @@ export default function CompanySettings() {
                           helperText={touched.companyName && errors.companyName}
                           sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                         />
-                      </Grid>
-
-                      <Grid size={{ md: 6, xs: 12 }}>
-                        <FormControl fullWidth>
-                          <InputLabel>סוג עסק</InputLabel>
-                          <Select
-                            name="businessType"
-                            value={values.businessType}
-                            label="סוג עסק"
-                            onChange={handleChange}
-                            sx={{ borderRadius: 2 }}
-                          >
-                            <MenuItem value="retail">קמעונאות</MenuItem>
-                            <MenuItem value="wholesale">סיטונאות</MenuItem>
-                            <MenuItem value="manufacturing">ייצור</MenuItem>
-                            <MenuItem value="services">שירותים</MenuItem>
-                          </Select>
-                        </FormControl>
                       </Grid>
 
                       <Grid size={{ md: 6, xs: 12 }}>
@@ -172,131 +178,7 @@ export default function CompanySettings() {
                         />
                       </Grid>
 
-                      <Grid size={{ xs: 12 }}>
-                        <FormControlLabel
-                          control={
-                            <Switch
-                              checked={values.isVatRegistered}
-                              onChange={(e) => setFieldValue("isVatRegistered", e.target.checked)}
-                              color="primary"
-                            />
-                          }
-                          label='עוסק מורשה במע"מ'
-                        />
-                      </Grid>
-                    </Grid>
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              {/* Address Information */}
-              <Grid size={{ xs: 12 }}>
-                <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "info.200" }}>
-                  <CardContent>
-                    <FlexBox alignItems="center" gap={2} mb={2}>
-                      <LocationOn color="info" />
-                      <H6 sx={{ fontWeight: 700 }}>כתובת</H6>
-                    </FlexBox>
-                    
-                    <Grid container spacing={2}>
-                      <Grid size={{ xs: 12 }}>
-                        <TextField
-                          fullWidth
-                          name="address"
-                          label="רחוב ומספר בית"
-                          value={values.address}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          error={Boolean(touched.address && errors.address)}
-                          helperText={touched.address && errors.address}
-                          sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-                        />
-                      </Grid>
-
-                      <Grid size={{ md: 4, xs: 12 }}>
-                        <TextField
-                          fullWidth
-                          name="city"
-                          label="עיר"
-                          value={values.city}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          error={Boolean(touched.city && errors.city)}
-                          helperText={touched.city && errors.city}
-                          sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-                        />
-                      </Grid>
-
-                      <Grid size={{ md: 4, xs: 12 }}>
-                        <TextField
-                          fullWidth
-                          name="zipCode"
-                          label="מיקוד"
-                          value={values.zipCode}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          error={Boolean(touched.zipCode && errors.zipCode)}
-                          helperText={touched.zipCode && errors.zipCode}
-                          sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-                        />
-                      </Grid>
-
-                      <Grid size={{ md: 4, xs: 12 }}>
-                        <TextField
-                          fullWidth
-                          name="country"
-                          label="מדינה"
-                          value={values.country}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-                        />
-                      </Grid>
-                    </Grid>
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              {/* Contact Information */}
-              <Grid size={{ xs: 12 }}>
-                <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "success.200" }}>
-                  <CardContent>
-                    <FlexBox alignItems="center" gap={2} mb={2}>
-                      <Phone color="success" />
-                      <H6 sx={{ fontWeight: 700 }}>פרטי יצירת קשר</H6>
-                    </FlexBox>
-                    
-                    <Grid container spacing={2}>
                       <Grid size={{ md: 6, xs: 12 }}>
-                        <TextField
-                          fullWidth
-                          name="phone"
-                          label="טלפון"
-                          value={values.phone}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          error={Boolean(touched.phone && errors.phone)}
-                          helperText={touched.phone && errors.phone}
-                          sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-                        />
-                      </Grid>
-
-                      <Grid size={{ md: 6, xs: 12 }}>
-                        <TextField
-                          fullWidth
-                          name="email"
-                          label="אימייל"
-                          type="email"
-                          value={values.email}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          error={Boolean(touched.email && errors.email)}
-                          helperText={touched.email && errors.email}
-                          sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-                        />
-                      </Grid>
-
-                      <Grid size={{ xs: 12 }}>
                         <TextField
                           fullWidth
                           name="website"
@@ -326,18 +208,103 @@ export default function CompanySettings() {
                 </Card>
               </Grid>
 
+              {/* Contact Information */}
+              <Grid size={{ xs: 12 }}>
+                <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "primary.200" }}>
+                  <CardContent>
+                    <FlexBox alignItems="center" gap={2} mb={2}>
+                      <LocationOn color="primary" />
+                      <H6 sx={{ fontWeight: 700 }}>פרטי יצירת קשר</H6>
+                    </FlexBox>
+                    <Divider sx={{ mb: 3 }} />
+
+                    <Grid container spacing={3}>
+                      <Grid size={{ xs: 12 }}>
+                        <TextField
+                          fullWidth
+                          multiline
+                          rows={2}
+                          name="address"
+                          label="כתובת החברה"
+                          value={values.address}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={Boolean(touched.address && errors.address)}
+                          helperText={touched.address && errors.address}
+                          sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                        />
+                      </Grid>
+
+                      <Grid size={{ md: 6, xs: 12 }}>
+                        <TextField
+                          fullWidth
+                          name="phone"
+                          label="טלפון"
+                          value={values.phone}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={Boolean(touched.phone && errors.phone)}
+                          helperText={touched.phone && errors.phone}
+                          sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                        />
+                      </Grid>
+
+                      <Grid size={{ md: 6, xs: 12 }}>
+                        <TextField
+                          fullWidth
+                          name="email"
+                          label="אימייל"
+                          type="email"
+                          value={values.email}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={Boolean(touched.email && errors.email)}
+                          helperText={touched.email && errors.email}
+                          sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                        />
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Tax Settings */}
+              <Grid size={{ xs: 12 }}>
+                <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "primary.200" }}>
+                  <CardContent>
+                    <FlexBox alignItems="center" gap={2} mb={2}>
+                      <Business color="primary" />
+                      <H6 sx={{ fontWeight: 700 }}>הגדרות מיסוי</H6>
+                    </FlexBox>
+                    <Divider sx={{ mb: 3 }} />
+
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={values.isVatRegistered}
+                          onChange={(e) => setFieldValue('isVatRegistered', e.target.checked)}
+                          color="primary"
+                        />
+                      }
+                      label="חברה רשומה כעוסק מורשה"
+                    />
+                  </CardContent>
+                </Card>
+              </Grid>
+
               {/* Action Buttons */}
               <Grid size={{ xs: 12 }}>
                 <Divider sx={{ my: 2 }} />
                 <FlexBetween>
-                  <Alert severity="warning" sx={{ flex: 1, mr: 2 }}>
-                    שינויים בפרטי החברה ישפיעו על מסמכים רשמיים
+                  <Alert severity="info" sx={{ flex: 1, mr: 2 }}>
+                    שינויים יכנסו לתוקף מיד לאחר השמירה
                   </Alert>
                   <FlexBox gap={2}>
                     <Button
                       variant="outlined"
                       startIcon={<Refresh />}
                       sx={{ borderRadius: 2 }}
+                      onClick={() => window.location.reload()}
                     >
                       איפוס
                     </Button>
@@ -345,7 +312,7 @@ export default function CompanySettings() {
                       type="submit"
                       variant="contained"
                       startIcon={<Save />}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isLoading}
                       sx={{ borderRadius: 2, minWidth: 120 }}
                     >
                       {isSubmitting ? "שומר..." : "שמור שינויים"}
@@ -357,6 +324,22 @@ export default function CompanySettings() {
           </form>
         )}
       </Formik>
+
+      {/* Success/Error Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} 
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

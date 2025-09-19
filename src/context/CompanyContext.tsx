@@ -39,7 +39,8 @@ export const CompanyProvider = ({ children }: { children: React.ReactNode }) => 
       const { data, error } = await supabaseBrowserClient
         .from('settings')
         .select('*')
-        .single();
+        .limit(1)
+        .maybeSingle();
 
       if (error) {
         if (error.code === 'PGRST116') {
@@ -73,42 +74,24 @@ export const CompanyProvider = ({ children }: { children: React.ReactNode }) => 
     try {
       console.log('🔄 Updating company settings:', updates);
 
-      // First, try to update existing settings
+      // Use upsert to handle both insert and update cases
       const { data, error } = await supabaseBrowserClient
         .from('settings')
-        .update({
+        .upsert({
+          ...DEFAULT_SETTINGS,
           ...updates,
+          id: settings?.id || '1', // Use existing ID or default to '1'
           updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'id'
         })
-        .eq('id', settings?.id || '1')
         .select()
         .single();
 
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // No existing settings, create new ones
-          const { data: newData, error: insertError } = await supabaseBrowserClient
-            .from('settings')
-            .insert({
-              ...DEFAULT_SETTINGS,
-              ...updates,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-            .select()
-            .single();
-
-          if (insertError) throw insertError;
-          
-          setSettings(newData as CompanySettings);
-          console.log('✅ Company settings created');
-        } else {
-          throw error;
-        }
-      } else {
-        setSettings(data as CompanySettings);
-        console.log('✅ Company settings updated');
-      }
+      if (error) throw error;
+      
+      setSettings(data as CompanySettings);
+      console.log('✅ Company settings saved');
 
       setLastUpdated(new Date());
       return {};

@@ -67,7 +67,7 @@ export const useAdminResource = <T extends { id: string }>({
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<PaginationState>({
     page: 1,
-    limit: 10,
+    limit: 20, // Default 20 rows per page
     total: 0,
     totalPages: 0
   });
@@ -83,7 +83,7 @@ export const useAdminResource = <T extends { id: string }>({
   // Fetch data (same pattern as fetchClients)
   const fetchData = useCallback(async (
     page = 1, 
-    limit = 10, 
+    limit = 20, // Default 20 rows per page
     filters: Record<string, unknown> = {}
   ) => {
     try {
@@ -92,9 +92,11 @@ export const useAdminResource = <T extends { id: string }>({
 
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: limit.toString(),
         ...initialFilters
       });
+      
+      // Always add limit parameter
+      params.append('limit', limit.toString());
       
       // Add dynamic filters
       Object.entries(filters).forEach(([key, value]) => {
@@ -257,7 +259,7 @@ export const useAdminResource = <T extends { id: string }>({
   // Auto-fetch on mount (same as useClientManagement)
   useEffect(() => {
     if (autoFetch) {
-      fetchDataRef.current(1, 10, {});
+      fetchDataRef.current(1, 20, {}); // Default 20 rows per page
     }
   }, [autoFetch]); // Only depend on autoFetch to prevent infinite loops
 

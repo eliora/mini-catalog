@@ -76,7 +76,7 @@ const ProductsManagementView: React.FC = () => {
       {/* Optional: Display stats grid here */}
       {/* <AdminStatsGrid stats={stats} /> */}
 
-      <Card sx={{ borderRadius: 2, boxShadow: 1 }}>
+      <Card sx={{ borderRadius: 1, boxShadow: 1 }}>
         <AdminDataTable<Product>
           data={products}
           columns={productsTableColumns}
@@ -85,6 +85,8 @@ const ProductsManagementView: React.FC = () => {
           onDelete={handleDeleteProduct}
           onSelectionChange={handleSelectionChange}
           permissions={{ canEdit: canWrite, canDelete: canDelete }}
+          pageSize={20}
+          pageSizeOptions={[10, 20, 50, 100]}
         />
       </Card>
 

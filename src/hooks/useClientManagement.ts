@@ -59,12 +59,12 @@ export const useClientManagement = () => {
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<PaginationState>({
     page: 1,
-    limit: 10,
+    limit: 20, // Default 20 rows per page
     total: 0,
     totalPages: 0
   });
 
-  const fetchClients = useCallback(async (page = 1, limit = 10, filters: Record<string, unknown> = {}) => {
+  const fetchClients = useCallback(async (page = 1, limit = 20, filters: Record<string, unknown> = {}) => {
     try {
       setLoading(true);
       setError(null);

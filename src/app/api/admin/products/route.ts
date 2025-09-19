@@ -36,7 +36,8 @@ export async function GET(request: NextRequest) {
 
     // Parse query parameters
     const page = parseInt(searchParams.get('page') || '1', 10);
-    const limit = parseInt(searchParams.get('limit') || '10', 10);
+    const limitParam = searchParams.get('limit');
+    const limit = limitParam ? parseInt(limitParam, 10) : 20; // Default 20 rows per page
     const search = searchParams.get('search') || '';
     const product_line = searchParams.get('product_line') || '';
     const product_type = searchParams.get('product_type') || '';
