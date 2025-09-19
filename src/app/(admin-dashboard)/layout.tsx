@@ -1,11 +1,11 @@
 import { PropsWithChildren } from "react";
-import VendorDashboardLayout from "@/components/layouts/vendor-dashboard";
+import AdminLayout from "@/components/layout/AdminLayout";
 import AdminAuthGuard from "@/components/admin/guards/AdminAuthGuard";
 
 const Layout = ({ children }: PropsWithChildren) => {
   return (
     <AdminAuthGuard>
-      <VendorDashboardLayout>{children}</VendorDashboardLayout>
+      <AdminLayout>{children}</AdminLayout>
     </AdminAuthGuard>
   );
 };

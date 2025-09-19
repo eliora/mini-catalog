@@ -6,10 +6,11 @@
  */
 'use client';
 import React from 'react';
-import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
+import { GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
 import { Box, Chip, Typography, Avatar } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Person as PersonIcon, Business as BusinessIcon } from '@mui/icons-material';
 import { format } from 'date-fns';
+import AdminDataGrid from '@/components/admin/shared/AdminDataGrid';
 
 // Complete Client interface matching database schema
 interface Client {
@@ -44,8 +45,7 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({ clients, onEdit, onDe
     {
       field: 'full_name',
       headerName: 'שם מלא',
-      minWidth: 180,
-      flex: 1.5,
+      flex: 1,
       renderCell: (params) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Avatar sx={{ width: 32, height: 32 }}>
@@ -61,14 +61,12 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({ clients, onEdit, onDe
     {
       field: 'email',
       headerName: 'אימייל',
-      minWidth: 200,
-      flex: 1.5,
+      flex: 1,
     },
     // Business Name - Single Line
     {
       field: 'business_name',
       headerName: 'עסק',
-      minWidth: 120,
       flex: 1,
       renderCell: (params) => (
         <Typography variant="body2">
@@ -80,7 +78,6 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({ clients, onEdit, onDe
     {
       field: 'phone_number',
       headerName: 'טלפון',
-      minWidth: 120,
       flex: 1,
       renderCell: (params) => (
         <Typography variant="body2" dir="ltr">
@@ -92,8 +89,7 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({ clients, onEdit, onDe
     {
       field: 'formatted_address',
       headerName: 'כתובת',
-      minWidth: 150,
-      flex: 1.3,
+      flex: 1,
       renderCell: (params) => (
         <Typography 
           variant="body2" 
@@ -113,8 +109,7 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({ clients, onEdit, onDe
     {
       field: 'user_role',
       headerName: 'תפקיד',
-      minWidth: 110,
-      flex: 0.8,
+      flex: 1,
       renderCell: (params) => {
         const roleLabels: { [key: string]: string } = {
           standard: 'רגיל',
@@ -142,8 +137,7 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({ clients, onEdit, onDe
     {
       field: 'status',
       headerName: 'סטטוס',
-      minWidth: 90,
-      flex: 0.7,
+      flex: 1,
       renderCell: (params) => {
         const statusConfig: { [key: string]: { label: string; color: 'success' | 'default' | 'error' } } = {
           active: { label: 'פעיל', color: 'success' },
@@ -158,8 +152,7 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({ clients, onEdit, onDe
     {
       field: 'created_at',
       headerName: 'נוצר',
-      minWidth: 100,
-      flex: 0.8,
+      flex: 1,
       renderCell: (params) => (
         <Typography variant="body2">
           {format(new Date(params.value), 'dd/MM/yy')}
@@ -171,7 +164,7 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({ clients, onEdit, onDe
       field: 'actions',
       type: 'actions',
       headerName: 'פעולות',
-      width: 80,
+      flex: 0.5,
       getActions: (params) => [
         <GridActionsCellItem
           key="edit"
@@ -192,39 +185,21 @@ const ClientDataTable: React.FC<ClientDataTableProps> = ({ clients, onEdit, onDe
   ];
 
   return (
-    <Box sx={{ height: 600, width: '100%' }}>
-      <DataGrid
-        rows={clients}
-        columns={columns}
-        initialState={{
-          pagination: {
-            paginationModel: { page: 0, pageSize: 10 },
-          },
-        }}
-        pageSizeOptions={[10, 25, 50]}
-        checkboxSelection
-        disableRowSelectionOnClick
-        autoHeight={false}
-        rowHeight={52}
-        sx={{
-          '& .MuiDataGrid-cell': {
-            borderBottom: '1px solid #f0f0f0',
-            padding: '8px 16px',
-            display: 'flex',
-            alignItems: 'center',
-          },
-          '& .MuiDataGrid-columnHeaders': {
-            backgroundColor: '#fafafa',
-            borderBottom: '2px solid #e0e0e0',
-            fontSize: '0.875rem',
-            fontWeight: 600,
-          },
-          '& .MuiDataGrid-columnHeaderTitle': {
-            fontWeight: 600,
-          },
-        }}
-      />
-    </Box>
+    <AdminDataGrid
+      rows={clients}
+      columns={columns}
+      height={600}
+      initialState={{
+        pagination: {
+          paginationModel: { page: 0, pageSize: 10 },
+        },
+      }}
+      pageSizeOptions={[10, 25, 50]}
+      checkboxSelection
+      disableRowSelectionOnClick
+      autoHeight={false}
+      rowHeight={52}
+    />
   );
 };
 

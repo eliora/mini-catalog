@@ -5,9 +5,10 @@
  */
 'use client';
 import React from 'react';
-import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
-import { Box, Chip, Typography, Avatar } from '@mui/material';
+import { GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
+import { Chip, Typography } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import AdminDataGrid from '@/components/admin/shared/AdminDataGrid';
 
 interface Product {
   id: string;
@@ -44,33 +45,43 @@ interface ProductDataTableProps {
 
 const ProductDataTable: React.FC<ProductDataTableProps> = ({ products, onEdit, onDelete }) => {
   const columns: GridColDef[] = [
-    // Product Name - Single Line with Avatar
+    // Product Ref
     {
-      field: 'display_name',
-      headerName: 'שם מוצר',
-      minWidth: 200,
-      flex: 2,
+      field: 'ref',
+      headerName: 'מק"ט',
+      flex: 1,
       renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Avatar src={params.row.main_pic || params.row.parsed_images?.main} variant="rounded" sx={{ width: 32, height: 32 }}>
-            {(params.row.hebrew_name || params.row.english_name || params.row.ref)?.charAt(0)}
-          </Avatar>
-          <Box>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              {params.row.hebrew_name || params.row.english_name || params.row.ref}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {params.row.ref}
-            </Typography>
-          </Box>
-        </Box>
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          {params.value || '-'}
+        </Typography>
+      ),
+    },
+    // Hebrew Name
+    {
+      field: 'hebrew_name',
+      headerName: 'שם עברי',
+      flex: 1,
+      renderCell: (params) => (
+        <Typography variant="body2">
+          {params.value || '-'}
+        </Typography>
+      ),
+    },
+    // English Name
+    {
+      field: 'english_name',
+      headerName: 'שם אנגלי',
+      flex: 1,
+      renderCell: (params) => (
+        <Typography variant="body2">
+          {params.value || '-'}
+        </Typography>
       ),
     },
     // Product Line - Single Line Chip
     {
       field: 'product_line',
       headerName: 'קו מוצרים',
-      minWidth: 120,
       flex: 1,
       renderCell: (params) => (
         params.value ? (
@@ -85,24 +96,11 @@ const ProductDataTable: React.FC<ProductDataTableProps> = ({ products, onEdit, o
         )
       ),
     },
-    // Product Type - Single Line
-    {
-      field: 'product_type',
-      headerName: 'סוג',
-      minWidth: 100,
-      flex: 0.8,
-      renderCell: (params) => (
-        <Typography variant="body2">
-          {params.value || '-'}
-        </Typography>
-      ),
-    },
     // Price - Single Line Only
     {
       field: 'unit_price',
       headerName: 'מחיר',
-      minWidth: 80,
-      flex: 0.8,
+      flex: 1,
       renderCell: (params) => (
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
           {params.value ? `₪${params.value}` : '-'}
@@ -113,8 +111,7 @@ const ProductDataTable: React.FC<ProductDataTableProps> = ({ products, onEdit, o
     {
       field: 'qty',
       headerName: 'מלאי',
-      minWidth: 80,
-      flex: 0.7,
+      flex: 1,
       renderCell: (params) => {
         const stockStatus = params.row.stock_status;
         let color = 'text.primary';
@@ -140,8 +137,7 @@ const ProductDataTable: React.FC<ProductDataTableProps> = ({ products, onEdit, o
     {
       field: 'size',
       headerName: 'גודל',
-      minWidth: 70,
-      flex: 0.6,
+      flex: 1,
       renderCell: (params) => (
         <Typography variant="body2">
           {params.value || '-'}
@@ -152,8 +148,7 @@ const ProductDataTable: React.FC<ProductDataTableProps> = ({ products, onEdit, o
     {
       field: 'created_at',
       headerName: 'נוצר',
-      minWidth: 90,
-      flex: 0.7,
+      flex: 1,
       renderCell: (params) => (
         <Typography variant="body2">
           {new Date(params.value).toLocaleDateString('he-IL', { 
@@ -169,7 +164,7 @@ const ProductDataTable: React.FC<ProductDataTableProps> = ({ products, onEdit, o
       field: 'actions',
       type: 'actions',
       headerName: 'פעולות',
-      width: 80,
+      flex: 0.5,
       getActions: (params) => [
         <GridActionsCellItem
           key="edit"
@@ -190,39 +185,21 @@ const ProductDataTable: React.FC<ProductDataTableProps> = ({ products, onEdit, o
   ];
 
   return (
-    <Box sx={{ height: 600, width: '100%' }}>
-      <DataGrid
-        rows={products}
-        columns={columns}
-        initialState={{
-          pagination: {
-            paginationModel: { page: 0, pageSize: 10 },
-          },
-        }}
-        pageSizeOptions={[10, 25, 50]}
-        checkboxSelection
-        disableRowSelectionOnClick
-        autoHeight={false}
-        rowHeight={52}
-        sx={{
-          '& .MuiDataGrid-cell': {
-            borderBottom: '1px solid #f0f0f0',
-            padding: '8px 16px',
-            display: 'flex',
-            alignItems: 'center',
-          },
-          '& .MuiDataGrid-columnHeaders': {
-            backgroundColor: '#fafafa',
-            borderBottom: '2px solid #e0e0e0',
-            fontSize: '0.875rem',
-            fontWeight: 600,
-          },
-          '& .MuiDataGrid-columnHeaderTitle': {
-            fontWeight: 600,
-          },
-        }}
-      />
-    </Box>
+    <AdminDataGrid
+      rows={products}
+      columns={columns}
+      height={600}
+      initialState={{
+        pagination: {
+          paginationModel: { page: 0, pageSize: 10 },
+        },
+      }}
+      pageSizeOptions={[10, 25, 50]}
+      checkboxSelection
+      disableRowSelectionOnClick
+      autoHeight={false}
+      rowHeight={52}
+    />
   );
 };
 

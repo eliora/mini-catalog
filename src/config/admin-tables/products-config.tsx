@@ -1,33 +1,10 @@
 import React from 'react';
 import { GridColDef } from '@mui/x-data-grid';
-import { Typography, Chip, Box, Avatar } from '@mui/material';
+import { Typography, Chip } from '@mui/material';
+import { Product } from '@/types/product';
 
-// Product interface (matching the existing structure)
-export interface Product {
-  id: string;
-  ref: string;
-  hebrew_name?: string;
-  english_name?: string;
-  french_name?: string;
-  product_line?: string;
-  product_type?: string;
-  type?: string;
-  size?: string;
-  qty: number;
-  unit_price?: number;
-  description?: string;
-  description_he?: string;
-  main_pic?: string;
-  pics?: string[] | null;
-  created_at: string;
-  updated_at: string;
-  // Computed fields from helper functions
-  display_name?: string;
-  formatted_price?: string;
-  stock_status?: string;
-  stock_status_color?: string;
-  parsed_images?: { main?: string } | null;
-}
+// Re-export Product type for convenience
+export type { Product };
 
 // Helper to format currency
 const formatCurrency = (amount: number | undefined) => {
@@ -52,30 +29,40 @@ const getStockStatusColor = (qty: number) => {
 };
 
 export const productsTableColumns: GridColDef<Product>[] = [
-  // Product Name - Single Line with Avatar
+  // Product Ref
   {
-    field: 'display_name',
-    headerName: 'שם מוצר',
-    minWidth: 200,
-    flex: 2,
+    field: 'ref',
+    headerName: 'מק"ט',
+    minWidth: 100,
+    width: 120,
     renderCell: (params) => (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-        <Avatar 
-          src={params.row.main_pic || params.row.parsed_images?.main} 
-          variant="rounded" 
-          sx={{ width: 32, height: 32 }}
-        >
-          {(params.row.hebrew_name || params.row.english_name || params.row.ref)?.charAt(0)}
-        </Avatar>
-        <Box>
-          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-            {params.row.hebrew_name || params.row.english_name || params.row.ref}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {params.row.ref}
-          </Typography>
-        </Box>
-      </Box>
+      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+        {params.value || '-'}
+      </Typography>
+    ),
+  },
+  // Hebrew Name
+  {
+    field: 'hebrew_name',
+    headerName: 'שם עברי',
+    minWidth: 150,
+    width: 200,
+    renderCell: (params) => (
+      <Typography variant="body2">
+        {params.value || '-'}
+      </Typography>
+    ),
+  },
+  // English Name
+  {
+    field: 'english_name',
+    headerName: 'שם אנגלי',
+    minWidth: 150,
+    width: 200,
+    renderCell: (params) => (
+      <Typography variant="body2">
+        {params.value || '-'}
+      </Typography>
     ),
   },
   // Product Line - Single Line Chip
@@ -83,7 +70,7 @@ export const productsTableColumns: GridColDef<Product>[] = [
     field: 'product_line',
     headerName: 'קו מוצרים',
     minWidth: 120,
-    flex: 1,
+    width: 150,
     renderCell: (params) => (
       params.value ? (
         <Chip
@@ -97,24 +84,12 @@ export const productsTableColumns: GridColDef<Product>[] = [
       )
     ),
   },
-  // Product Type - Single Line
-  {
-    field: 'product_type',
-    headerName: 'סוג',
-    minWidth: 100,
-    flex: 0.8,
-    renderCell: (params) => (
-      <Typography variant="body2">
-        {params.value || '-'}
-      </Typography>
-    ),
-  },
   // Price - Single Line Only
   {
     field: 'unit_price',
     headerName: 'מחיר',
     minWidth: 80,
-    flex: 0.8,
+    width: 100,
     renderCell: (params) => (
       <Typography variant="body2" sx={{ fontWeight: 600 }}>
         {formatCurrency(params.value)}
@@ -126,7 +101,7 @@ export const productsTableColumns: GridColDef<Product>[] = [
     field: 'qty',
     headerName: 'מלאי',
     minWidth: 80,
-    flex: 0.7,
+    width: 90,
     renderCell: (params) => {
       const color = getStockStatusColor(params.value as number);
 
@@ -148,7 +123,7 @@ export const productsTableColumns: GridColDef<Product>[] = [
     field: 'size',
     headerName: 'גודל',
     minWidth: 70,
-    flex: 0.6,
+    width: 80,
     renderCell: (params) => (
       <Typography variant="body2">
         {params.value || '-'}
@@ -160,7 +135,7 @@ export const productsTableColumns: GridColDef<Product>[] = [
     field: 'created_at',
     headerName: 'נוצר',
     minWidth: 90,
-    flex: 0.7,
+    width: 110,
     renderCell: (params) => (
       <Typography variant="body2">
         {formatDate(params.value as string)}

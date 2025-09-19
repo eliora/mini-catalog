@@ -149,6 +149,7 @@ const AdminDataTable = <T extends { id: string }>({
         pageSizeOptions={pageSizeOptions}
         checkboxSelection={checkboxSelection}
         disableRowSelectionOnClick={disableRowSelectionOnClick}
+        disableMultipleRowSelection={true}
         autoHeight={autoHeight}
         rowHeight={52}
         onRowSelectionModelChange={handleSelectionModelChange}
