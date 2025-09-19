@@ -63,7 +63,7 @@ const getProducts = async (): Promise<Product[]> => {
 };
 
 const getOrders = async (): Promise<Order[]> => {
-  const response = await fetch('/api/orders');
+  const response = await fetch('/api/admin/orders');
   
   if (!response.ok) {
     throw new Error(`Failed to fetch orders: ${response.statusText}`);
@@ -75,7 +75,7 @@ const getOrders = async (): Promise<Order[]> => {
     throw new Error(data.error || 'Failed to fetch orders');
   }
   
-  return data.data || [];
+  return data.data.orders || [];
 };
 
 const saveProduct = async (formData: Record<string, unknown>): Promise<void> => {

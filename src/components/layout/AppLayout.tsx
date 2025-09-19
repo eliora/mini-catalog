@@ -9,11 +9,10 @@
  * - Navigation and routing logic
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Box, Container, CircularProgress, Typography } from '@mui/material';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { useCart } from '@/context/CartContext';
 import { useCompany } from '@/context/CompanyContext';
 import JDAHeader from './JDAHeader';
 
@@ -24,29 +23,9 @@ interface AppLayoutProps {
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { cart, getItemCount } = useCart();
-  const { isAdmin, signOut, isInitializing } = useAuth();
+  const { isAdmin, isInitializing } = useAuth();
   const { settings: companySettings } = useCompany();
   
-  // Search state for header
-  const [headerSearchTerm, setHeaderSearchTerm] = useState(''); // eslint-disable-line @typescript-eslint/no-unused-vars
-  
-  // Fix hydration mismatch by ensuring consistent cart count between server and client
-  const [cartCount, setCartCount] = useState(0); // eslint-disable-line @typescript-eslint/no-unused-vars
-  const [hasMounted, setHasMounted] = useState(false);
-  
-  // Only run on client after component has mounted
-  useEffect(() => {
-    setHasMounted(true);
-    setCartCount(getItemCount());
-  }, [getItemCount]);
-  
-  // Update cart count when cart changes, but only after mounting
-  useEffect(() => {
-    if (hasMounted) {
-      setCartCount(getItemCount());
-    }
-  }, [cart, getItemCount, hasMounted]);
 
   // Update document title based on company settings
   useEffect(() => {
@@ -60,26 +39,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     }
   }, [companySettings]);
 
-  const handleAdminLogout = () => { // eslint-disable-line @typescript-eslint/no-unused-vars
-    signOut();
-    router.push('/catalog');
-  };
-
-  // Header search handlers
-  const handleHeaderSearchChange = (value: string) => { // eslint-disable-line @typescript-eslint/no-unused-vars
-    setHeaderSearchTerm(value);
-    // Navigate to catalog if not already there
-    if (pathname !== '/catalog') {
-      router.push('/catalog');
-    }
-    // Dispatch a custom event to communicate with Catalog component
-    window.dispatchEvent(new CustomEvent('headerSearch', { detail: { searchTerm: value } }));
-  };
-
-  const handleHeaderSearchClear = () => { // eslint-disable-line @typescript-eslint/no-unused-vars
-    setHeaderSearchTerm('');
-    window.dispatchEvent(new CustomEvent('headerSearch', { detail: { searchTerm: '' } }));
-  };
 
   // Redirect to catalog if trying to access admin without being logged in
   useEffect(() => {

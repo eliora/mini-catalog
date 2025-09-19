@@ -138,12 +138,13 @@ export default function OrderRevivalDialog({
     { value: "completed", label: "הושלם" }
   ];
 
-  const paymentStatuses: Array<{ value: string; label: string }> = [ // eslint-disable-line @typescript-eslint/no-unused-vars
-    { value: "pending", label: "ממתין לתשלום" },
-    { value: "paid", label: "שולם" },
-    { value: "failed", label: "נכשל" },
-    { value: "refunded", label: "הוחזר" }
-  ];
+  // TODO: Implement payment status functionality
+  // const paymentStatuses: Array<{ value: string; label: string }> = [
+  //   { value: "pending", label: "ממתין לתשלום" },
+  //   { value: "paid", label: "שולם" },
+  //   { value: "failed", label: "נכשל" },
+  //   { value: "refunded", label: "הוחזר" }
+  // ];
 
   return (
     <Dialog

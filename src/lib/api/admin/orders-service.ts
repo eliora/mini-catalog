@@ -41,8 +41,14 @@ export function getStatusLabel(status: string): string {
 }
 
 export function transformOrder(order: Record<string, unknown>) {
+  const client = order.client as Record<string, unknown> | null;
+  
+  // Determine customer name: use client full_name if available, otherwise use notes field
+  const customerName = client?.full_name || order.notes || 'לקוח אנונימי';
+  
   return {
     ...order,
+    customer_name: customerName, // Add customer_name for easy access
     parsedItems: Array.isArray(order.items) ? order.items : JSON.parse(String(order.items || '[]')),
     formattedTotal: new Intl.NumberFormat('he-IL', {
       style: 'currency',
@@ -60,12 +66,12 @@ export async function getOrders(supabase: any, filters: Record<string, unknown>,
   const { page, limit } = pagination;
   const offset = ((page as number) - 1) * (limit as number);
 
-  // Build main query
+  // Build main query - include client data only if client_id exists
   let query = supabase
     .from('orders')
     .select(`
       *,
-      client:users!orders_client_id_fkey (
+      client:users!left (
         id,
         full_name,
         email,
@@ -89,8 +95,8 @@ export async function getOrders(supabase: any, filters: Record<string, unknown>,
   }
 
   if (filters.search) {
-    // Search in order ID, client name, or email
-    query = query.or(`id.ilike.%${filters.search}%, client.full_name.ilike.%${filters.search}%, client.email.ilike.%${filters.search}%`);
+    // Search in order ID, notes (customer names), client name, or email
+    query = query.or(`id.ilike.%${filters.search}%, notes.ilike.%${filters.search}%, client.full_name.ilike.%${filters.search}%, client.email.ilike.%${filters.search}%`);
   }
 
   const { data: orders, error, count } = await query;
@@ -147,6 +153,22 @@ export async function createOrder(supabase: any, orderData: Record<string, unkno
   }
 
   return transformOrder(order);
+}
+
+export async function deleteOrder(supabase: any, orderId: string) { // eslint-disable-line @typescript-eslint/no-explicit-any
+  // Instead of hard deleting, we'll mark the order as cancelled
+  const { data, error } = await supabase
+    .from('orders')
+    .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+    .eq('id', orderId)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to cancel order: ${error.message}`);
+  }
+
+  return data;
 }
 
 export function validateOrder(data: Record<string, unknown>): { isValid: boolean; errors: string[] } {

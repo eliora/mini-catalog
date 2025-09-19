@@ -19,6 +19,7 @@ import {
 import {
   getOrders,
   createOrder,
+  deleteOrder,
   validateOrder
 } from '@/lib/api/admin/orders-service';
 
@@ -47,14 +48,14 @@ export async function GET(request: NextRequest) {
         filters: {
           applied: filters,
           available: {
-            statuses: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'completed', 'cancelled']
+            statuses: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled']
           }
         },
         stats: {
           total: result.total,
           pending: result.orders.filter((o: Order) => o.status === 'pending').length,
           processing: result.orders.filter((o: Order) => o.status === 'processing').length,
-          completed: result.orders.filter((o: Order) => ['delivered', 'completed'].includes(o.status)).length,
+          delivered: result.orders.filter((o: Order) => o.status === 'delivered').length,
         }
       });
     } catch (error: unknown) {
@@ -108,6 +109,38 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Order creation API error:', error);
+    return internalErrorResponse();
+  }
+}
+
+// DELETE - Cancel/delete an order
+export async function DELETE(request: NextRequest) {
+  try {
+    const supabaseAdmin = await createAuthedAdminClient(request);
+
+    // Parse order ID from query parameters
+    const { searchParams } = new URL(request.url);
+    const orderId = searchParams.get('id');
+
+    if (!orderId) {
+      return errorResponse('Order ID is required', 400);
+    }
+
+    // Delete/cancel the order
+    try {
+      const cancelledOrder = await deleteOrder(supabaseAdmin, orderId);
+      return successResponse({
+        order: cancelledOrder,
+        message: 'Order cancelled successfully'
+      });
+    } catch (error: unknown) {
+      console.error('Error cancelling order:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      return internalErrorResponse('Failed to cancel order', errorMessage);
+    }
+
+  } catch (error) {
+    console.error('Order deletion API error:', error);
     return internalErrorResponse();
   }
 }

@@ -40,7 +40,7 @@ const FilterChipGroup: React.FC<FilterChipGroupProps> = ({
     opacity: disabled ? 0.6 : 1
   };
 
-  const getChipProps = (value: string, isSelected: boolean) => ({
+  const getChipProps = (_value: string, isSelected: boolean) => ({
     variant: isSelected ? 'filled' as const : 'outlined' as const,
     color: isSelected ? 'primary' as const : 'default' as const,
     size: 'small' as const,

@@ -175,7 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [queryClient, loadUserProfile]);
+  }, [queryClient]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sign in with email and password
   const signIn = useCallback(async (email: string, password: string): Promise<{ error?: string }> => {

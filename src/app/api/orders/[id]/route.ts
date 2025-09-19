@@ -5,7 +5,7 @@ import { ApiResponse } from '@/types/api';
 
 // GET /api/orders/[id] - Get order by ID
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {

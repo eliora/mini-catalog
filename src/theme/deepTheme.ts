@@ -176,7 +176,17 @@ export const createDeepTheme = () => {
       ...deepColors,
       mode: 'light',
     } as Record<string, unknown>,
-    
+
+    breakpoints: {
+      values: {
+        xs: 0,
+        sm: 600,
+        md: 900,
+        lg: 1200,
+        xl: 1536,
+      },
+    },
+
     typography: {
       fontFamily: [
         'Heebo',
@@ -264,24 +274,12 @@ export const createDeepTheme = () => {
           },
           elevation1: {
             boxShadow: deepShadows.depth1,
-            '&:hover': {
-              boxShadow: deepShadows.depth2,
-              transform: 'translateY(-1px)',
-            },
           },
           elevation2: {
             boxShadow: deepShadows.depth2,
-            '&:hover': {
-              boxShadow: deepShadows.depth3,
-              transform: 'translateY(-2px)',
-            },
           },
           elevation3: {
             boxShadow: deepShadows.depth3,
-            '&:hover': {
-              boxShadow: deepShadows.depth4,
-              transform: 'translateY(-3px)',
-            },
           },
         },
       },
@@ -291,27 +289,17 @@ export const createDeepTheme = () => {
           root: {
             borderRadius: 20,
             border: `1px solid ${deepColors.grey[200]}`,
-            boxShadow: deepShadows.depth2,
-            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+
+
             overflow: 'hidden',
             position: 'relative',
             
             '&::before': {
               content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: '1px',
-              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent)',
-              zIndex: 1,
+
+
             },
             
-            '&:hover': {
-              boxShadow: deepShadows.depth4,
-              transform: 'translateY(-8px) scale(1.02)',
-              borderColor: deepColors.primary[300],
-            },
           },
         },
       },
@@ -324,7 +312,6 @@ export const createDeepTheme = () => {
             fontWeight: 600,
             fontSize: '0.875rem',
             textTransform: 'none' as const,
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             position: 'relative',
             overflow: 'hidden',
             
@@ -336,34 +323,17 @@ export const createDeepTheme = () => {
               width: '100%',
               height: '100%',
               background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
-              transition: 'left 0.6s ease',
             },
             
-            '&:hover::before': {
-              left: '100%',
-            },
           },
           
           contained: {
             boxShadow: deepShadows.depth2,
-            '&:hover': {
-              boxShadow: deepShadows.depth3,
-              transform: 'translateY(-2px)',
-            },
-            '&:active': {
-              transform: 'translateY(0)',
-              boxShadow: deepShadows.depth1,
-            },
           },
           
           containedPrimary: {
             background: deepGradients.primary,
             boxShadow: deepShadows.primaryShadow,
-            '&:hover': {
-              background: deepGradients.primary,
-              boxShadow: deepShadows.primaryShadow,
-              filter: 'brightness(1.1)',
-            },
           },
           
           outlined: {
@@ -371,12 +341,6 @@ export const createDeepTheme = () => {
             borderColor: deepColors.grey[300],
             backgroundColor: 'rgba(255, 255, 255, 0.8)',
             backdropFilter: 'blur(10px)',
-            '&:hover': {
-              borderColor: deepColors.primary.main,
-              backgroundColor: 'rgba(25, 118, 210, 0.08)',
-              transform: 'translateY(-2px)',
-              boxShadow: deepShadows.depth2,
-            },
           },
         },
       },
@@ -411,14 +375,13 @@ export const createDeepTheme = () => {
       MuiTab: {
         styleOverrides: {
           root: {
-            borderRadius: 12,
+            borderRadius: 2,
             margin: '0 4px',
             minHeight: 48,
             fontWeight: 600,
             fontSize: '0.875rem',
             textTransform: 'none' as const,
             color: deepColors.grey[600],
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             position: 'relative',
             overflow: 'hidden',
             
@@ -426,25 +389,14 @@ export const createDeepTheme = () => {
               content: '""',
               position: 'absolute',
               inset: 0,
-              borderRadius: 12,
+              borderRadius: 2,
               padding: '2px',
               background: 'linear-gradient(135deg, transparent, rgba(25, 118, 210, 0.1), transparent)',
               mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
               maskComposite: 'xor',
               opacity: 0,
-              transition: 'opacity 0.3s ease',
             },
             
-            '&:hover': {
-              backgroundColor: 'rgba(25, 118, 210, 0.08)',
-              color: deepColors.primary.main,
-              transform: 'translateY(-2px)',
-              boxShadow: deepShadows.depth1,
-              
-              '&::before': {
-                opacity: 1,
-              },
-            },
             
             '&.Mui-selected': {
               background: deepGradients.primary,
@@ -452,10 +404,6 @@ export const createDeepTheme = () => {
               boxShadow: deepShadows.primaryShadow,
               transform: 'translateY(-2px)',
               
-              '&:hover': {
-                background: deepGradients.primary,
-                filter: 'brightness(1.1)',
-              },
             },
           },
         },

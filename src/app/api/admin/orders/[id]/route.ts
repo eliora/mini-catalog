@@ -32,12 +32,12 @@ export async function GET(request: NextRequest) {
       return errorResponse('Invalid order ID in URL', 400);
     }
 
-    // Fetch order with client details
+    // Fetch order with client details (left join to handle anonymous orders)
     const { data: order, error } = await supabaseAdmin
       .from('orders')
       .select(`
         *,
-        client:users!orders_client_id_fkey (
+        client:users!left (
           id,
           full_name,
           email,
@@ -128,7 +128,7 @@ export async function PUT(request: NextRequest) {
     }
 
     if (status !== undefined) {
-      const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'completed', 'cancelled'];
+      const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
       if (!validStatuses.includes(status)) {
         return errorResponse(`Invalid status. Must be one of: ${validStatuses.join(', ')}`, 400);
       }
@@ -147,7 +147,7 @@ export async function PUT(request: NextRequest) {
       .eq('id', orderId)
       .select(`
         *,
-        client:users!orders_client_id_fkey (
+        client:users!left (
           id,
           full_name,
           email,

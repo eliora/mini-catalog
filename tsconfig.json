@@ -32,14 +32,17 @@
     }
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
     ".next/types/**/*.ts",
+    "constants/**/*",
     "next-env.d.ts",
+    "src/**/*",
     "build/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
+    "build/**/*",
+    ".next/cache/**/*",
+    ".next/static/**/*",
     "temp/**/*",
     "temp-packages/**/*"
   ]

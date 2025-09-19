@@ -1,147 +1,109 @@
-/**
- * @file Client Management View
- * @description The primary UI component for the client management page.
- * It composes the header, stats, and data table components, and orchestrates
- * the user interactions by leveraging the `useClientManagement` hook.
- */
 'use client';
-import React, { useState, useMemo } from 'react';
-import { Box, Card, Alert, CircularProgress } from '@mui/material';
 
-import { useClientManagement } from '@/hooks/useClientManagement';
-import ClientDataTable from '@/components/admin/data-tables/ClientDataTable';
-import ClientEditDialog from '@/components/admin/dialogs/ClientEditDialog';
+import React from 'react';
+import { Card } from '@mui/material';
 
-// Define proper interfaces
-interface Client {
-  id: string;
-  email: string;
-  full_name: string;
-  user_role: 'standard' | 'verified_members' | 'customer' | 'admin';
-  business_name?: string;
-  phone_number?: string;
-  address?: string | null;
-  status: 'active' | 'inactive' | 'suspended';
-  created_at: string;
-  updated_at: string;
-}
+// Shared admin components
+import { AdminDataTable, AdminPageLayout, AdminPageHeader } from '@/components/admin/shared';
 
-interface ClientData {
-  email: string;
-  full_name: string;
-  user_role: 'standard' | 'verified_members' | 'customer' | 'admin';
-  business_name?: string;
-  phone_number?: string;
-  address?: string | null;
-  status: 'active' | 'inactive' | 'suspended';
-  password?: string;
-}
-import PageWrapper from '../../page-wrapper';
-import ClientManagementHeader from '@/components/admin/client-management/ClientManagementHeader';
-import ClientStatsGrid from '@/components/admin/client-management/ClientStatsGrid';
+// Hooks
+import { useAdminResource } from '@/hooks/useAdminResource';
+import { clientsTableColumns, Client } from '@/config/admin-tables/clients-config';
+
+// Dialogs (will be created/integrated later)
+// import ClientEditDialog from '@/components/admin/dialogs/ClientEditDialog';
+// import ClientBulkActionsDialog from '@/components/admin/dialogs/ClientBulkActionsDialog';
 
 const ClientManagementView: React.FC = () => {
-  // --- Hooks ---
+  // Use the universal admin resource hook
   const {
-    clients,
-    userRoles,
-    availableFilters: _availableFilters, // eslint-disable-line @typescript-eslint/no-unused-vars
+    data: clients,
     loading,
     error,
-    pagination,
-    fetchClients: _fetchClients, // eslint-disable-line @typescript-eslint/no-unused-vars
-    handleSaveClient,
-    handleDeleteClient,
-  } = useClientManagement();
+    pagination: _pagination, // eslint-disable-line @typescript-eslint/no-unused-vars
+    stats: _stats, // eslint-disable-line @typescript-eslint/no-unused-vars
+    fetchData: _fetchData, // eslint-disable-line @typescript-eslint/no-unused-vars
+    updateItem: _updateItem, // eslint-disable-line @typescript-eslint/no-unused-vars
+    deleteItem,
+    refresh,
+    clearError
+  } = useAdminResource<Client>({
+    resource: 'clients',
+    endpoint: '/api/admin/client-management', // Using the existing working endpoint
+    autoFetch: true
+  });
 
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<Client | undefined>(undefined);
+  // Local state for dialogs and selections (TODO: Implement dialog functionality)
+  // const [selectedClients, setSelectedClients] = useState<string[]>([]);
+  // const [editDialogOpen, setEditDialogOpen] = useState(false);
+  // const [selectedClient, setSelectedClient] = useState<Client | undefined>(undefined);
 
-  // --- Memos for Performance ---
-  const stats = useMemo(() => ({
-    totalClients: pagination.total,
-    activeClients: clients.filter(c => c.status === 'active').length,
-    verifiedMembers: clients.filter(c => c.user_role === 'verified_members').length,
-    adminUsers: clients.filter(c => c.user_role === 'admin').length,
-  }), [clients, pagination.total]);
-
-  // --- Permissions (Placeholder) ---
-  const canRead = true;
+  // Permissions (same pattern as client management)
   const canWrite = true;
-  const canDelete: boolean = true; // eslint-disable-line @typescript-eslint/no-unused-vars
+  const canDelete = true;
 
-  // --- Handlers ---
-  const handleEditClient = (client: Client) => {
-    setSelectedClient(client);
-    setEditDialogOpen(true);
-  };
-
+  // Handlers for actions
   const handleAddClient = () => {
-    setSelectedClient(undefined);
-    setEditDialogOpen(true);
+    // TODO: Implement add client dialog
+    console.log('Add client clicked');
   };
 
-  const handleDialogClose = () => {
-    setEditDialogOpen(false);
-    setSelectedClient(undefined);
+  const handleEditClient = (client: Client) => {
+    // TODO: Implement edit client dialog
+    console.log('Edit client:', client.id);
   };
-  
-  const handleDialogSave = async (clientData: ClientData) => {
-    try {
-      await handleSaveClient(clientData as unknown as Record<string, unknown>, selectedClient);
-      handleDialogClose();
-    } catch (err) {
-      console.error('Error saving client:', err);
-      // Re-throw to be handled by the dialog's internal error state
-      throw err;
-    }
-  };
-  
-  // --- Render Logic ---
-  if (!canRead) {
-    return (
-      <Card><Alert severity="error">אין לך הרשאה לצפות בניהול לקוחות.</Alert></Card>
-    );
-  }
 
-  if (loading && clients.length === 0) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+  const handleDeleteClient = async (clientId: string) => {
+    await deleteItem(clientId);
+  };
+
+  const handleSelectionChange = (selectedIds: string[]) => {
+    // TODO: Implement selection handling
+    console.log('Selected clients:', selectedIds);
+  };
 
   return (
-    <PageWrapper title="ניהול לקוחות">
-      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
-      
-      <ClientManagementHeader
-        canWrite={canWrite}
-        onAddClient={handleAddClient}
-        onExport={() => console.log('Exporting...')}
-        onImport={() => console.log('Importing...')}
+    <AdminPageLayout title="ניהול לקוחות" loading={loading} error={error} onErrorDismiss={clearError}>
+      <AdminPageHeader
+        title="ניהול לקוחות"
+        breadcrumbs={[{ label: 'ראשי', href: '/admin' }, { label: 'לקוחות', href: '/admin/client-management' }]}
+        onAdd={handleAddClient}
+        onRefresh={refresh}
+        refreshing={loading}
+        canAdd={canWrite}
       />
 
-      <ClientStatsGrid {...stats} />
+      {/* Optional: Display stats grid here */}
+      {/* <AdminStatsGrid stats={stats} /> */}
 
-      <Card>
-        <ClientDataTable
-          clients={clients}
+      <Card sx={{ borderRadius: 2, boxShadow: 1 }}>
+        <AdminDataTable<Client>
+          data={clients}
+          columns={clientsTableColumns}
+          loading={loading}
           onEdit={handleEditClient}
           onDelete={handleDeleteClient}
-          // getStatusChip and getRoleChip can be moved inside ClientDataTable or passed as props
+          onSelectionChange={handleSelectionChange}
+          permissions={{ canEdit: canWrite, canDelete: canDelete }}
         />
       </Card>
 
-      <ClientEditDialog
-        client={selectedClient}
-        userRoles={userRoles}
+      {/* Client Edit Dialog (TODO: Implement) */}
+      {/* <ClientEditDialog
         open={editDialogOpen}
-        onClose={handleDialogClose}
-        onSave={handleDialogSave}
-      />
-    </PageWrapper>
+        onClose={() => setEditDialogOpen(false)}
+        client={selectedClient}
+        onSave={handleSaveClient}
+      /> */}
+
+      {/* Client Bulk Actions Dialog (TODO: Implement) */}
+      {/* <ClientBulkActionsDialog
+        open={bulkActionsDialogOpen}
+        onClose={() => setBulkActionsDialogOpen(false)}
+        selectedClients={selectedClients}
+        onActionComplete={handleBulkActionComplete}
+      /> */}
+    </AdminPageLayout>
   );
 };
 

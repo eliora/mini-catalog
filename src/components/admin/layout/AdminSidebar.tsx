@@ -90,7 +90,7 @@ interface AdminSidebarProps {
 }
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({
-  open: controlledOpen,
+  open: _controlledOpen, // eslint-disable-line @typescript-eslint/no-unused-vars
   onClose
 }) => {
   const theme = useTheme();
@@ -100,7 +100,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
   const router = useRouter();
   const { user } = useAuth();
 
-  const _isOpen = controlledOpen !== undefined ? controlledOpen : !isMobile; // eslint-disable-line @typescript-eslint/no-unused-vars
 
   const handleDrawerToggle = () => {
     if (onClose) {
