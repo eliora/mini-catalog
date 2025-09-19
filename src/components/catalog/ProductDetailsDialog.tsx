@@ -12,7 +12,7 @@
  * This is the detailed product view that opens when users click "info" button on product cards.
  * 
  * USAGE CONTEXT:
- * - Triggered from ProductCard or ProductListItem "info" button clicks
+ * - Triggered from ProductListItem "info" button clicks
  * - Used in ALL view modes (catalog cards, list, compact)
  * - Opens as overlay modal dialog on top of catalog
  * - Primary detailed product view for desktop users

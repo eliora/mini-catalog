@@ -19,7 +19,7 @@
  * - Central hub for all product rendering logic
  * 
  * VIEW MODES:
- * 1. CATALOG (default): Grid of ProductCard components - optimized for desktop
+ * 1. CATALOG (default): Grid of ProductListItem components - optimized for desktop
  * 2. LIST: Vertical list of ProductListItem with accordions - good for mobile
  * 3. COMPACT: Same as list but more condensed layout
  * 

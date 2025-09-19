@@ -36,6 +36,7 @@ PROJECT CONTEXT
 ESLINT RULES (ZERO TOLERANCE)
 ------------------------------------------------------------
 - No global disables.
+- check constant folder for any db related table code.
 - no-unused-vars: DELETE immediately or rename to `_var` if intentionally unused.
 - no-explicit-any: DO NOT use `any`. Use proper interface or `unknown` + cast.
 - @next/next/no-img-element: REPLACE with next/image ALWAYS.

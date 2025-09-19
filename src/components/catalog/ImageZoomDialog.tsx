@@ -13,7 +13,7 @@
  * 
  * USAGE CONTEXT:
  * - Triggered from ProductDetailsDialog zoom button
- * - Triggered from ProductCard or ProductListItem image clicks
+ * - Triggered from ProductListItem image clicks
  * - Used for detailed product image examination
  * - Supports both single images and image galleries
  * 

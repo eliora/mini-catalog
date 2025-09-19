@@ -8,22 +8,20 @@
  * 🎯 TRIGGER: Used by catalog to render each product
  * 
  * WHAT IT DOES:
- * Smart wrapper component that decides how to render products based on view mode.
- * Handles the switch between card view and list view rendering.
+ * Wrapper component that renders products using ProductListItem.
+ * ProductCard component has been removed, so all views use list format.
  * 
  * USAGE CONTEXT:
  * - Used by CatalogClean to render each product in the catalog
- * - Handles both 'catalog' (card) and 'list'/'compact' view modes
- * - Provides consistent prop interface for both card and list components
+ * - All view modes now use ProductListItem component
+ * - Provides consistent prop interface for product components
  * - Optimized with React.memo to prevent unnecessary re-renders
  * 
  * RESPONSIVE BEHAVIOR:
- * - Card view: Uses Grid layout for responsive card grid
- * - List view: Uses full-width list items
+ * - All views: Uses ProductListItem with full-width list items
  * - Passes through all necessary props to child components
  * 
  * FEATURES:
- * - View mode switching (card vs list)
  * - Memoized for performance optimization
  * - Unified prop interface for all product components
  * - Quantity management integration
@@ -47,7 +45,6 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import { Product } from '@/types/product';
-import ProductCard from './ProductCard';
 import ProductListItem from './ProductListItem';
 
 interface ProductRendererProps {
@@ -94,26 +91,7 @@ const ProductRenderer: React.FC<ProductRendererProps> = React.memo(({
     parseJsonField
   };
 
-  // Card view (catalog mode) - wrapped in responsive flex container
-  if (viewMode === 'catalog') {
-    return (
-      <Box sx={{ 
-        flex: '1 1 300px', 
-        minWidth: 280, 
-        maxWidth: 400,
-        // Ensure consistent spacing in flex grid
-        mb: 2
-      }}>
-        <ProductCard
-          {...commonProps}
-          canViewPrices={canViewPrices}
-          productPrice={productPrices[product.ref]}
-        />
-      </Box>
-    );
-  }
-
-  // List view (list/compact modes) - full width
+  // All views now use ProductListItem (ProductCard removed)
   return (
     <ProductListItem {...commonProps} />
   );

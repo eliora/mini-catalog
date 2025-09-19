@@ -12,37 +12,7 @@ import {
  * Provides consistent loading states across the application
  */
 
-// Product Card Skeleton (for catalog view)
-interface ProductCardSkeletonProps {
-  count?: number;
-}
-
-export const ProductCardSkeleton: React.FC<ProductCardSkeletonProps> = ({ count = 1 }) => {
-  return (
-    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-      {Array.from({ length: count }).map((_, index) => (
-        <Box key={index} sx={{ flex: '1 1 300px', minWidth: 280, maxWidth: 400 }}>
-          <Card sx={{ height: 240, borderRadius: 2 }}>
-            <CardContent sx={{ p: 2 }}>
-              <Skeleton 
-                variant="rectangular" 
-                width="100%" 
-                height={120} 
-                sx={{ borderRadius: 1, mb: 1 }}
-              />
-              <Skeleton variant="text" width="80%" height={20} />
-              <Skeleton variant="text" width="60%" height={16} />
-              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 1 }}>
-                <Skeleton variant="text" width="40%" height={18} />
-                <Skeleton variant="rectangular" width={60} height={24} sx={{ borderRadius: 1 }} />
-              </Stack>
-            </CardContent>
-          </Card>
-        </Box>
-      ))}
-    </Box>
-  );
-};
+// ProductCardSkeleton removed since ProductCard component was deleted
 
 // Product List Item Skeleton (for accordion view)
 interface ProductListSkeletonProps {
@@ -101,9 +71,7 @@ export const SearchResultsSkeleton: React.FC<SearchResultsSkeletonProps> = ({
   viewMode = 'list', 
   count = 6 
 }) => {
-  if (viewMode === 'catalog') {
-    return <ProductCardSkeleton count={count} />;
-  }
+  // ProductCard removed, all views now use ProductListSkeleton
   return <ProductListSkeleton count={count} />;
 };
 
@@ -223,7 +191,6 @@ export const SearchLoadingOverlay: React.FC<SearchLoadingOverlayProps> = ({
 };
 
 const SkeletonComponents = {
-  ProductCardSkeleton,
   ProductListSkeleton,
   SearchResultsSkeleton,
   AccordionContentSkeleton,
