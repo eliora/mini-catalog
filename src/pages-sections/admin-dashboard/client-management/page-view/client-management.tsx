@@ -11,7 +11,31 @@ import { Box, Card, Alert, CircularProgress } from '@mui/material';
 import { useClientManagement } from '@/hooks/useClientManagement';
 import ClientDataTable from '@/components/admin/data-tables/ClientDataTable';
 import ClientEditDialog from '@/components/admin/dialogs/ClientEditDialog';
-// Types will be inferred from the components
+
+// Define proper interfaces
+interface Client {
+  id: string;
+  email: string;
+  full_name: string;
+  user_role: 'standard' | 'verified_members' | 'customer' | 'admin';
+  business_name?: string;
+  phone_number?: string;
+  address?: string | null;
+  status: 'active' | 'inactive' | 'suspended';
+  created_at: string;
+  updated_at: string;
+}
+
+interface ClientData {
+  email: string;
+  full_name: string;
+  user_role: 'standard' | 'verified_members' | 'customer' | 'admin';
+  business_name?: string;
+  phone_number?: string;
+  address?: string | null;
+  status: 'active' | 'inactive' | 'suspended';
+  password?: string;
+}
 import PageWrapper from '../../page-wrapper';
 import ClientManagementHeader from '@/components/admin/client-management/ClientManagementHeader';
 import ClientStatsGrid from '@/components/admin/client-management/ClientStatsGrid';
@@ -31,7 +55,7 @@ const ClientManagementView: React.FC = () => {
   } = useClientManagement();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<any | undefined>(undefined);
+  const [selectedClient, setSelectedClient] = useState<Client | undefined>(undefined);
 
   // --- Memos for Performance ---
   const stats = useMemo(() => ({
@@ -47,7 +71,7 @@ const ClientManagementView: React.FC = () => {
   const canDelete = true;
 
   // --- Handlers ---
-  const handleEditClient = (client: any) => {
+  const handleEditClient = (client: Client) => {
     setSelectedClient(client);
     setEditDialogOpen(true);
   };
@@ -62,9 +86,9 @@ const ClientManagementView: React.FC = () => {
     setSelectedClient(undefined);
   };
   
-  const handleDialogSave = async (clientData: any) => {
+  const handleDialogSave = async (clientData: ClientData) => {
     try {
-      await handleSaveClient(clientData, selectedClient);
+      await handleSaveClient(clientData as unknown as Record<string, unknown>, selectedClient);
       handleDialogClose();
     } catch (err) {
       console.error('Error saving client:', err);

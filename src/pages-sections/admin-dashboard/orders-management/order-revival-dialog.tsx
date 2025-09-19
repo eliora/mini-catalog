@@ -62,7 +62,7 @@ interface Order {
     email: string;
     phone_number?: string;
     business_name?: string;
-    address?: any;
+    address?: string | null;
     user_roles: string[];
     status: string;
   };
@@ -177,9 +177,9 @@ export default function OrderRevivalDialog({
           החיית הזמנה מאפשרת לערוך הזמנה שהושלמה או בוטלה ולהחזירה למצב פעיל
         </Alert>
 
-        <Grid container {...({} as any)} spacing={3}>
+        <Grid container spacing={3}>
           {/* Customer Information */}
-          <Grid item {...({} as any)} xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "primary.200" }}>
               <CardContent>
                 <FlexBox alignItems="center" gap={2} mb={2}>
@@ -187,8 +187,8 @@ export default function OrderRevivalDialog({
                   <H6 sx={{ fontWeight: 700 }}>פרטי הלקוח</H6>
                 </FlexBox>
                 
-                <Grid container {...({} as any)} spacing={2}>
-                  <Grid item {...({} as any)} md={4} xs={12}>
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, md: 4 }}>
                     <TextField
                       fullWidth
                       label="שם הלקוח"
@@ -207,7 +207,7 @@ export default function OrderRevivalDialog({
                     />
                   </Grid>
 
-                  <Grid item {...({} as any)} md={4} xs={12}>
+                  <Grid size={{ xs: 12, md: 4 }}>
                     <TextField
                       fullWidth
                       label="אימייל"
@@ -227,7 +227,7 @@ export default function OrderRevivalDialog({
                     />
                   </Grid>
 
-                  <Grid item {...({} as any)} md={4} xs={12}>
+                  <Grid size={{ xs: 12, md: 4 }}>
                     <TextField
                       fullWidth
                       label="טלפון"
@@ -252,7 +252,7 @@ export default function OrderRevivalDialog({
           </Grid>
 
           {/* Order Items */}
-          <Grid item {...({} as any)} xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "success.200" }}>
               <CardContent>
                 <FlexBetween mb={2}>
@@ -376,7 +376,7 @@ export default function OrderRevivalDialog({
           </Grid>
 
           {/* Order Status */}
-          <Grid item {...({} as any)} xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "warning.200" }}>
               <CardContent>
                 <FlexBox alignItems="center" gap={2} mb={2}>
@@ -384,8 +384,8 @@ export default function OrderRevivalDialog({
                   <H6 sx={{ fontWeight: 700 }}>סטטוס ההזמנה</H6>
                 </FlexBox>
                 
-                <Grid container {...({} as any)} spacing={2}>
-                  <Grid item {...({} as any)} md={6} xs={12}>
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <FormControl fullWidth>
                       <InputLabel>סטטוס הזמנה</InputLabel>
                       <Select
@@ -401,14 +401,14 @@ export default function OrderRevivalDialog({
                     </FormControl>
                   </Grid>
 
-                  <Grid item {...({} as any)} md={6} xs={12}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <TextField
                       fullWidth
                       label="הערות"
                       multiline
                       rows={2}
-                      value={(formData as any).notes || ''}
-                      onChange={(e) => setFormData(prev => prev ? { ...prev, notes: e.target.value } as any : null)}
+                      value={(formData as Order & { notes?: string }).notes || ''}
+                      onChange={(e) => setFormData(prev => prev ? { ...prev, notes: e.target.value } as Order & { notes?: string } : null)}
                       sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                       placeholder="הערות נוספות להזמנה..."
                     />
