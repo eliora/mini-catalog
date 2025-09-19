@@ -37,8 +37,8 @@ const SearchHeader: React.FC<SearchHeaderProps> = ({
   onSearchChange,
   onClearSearch,
   placeholder = "חיפוש...",
-  filteredCount,
-  countLabel = "פריטים",
+  filteredCount: _filteredCount, // eslint-disable-line @typescript-eslint/no-unused-vars
+  countLabel: _countLabel = "פריטים", // eslint-disable-line @typescript-eslint/no-unused-vars
   activeFilters = [],
   onFilterRemove,
   actions

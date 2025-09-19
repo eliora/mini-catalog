@@ -15,7 +15,7 @@ interface UseAdminAccessResult {
 }
 
 export const useAdminAccess = (): UseAdminAccessResult => {
-  const { user, isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin } = useAuth();
 
   return {
     // Admin panel access (only for admin role)

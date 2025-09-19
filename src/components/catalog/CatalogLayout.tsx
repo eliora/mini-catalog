@@ -19,8 +19,15 @@ import { Box, useTheme, useMediaQuery } from '@mui/material';
 import FilterSidebar from './desktop/FilterSidebar';
 import MobileFilterDrawer from './mobile/MobileFilterDrawer';
 
+interface FilterOptions {
+  lines: string[];
+  productTypes: string[];
+  skinTypes: string[];
+  types: string[];
+}
+
 interface FilterState {
-  filterOptions: any;
+  filterOptions: FilterOptions;
   selectedLines?: string[];
   selectedProductTypes?: string[];
   selectedSkinTypes?: string[];

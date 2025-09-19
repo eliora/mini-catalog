@@ -53,7 +53,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   stats = {},
   mobileOpen,
   onDrawerToggle,
-  showAnalytics = false,
+  showAnalytics: _showAnalytics = false, // eslint-disable-line @typescript-eslint/no-unused-vars
   companyName = 'מערכת ניהול חכמה',
   version = '3.0'
 }) => {

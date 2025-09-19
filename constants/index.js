@@ -134,7 +134,7 @@ export const ERROR_MESSAGES = {
   DUPLICATE_KEY: 'Record already exists'
 };
 
-export default {
+const DATABASE_CONSTANTS = {
   USERS_TABLE,
   ORDERS_TABLE,
   PRODUCTS_TABLE,
@@ -144,6 +144,8 @@ export default {
   RLS_HELPERS,
   QUERY_BUILDERS,
   VALIDATORS,
-  ERROR_MESSAGES
+  ERROR_MESSAGES,
 };
+
+export default DATABASE_CONSTANTS;
 

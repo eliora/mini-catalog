@@ -83,16 +83,16 @@ const ProductImage: React.FC<ProductImageProps> = ({
             }}
           />
         ) : (
-          // Use regular img for external URLs (no Next.js optimization needed)
-          <img
+          // Use Next.js Image for external URLs
+          <Image
             src={imageSrc}
             alt={altText}
+            fill
             style={{
-              width: '100%',
-              height: '100%',
               objectFit: 'contain',
               padding: `${padding * 8}px`, // Convert MUI spacing to pixels
             }}
+            sizes="(max-width: 768px) 100vw, 50vw"
             onError={(e) => {
               // Fallback to placeholder on error
               const target = e.target as HTMLImageElement;

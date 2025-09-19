@@ -25,18 +25,13 @@ import {
   IconButton,
   TextField,
   InputAdornment,
-  Badge,
   useTheme,
   useMediaQuery,
   Drawer,
-  List,
-  ListItem,
-  ListItemText,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   PersonOutline as PersonIcon,
-  ShoppingCartOutlined as CartIcon,
   Menu as MenuIcon,
   Clear as ClearIcon,
 } from '@mui/icons-material';

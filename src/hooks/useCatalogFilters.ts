@@ -12,7 +12,7 @@
  * - Real filter options from product data
  */
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { getFilterOptions } from '@/api/products';
 
 interface FilterOptions {

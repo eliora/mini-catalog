@@ -3,15 +3,6 @@ import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { CompanySettings, CompanyFormData } from '@/types/company';
 import { ApiResponse } from '@/types/api';
 
-// Helper function to add timeout to any promise
-const withTimeout = <T>(promise: Promise<T>, timeoutMs = 8000, operation = 'Operation'): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => 
-      setTimeout(() => reject(new Error(`${operation} timeout after ${timeoutMs}ms`)), timeoutMs)
-    )
-  ]);
-};
 
 // Default company settings
 const DEFAULT_SETTINGS: CompanySettings = {
@@ -28,7 +19,7 @@ const DEFAULT_SETTINGS: CompanySettings = {
 };
 
 // GET /api/settings - Get company settings
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = await createSupabaseServerClient();
     
@@ -90,10 +81,10 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/settings - Create or update company settings (Admin only)
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const supabase = await createSupabaseServerClient();
-    const body: CompanyFormData = await request.json();
+    const body: CompanyFormData = await _request.json();
     
     // Validate required fields
     if (!body.company_name) {
@@ -189,10 +180,10 @@ export async function POST(request: NextRequest) {
 }
 
 // PUT /api/settings - Update company settings (Admin only)
-export async function PUT(request: NextRequest) {
+export async function PUT(_request: NextRequest) {
   try {
     const supabase = await createSupabaseServerClient();
-    const body: Partial<CompanyFormData> = await request.json();
+    const body: Partial<CompanyFormData> = await _request.json();
     
     // Get existing settings first
     const { data: existing, error: fetchError } = await supabase
@@ -216,7 +207,34 @@ export async function PUT(request: NextRequest) {
     }
     
     // Prepare update data
-    const updateData: any = {
+    const updateData: {
+      updated_at: string;
+      company_name?: string;
+      company_description?: string;
+      company_email?: string;
+      company_phone?: string;
+      company_address?: string;
+      company_logo?: string;
+      logo_url?: string;
+      primary_color?: string;
+      secondary_color?: string;
+      tax_rate?: number;
+      currency?: string;
+      business_name?: string;
+      address?: string;
+      phone?: string;
+      email?: string;
+      website?: string;
+      smtp_host?: string;
+      smtp_port?: number;
+      smtp_user?: string;
+      smtp_pass?: string;
+      smtp_secure?: boolean;
+      email_from?: string;
+      notifications_enabled?: boolean;
+      maintenance_mode?: boolean;
+      timezone?: string;
+    } = {
       updated_at: new Date().toISOString(),
     };
     
@@ -275,11 +293,11 @@ export async function PUT(request: NextRequest) {
 }
 
 // DELETE /api/settings - Delete company settings (Admin only)
-export async function DELETE(request: NextRequest) {
+export async function DELETE() {
   try {
     const supabase = await createSupabaseServerClient();
     
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('settings')
       .delete()
       .select()

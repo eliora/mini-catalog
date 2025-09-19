@@ -6,7 +6,6 @@ import {
   Typography,
   Chip,
   useMediaQuery,
-  useTheme,
 } from '@mui/material';
 import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import { Product } from '@/types/product';
@@ -28,8 +27,7 @@ interface ProductListItemProps {
   onQuantityChange: (value: string) => void;
   onProductInfoClick: () => void;
   onImageClick: (src: string) => void;
-  shouldRenderContent: (content: any) => boolean;
-  parseJsonField: (field: any) => any;
+  shouldRenderContent: (content: unknown) => boolean;
 }
 
 const ProductListItem: React.FC<ProductListItemProps> = React.memo(({
@@ -38,16 +36,14 @@ const ProductListItem: React.FC<ProductListItemProps> = React.memo(({
   onDecrement,
   onIncrement,
   onQuantityChange,
-  onProductInfoClick,
+  onProductInfoClick: _onProductInfoClick, // eslint-disable-line @typescript-eslint/no-unused-vars
   onImageClick,
-  shouldRenderContent,
-  parseJsonField
+  shouldRenderContent
 }) => {
   const [expanded, setExpanded] = useState(false);
   const { productDetails, isLoading, fetchDetails } = useProductDetails();
   // Responsive config (matches original React implementation)
-  const { isMobile, dimensions, spacing } = useResponsiveConfig();
-  const theme = useTheme();
+  const { isMobile, dimensions } = useResponsiveConfig();
   const isUltraSmall = useMediaQuery('(max-width:450px)');
 
   // Fetch product details when accordion expands
@@ -286,7 +282,6 @@ const ProductListItem: React.FC<ProductListItemProps> = React.memo(({
                 accordionData={productDetails}
                 isLoadingDetails={isLoading}
                 shouldRenderContent={shouldRenderContent}
-                parseJsonField={parseJsonField}
                 onImageClick={onImageClick}
               />
             )}

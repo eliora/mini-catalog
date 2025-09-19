@@ -43,7 +43,6 @@
  */
 
 import React from 'react';
-import { Box } from '@mui/material';
 import { Product } from '@/types/product';
 import ProductListItem from './ProductListItem';
 
@@ -56,15 +55,14 @@ interface ProductRendererProps {
   onQuantityChange: (ref: string, value: string | number) => void;
   onProductInfoClick: (product: Product) => void;
   onImageClick?: (src: string) => void;
-  shouldRenderContent: (content: any) => boolean;
-  parseJsonField: (field: any) => any;
+  shouldRenderContent: (content: unknown) => boolean;
   canViewPrices: boolean;
-  productPrices: Record<string, any>;
+  productPrices: Record<string, { unitPrice: number; currency: string; discountPrice?: number; priceTier: string; updatedAt: string }>;
 }
 
-const ProductRenderer: React.FC<ProductRendererProps> = React.memo(({ 
-  product, 
-  viewMode, 
+const ProductRenderer: React.FC<ProductRendererProps> = React.memo(({
+  product,
+  viewMode: _viewMode, // eslint-disable-line @typescript-eslint/no-unused-vars
   getCurrentQuantity,
   onDecrement,
   onIncrement,
@@ -72,9 +70,8 @@ const ProductRenderer: React.FC<ProductRendererProps> = React.memo(({
   onProductInfoClick,
   onImageClick,
   shouldRenderContent,
-  parseJsonField,
-  canViewPrices,
-  productPrices
+  canViewPrices: _canViewPrices, // eslint-disable-line @typescript-eslint/no-unused-vars
+  productPrices: _productPrices // eslint-disable-line @typescript-eslint/no-unused-vars
 }) => {
   const quantity = getCurrentQuantity(product.ref);
   
@@ -87,8 +84,7 @@ const ProductRenderer: React.FC<ProductRendererProps> = React.memo(({
     onQuantityChange: (value: string) => onQuantityChange(product.ref, value),
     onProductInfoClick: () => onProductInfoClick(product),
     onImageClick: onImageClick || (() => {}), // Provide default empty function
-    shouldRenderContent,
-    parseJsonField
+    shouldRenderContent
   };
 
   // All views now use ProductListItem (ProductCard removed)

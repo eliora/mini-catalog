@@ -24,7 +24,6 @@ import {
   Typography,
   useTheme,
   useMediaQuery,
-  Divider,
 } from '@mui/material';
 import { KeyboardArrowDown as ArrowDownIcon } from '@mui/icons-material';
 import { 

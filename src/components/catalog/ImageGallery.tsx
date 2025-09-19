@@ -85,12 +85,11 @@ const ImageGallery: React.FC<ImageGalleryProps> = React.memo(({
               priority={selectedIndex === 0}
             />
           ) : (
-            <img
+            <Image
               src={currentImage}
               alt={`${productName} - תמונה ${selectedIndex + 1}`}
+              fill
               style={{
-                maxWidth: '100%',
-                maxHeight: '100%',
                 objectFit: 'contain',
                 transition: 'opacity 0.2s ease'
               }}
@@ -149,12 +148,11 @@ const ImageGallery: React.FC<ImageGalleryProps> = React.memo(({
                       sizes="72px"
                     />
                   ) : (
-                    <img
+                    <Image
                       src={thumb}
                       alt={`תמונה ${index + 1}`}
+                      fill
                       style={{
-                        width: '100%',
-                        height: '100%',
                         objectFit: 'cover'
                       }}
                     />

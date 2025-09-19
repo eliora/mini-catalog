@@ -17,7 +17,6 @@ import {
   ListItemButton,
   Box,
   Typography,
-  Divider,
   useTheme,
   useMediaQuery,
   IconButton,
@@ -32,7 +31,6 @@ import {
   Settings as SettingsIcon,
   Analytics as AnalyticsIcon,
   ChevronLeft as ChevronLeftIcon,
-  Menu as MenuIcon
 } from '@mui/icons-material';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -103,7 +101,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
   const router = useRouter();
   const { user } = useAuth();
 
-  const isOpen = controlledOpen !== undefined ? controlledOpen : !isMobile;
+  const _isOpen = controlledOpen !== undefined ? controlledOpen : !isMobile; // eslint-disable-line @typescript-eslint/no-unused-vars
 
   const handleDrawerToggle = () => {
     if (onClose) {

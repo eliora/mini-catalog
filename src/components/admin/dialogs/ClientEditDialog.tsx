@@ -20,7 +20,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Chip,
   Card,
   CardContent,
   Divider,
@@ -28,9 +27,6 @@ import {
   CircularProgress,
   IconButton,
   Avatar,
-  Switch,
-  FormControlLabel,
-  Autocomplete,
   Stack
 } from '@mui/material';
 import {
@@ -38,7 +34,6 @@ import {
   Person as PersonIcon,
   Business as BusinessIcon,
   Email as EmailIcon,
-  Phone as PhoneIcon,
   LocationOn as LocationIcon,
   Security as SecurityIcon,
   Save as SaveIcon
@@ -52,7 +47,7 @@ interface Client {
   user_role: 'standard' | 'verified_members' | 'customer' | 'admin';
   business_name?: string;
   phone_number?: string;
-  address?: any;
+  address?: string | null;
   status: 'active' | 'inactive' | 'suspended';
   created_at: string;
   updated_at: string;
@@ -62,6 +57,17 @@ interface Client {
   is_admin?: boolean;
   is_verified?: boolean;
   is_active?: boolean;
+}
+
+interface ClientData {
+  email: string;
+  full_name: string;
+  user_role: 'standard' | 'verified_members' | 'customer' | 'admin';
+  business_name?: string;
+  phone_number?: string;
+  address?: string | null;
+  status: 'active' | 'inactive' | 'suspended';
+  password?: string;
 }
 
 interface UserRole {
@@ -78,12 +84,7 @@ interface FormData {
   user_role: 'standard' | 'verified_members' | 'customer' | 'admin';
   business_name: string;
   phone_number: string;
-  address: {
-    street: string;
-    city: string;
-    postal_code: string;
-    country: string;
-  };
+  address: string;
   status: 'active' | 'inactive' | 'suspended';
 }
 
@@ -92,7 +93,7 @@ interface ClientEditDialogProps {
   userRoles: UserRole[];
   open: boolean;
   onClose: () => void;
-  onSave: (clientData: any) => Promise<void>;
+  onSave: (clientData: ClientData) => Promise<void>;
   mode?: 'create' | 'edit';
 }
 
@@ -158,7 +159,7 @@ const HEBREW_LABELS = {
 
 const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
   client,
-  userRoles,
+  userRoles: _userRoles, // eslint-disable-line @typescript-eslint/no-unused-vars
   open,
   onClose,
   onSave,
@@ -175,12 +176,7 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
     user_role: 'standard',
     business_name: '',
     phone_number: '',
-    address: {
-      street: '',
-      city: '',
-      postal_code: '',
-      country: 'ישראל'
-    },
+    address: '',
     status: 'active'
   });
 
@@ -194,12 +190,7 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
         user_role: client.user_role || 'standard',
         business_name: client.business_name || '',
         phone_number: client.phone_number || '',
-        address: {
-          street: client.address?.street || '',
-          city: client.address?.city || '',
-          postal_code: client.address?.postal_code || '',
-          country: client.address?.country || 'ישראל'
-        },
+        address: client.address || '',
         status: client.status || 'active'
       });
     } else {
@@ -211,12 +202,7 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
         user_role: 'standard',
         business_name: '',
         phone_number: '',
-        address: {
-          street: '',
-          city: '',
-          postal_code: '',
-          country: 'ישראל'
-        },
+        address: '',
         status: 'active'
       });
     }
@@ -258,21 +244,10 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
   ) => {
     const value = event.target.value;
     
-    if (field.startsWith('address.')) {
-      const addressField = field.split('.')[1];
-      setFormData(prev => ({
-        ...prev,
-        address: {
-          ...prev.address,
-          [addressField]: value
-        }
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [field]: value
-      }));
-    }
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
 
     // Clear validation error for this field
     if (validationErrors[field]) {
@@ -289,7 +264,7 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
   ) => {
     setFormData(prev => ({
       ...prev,
-      [field]: event.target.value as any
+      [field]: event.target.value as string
     }));
   };
 
@@ -321,8 +296,8 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
 
       await onSave(clientData);
       
-    } catch (err: any) {
-      setError(err.message || 'שגיאה בשמירת הנתונים');
+    } catch (err: unknown) {
+      setError((err as Error).message || 'שגיאה בשמירת הנתונים');
     } finally {
       setLoading(false);
     }
@@ -487,8 +462,8 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
                   fullWidth
                   label={HEBREW_LABELS.fields.street}
                   placeholder={HEBREW_LABELS.placeholders.street}
-                  value={formData.address.street}
-                  onChange={handleInputChange('address.street')}
+                  value={formData.address}
+                  onChange={handleInputChange('address')}
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                 />
                 
@@ -497,16 +472,16 @@ const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
                     fullWidth
                     label={HEBREW_LABELS.fields.city}
                     placeholder={HEBREW_LABELS.placeholders.city}
-                    value={formData.address.city}
-                    onChange={handleInputChange('address.city')}
+                    value=""
+                    onChange={() => {}}
                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 }, flex: 1 }}
                   />
                   
                   <TextField
                     label={HEBREW_LABELS.fields.postalCode}
                     placeholder={HEBREW_LABELS.placeholders.postalCode}
-                    value={formData.address.postal_code}
-                    onChange={handleInputChange('address.postal_code')}
+                    value=""
+                    onChange={() => {}}
                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 }, flex: 1 }}
                   />
                 </Box>

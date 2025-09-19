@@ -17,7 +17,7 @@ interface PriceDisplayProps {
 const PriceDisplay: React.FC<PriceDisplayProps> = ({ 
   productRef,
   price, 
-  canViewPrices: legacyCanView, // Legacy prop, will be overridden
+  canViewPrices: _legacyCanView, // eslint-disable-line @typescript-eslint/no-unused-vars
   screenType = 'desktop', 
   align = 'left',
   loading = false,
@@ -25,7 +25,7 @@ const PriceDisplay: React.FC<PriceDisplayProps> = ({
   color: propColor,
   size = 'medium'
 }) => {
-  const { canViewPrices, formatPriceSimple, getProductPrice, getPricingMessage } = usePricing();
+  const { canViewPrices, getProductPrice } = usePricing();
   
   // Calculate fontSize based on size prop (matching ProductSize)
   const calculateFontSize = () => {
@@ -69,12 +69,12 @@ const PriceDisplay: React.FC<PriceDisplayProps> = ({
   return (
     <Box sx={{ textAlign: align }}>
       {loading ? (
-        <Typography variant={variant as any} color="text.secondary" sx={{ fontSize }}>
+        <Typography variant={variant as "body1" | "body2" | "caption" | "h6"} color="text.secondary" sx={{ fontSize }}>
           טוען מחיר...
         </Typography>
       ) : (
         <Box>
-          <Typography variant={variant as any} color={propColor || "primary"} sx={{ fontWeight: 600, fontSize }}>
+          <Typography variant={variant as "body1" | "body2" | "caption" | "h6"} color={propColor || "primary"} sx={{ fontWeight: 600, fontSize }}>
             ₪{Number(priceValue).toFixed(2)}
           </Typography>
           {isDiscounted && securePrice && (

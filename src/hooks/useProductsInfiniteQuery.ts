@@ -26,8 +26,8 @@ interface UseProductsInfiniteQueryResult {
   isError: boolean;
   error: Error | null;
   hasNextPage: boolean;
-  fetchNextPage: () => Promise<any>;
-  refetch: () => Promise<any>;
+  fetchNextPage: () => Promise<unknown>;
+  refetch: () => Promise<unknown>;
 }
 
 /**

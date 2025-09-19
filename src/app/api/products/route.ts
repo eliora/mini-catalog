@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { ProductRow, ProductInsert, ProductUpdate } from '@/types/product';
-import { ApiResponse, PaginatedResponse } from '@/types/api';
+import { ApiResponse } from '@/types/api';
 
 interface ProductFilter {
   search?: string;
@@ -32,15 +32,6 @@ interface FilterOptions {
 const requestCache = new Map<string, { promise: Promise<unknown>; timestamp: number }>();
 const REQUEST_CACHE_TTL = 30000; // 30 seconds
 
-// Helper function to add timeout to any promise
-const withTimeout = <T>(promise: Promise<T>, timeoutMs = 10000, operation = 'Operation'): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => 
-      setTimeout(() => reject(new Error(`${operation} timeout after ${timeoutMs}ms`)), timeoutMs)
-    )
-  ]);
-};
 
 // Request deduplication helper
 const getCacheKey = (operation: string, params: unknown): string => {
@@ -262,19 +253,19 @@ async function getProductsInternal(
   ) as { data: unknown[] | null; error: unknown };
   
   const { data, error } = result;
-  
+
   if (error) throw error;
-  
+
   console.log(`Raw products from DB: ${data?.length || 0} (page ${page}, pageSize ${pageSize})`);
   console.log(`User role check: isAdmin = ${isAdmin}`);
-  
+
   // Filter products based on availability and user role
-  const filteredData = (data || []).filter((product: any) => {
+  const filteredData = ((data || []) as ProductRow[]).filter((product) => {
     const qty = product.qty;
-    
+
     // Always exclude products with null/undefined/empty qty
     if (qty === null || qty === undefined) return false;
-    if (typeof qty === 'string' && qty.trim() === '') return false;
+    if (typeof qty === 'string' && (qty as string).trim() === '') return false;
     
     // Hide out-of-stock items (qty === 0) for non-admin users
     if (!isAdmin && qty === 0) {
@@ -288,10 +279,10 @@ async function getProductsInternal(
   console.log(`Products after filtering: ${filteredData.length} out of ${data?.length || 0}`);
   
   // Get product refs for price lookup
-  const productRefs = filteredData.map((product: any) => product.ref);
-  
+  const productRefs = filteredData.map((product) => product.ref);
+
   // Fetch prices separately (only if user has permission) with timeout protection
-  let prices: Record<string, any> = {};
+  let prices: Record<string, { unitPrice: number; currency: string; discountPrice?: number; priceTier: string; updatedAt: string }> = {};
   try {
     // Call internal prices API
     const pricesResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/prices?refs=${productRefs.join(',')}`, {
@@ -313,7 +304,7 @@ async function getProductsInternal(
   }
   
   // Transform database structure to component expected structure
-  const products = filteredData.map((product: any) => ({
+  const products = filteredData.map((product) => ({
     ...product,
     // Map database fields to component expected fields
     productName: product.hebrew_name,

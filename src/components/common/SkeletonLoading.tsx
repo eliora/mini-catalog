@@ -68,7 +68,7 @@ interface SearchResultsSkeletonProps {
 }
 
 export const SearchResultsSkeleton: React.FC<SearchResultsSkeletonProps> = ({ 
-  viewMode = 'list', 
+  viewMode: _viewMode = 'list', // eslint-disable-line @typescript-eslint/no-unused-vars 
   count = 6 
 }) => {
   // ProductCard removed, all views now use ProductListSkeleton

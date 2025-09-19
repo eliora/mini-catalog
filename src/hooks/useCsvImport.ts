@@ -19,6 +19,7 @@
 
 import { useState, useCallback } from 'react';
 import { supabaseBrowserClient } from '@/lib/supabaseClient';
+import { ProductRow } from '@/types/product';
 import { 
   parseCSV, 
   transformProduct, 
@@ -44,7 +45,7 @@ interface UseCsvImportResult {
   uploading: boolean;
   progress: number;
   results: ImportResults | null;
-  preview: any[];
+  preview: Record<string, unknown>[];
   snackbar: SnackbarState;
   confirmDialog: boolean;
   
@@ -68,7 +69,7 @@ const useCsvImport = (onImportComplete?: () => void): UseCsvImportResult => {
     message: '', 
     severity: 'info' 
   });
-  const [preview, setPreview] = useState<any[]>([]);
+  const [preview, setPreview] = useState<Record<string, unknown>[]>([]);
   const [confirmDialog, setConfirmDialog] = useState(false);
 
   // ===== FILE HANDLING =====
@@ -96,7 +97,7 @@ const useCsvImport = (onImportComplete?: () => void): UseCsvImportResult => {
         const csvData = parseCSV(e.target?.result as string);
         const uniqueData = deduplicateData(csvData);
         const previewData = generatePreview(uniqueData);
-        setPreview(previewData);
+        setPreview(previewData as unknown as Record<string, unknown>[]);
         
         setSnackbar({
           open: true,
@@ -144,7 +145,7 @@ const useCsvImport = (onImportComplete?: () => void): UseCsvImportResult => {
 
       const products = uniqueCsvData
         .map(transformProduct)
-        .filter(p => (p as any).ref && (p as any).ref.trim());
+        .filter(p => (p as unknown as Record<string, unknown>).ref && String((p as unknown as Record<string, unknown>).ref).trim());
 
       const { validProducts, errors } = validateProductData(products);
       
@@ -181,7 +182,7 @@ const useCsvImport = (onImportComplete?: () => void): UseCsvImportResult => {
 
         const { error } = await supabaseBrowserClient
           .from('products')
-          .insert(batch as any);
+          .insert(batch as unknown as ProductRow[]);
 
         if (error) {
           console.error(`Error in batch ${batchCount}:`, error);

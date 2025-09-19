@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
     let body;
     try {
       body = await request.json();
-    } catch (parseError) {
+    } catch {
       return errorResponse('Invalid JSON in request body', 400);
     }
 
@@ -159,7 +159,7 @@ export async function PUT(request: NextRequest) {
     let body;
     try {
       body = await request.json();
-    } catch (parseError) {
+    } catch {
       return errorResponse('Invalid JSON in request body', 400);
     }
     

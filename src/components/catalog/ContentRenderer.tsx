@@ -11,8 +11,8 @@ import React from 'react';
 import { Typography, Box } from '@mui/material';
 
 interface ContentRendererProps {
-  content: any;
-  shouldRenderContent: (content: any) => boolean;
+  content: unknown;
+  shouldRenderContent: (content: unknown) => boolean;
   variant?: 'body1' | 'body2' | 'caption';
   fallback?: React.ReactNode;
 }

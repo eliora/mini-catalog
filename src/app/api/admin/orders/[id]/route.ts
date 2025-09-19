@@ -7,17 +7,14 @@
 import { NextRequest } from 'next/server';
 
 // Import utilities
-import { createAuthedAdminClient, AuthError } from '@/lib/api/admin/auth';
+import { createAuthedAdminClient } from '@/lib/api/admin/auth';
 import {
   successResponse,
   errorResponse,
-  validationErrorResponse,
-  unauthorizedResponse,
-  forbiddenResponse,
   notFoundResponse,
   internalErrorResponse
 } from '@/lib/api/admin/responses';
-import { transformOrder, validateOrder } from '@/lib/api/admin/orders-service';
+import { transformOrder } from '@/lib/api/admin/orders-service';
 
 // Helper function to extract order ID from URL
 function extractOrderId(url: string): string {
@@ -86,7 +83,7 @@ export async function PUT(request: NextRequest) {
     let body;
     try {
       body = await request.json();
-    } catch (parseError) {
+    } catch {
       return errorResponse('Invalid JSON in request body', 400);
     }
 
@@ -193,7 +190,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Check if order exists before deletion
-    const { data: existingOrder, error: checkError } = await supabaseAdmin
+    const { error: checkError } = await supabaseAdmin
       .from('orders')
       .select('id, status')
       .eq('id', orderId)

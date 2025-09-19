@@ -26,7 +26,6 @@ import {
 import {
   Menu as MenuIcon,
   Notifications as NotificationsIcon,
-  AccountCircle as AccountCircleIcon,
   Settings as SettingsIcon,
   ExitToApp as LogoutIcon,
   Person as PersonIcon

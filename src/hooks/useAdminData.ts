@@ -36,7 +36,7 @@ interface UseAdminDataResult {
   // Actions
   loadProducts: () => Promise<void>;
   loadOrders: () => Promise<void>;
-  saveProductData: (formData: any) => Promise<boolean>;
+  saveProductData: (formData: Record<string, unknown>) => Promise<boolean>;
   deleteProductData: (ref: string) => Promise<boolean>;
   
   // Utilities
@@ -78,7 +78,7 @@ const getOrders = async (): Promise<Order[]> => {
   return data.data || [];
 };
 
-const saveProduct = async (formData: any): Promise<void> => {
+const saveProduct = async (formData: Record<string, unknown>): Promise<void> => {
   const response = await fetch('/api/products', {
     method: 'POST',
     headers: {
@@ -166,7 +166,7 @@ const useAdminData = (): UseAdminDataResult => {
   }, [showSnackbar]);
 
   // ===== PRODUCT MANAGEMENT FUNCTIONS =====
-  const saveProductData = useCallback(async (formData: any): Promise<boolean> => {
+  const saveProductData = useCallback(async (formData: Record<string, unknown>): Promise<boolean> => {
     if (!formData.ref || !formData.productName) {
       showSnackbar('נדרש מספר מוצר ושם מוצר', 'error');
       return false;

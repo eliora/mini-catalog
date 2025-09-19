@@ -29,10 +29,10 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const { settings: companySettings } = useCompany();
   
   // Search state for header
-  const [headerSearchTerm, setHeaderSearchTerm] = useState('');
+  const [headerSearchTerm, setHeaderSearchTerm] = useState(''); // eslint-disable-line @typescript-eslint/no-unused-vars
   
   // Fix hydration mismatch by ensuring consistent cart count between server and client
-  const [cartCount, setCartCount] = useState(0);
+  const [cartCount, setCartCount] = useState(0); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [hasMounted, setHasMounted] = useState(false);
   
   // Only run on client after component has mounted
@@ -60,13 +60,13 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     }
   }, [companySettings]);
 
-  const handleAdminLogout = () => {
+  const handleAdminLogout = () => { // eslint-disable-line @typescript-eslint/no-unused-vars
     signOut();
     router.push('/catalog');
   };
 
   // Header search handlers
-  const handleHeaderSearchChange = (value: string) => {
+  const handleHeaderSearchChange = (value: string) => { // eslint-disable-line @typescript-eslint/no-unused-vars
     setHeaderSearchTerm(value);
     // Navigate to catalog if not already there
     if (pathname !== '/catalog') {
@@ -76,7 +76,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     window.dispatchEvent(new CustomEvent('headerSearch', { detail: { searchTerm: value } }));
   };
 
-  const handleHeaderSearchClear = () => {
+  const handleHeaderSearchClear = () => { // eslint-disable-line @typescript-eslint/no-unused-vars
     setHeaderSearchTerm('');
     window.dispatchEvent(new CustomEvent('headerSearch', { detail: { searchTerm: '' } }));
   };

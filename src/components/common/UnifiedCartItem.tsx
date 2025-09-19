@@ -74,7 +74,9 @@ const UnifiedCartItem: React.FC<UnifiedCartItemProps> = ({
 
   const handlePriceChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newPrice = Number(e.target.value) || 0;
-    onPriceChange && onPriceChange(itemId, newPrice);
+    if (onPriceChange) {
+      onPriceChange(itemId, newPrice);
+    }
   }, [itemId, onPriceChange]);
   const itemName = item.productName || item.product_name || '';
   const itemName2 = item.productName2 || item.product_name_2 || '';

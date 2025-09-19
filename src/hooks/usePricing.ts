@@ -3,7 +3,7 @@
  * Integrates with secure pricing system using RLS policies
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getPrices, canViewPrices, PricesMap, PriceInfo } from '@/api/prices';
 import { useAuth } from '@/context/AuthContext';

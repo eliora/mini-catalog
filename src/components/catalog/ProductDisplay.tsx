@@ -59,14 +59,13 @@ interface ProductDisplayProps {
   onQuantityChange: (ref: string, value: string | number) => void;
   onProductInfoClick: (product: Product) => void;
   onImageClick: (src: string) => void;
-  shouldRenderContent: (content: any) => boolean;
-  parseJsonField: (field: any) => any;
+  shouldRenderContent: (content: unknown) => boolean;
   loading?: boolean;
   loadingMore?: boolean;
   hasMore?: boolean;
   onLoadMore?: () => void;
   canViewPrices?: boolean;
-  productPrices?: Record<string, any>;
+  productPrices?: Record<string, { unitPrice: number; currency: string; discountPrice?: number; priceTier: string; updatedAt: string }>;
 }
 
 const ProductDisplay: React.FC<ProductDisplayProps> = React.memo(({
@@ -79,7 +78,6 @@ const ProductDisplay: React.FC<ProductDisplayProps> = React.memo(({
   onProductInfoClick,
   onImageClick,
   shouldRenderContent,
-  parseJsonField,
   loading = false,
   loadingMore = false,
   hasMore = false,
@@ -153,7 +151,6 @@ const ProductDisplay: React.FC<ProductDisplayProps> = React.memo(({
             onProductInfoClick={onProductInfoClick}
             onImageClick={onImageClick}
             shouldRenderContent={shouldRenderContent}
-            parseJsonField={parseJsonField}
             canViewPrices={canViewPrices}
             productPrices={productPrices}
           />
@@ -192,7 +189,6 @@ const ProductDisplay: React.FC<ProductDisplayProps> = React.memo(({
             onProductInfoClick={onProductInfoClick}
             onImageClick={onImageClick}
             shouldRenderContent={shouldRenderContent}
-            parseJsonField={parseJsonField}
             canViewPrices={canViewPrices}
             productPrices={productPrices}
           />

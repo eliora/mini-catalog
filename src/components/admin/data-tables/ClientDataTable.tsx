@@ -19,7 +19,7 @@ interface Client {
   user_role: 'standard' | 'verified_members' | 'customer' | 'admin';
   business_name?: string;
   phone_number?: string;
-  address?: any;
+  address?: string | null;
   status: 'active' | 'inactive' | 'suspended';
   created_at: string;
   updated_at: string;

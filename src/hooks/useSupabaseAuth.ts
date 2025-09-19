@@ -3,7 +3,7 @@ import { supabaseBrowserClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
 
-type UserProfile = Database['public']['Tables'] extends { users: any }
+type UserProfile = Database['public']['Tables'] extends { users: unknown }
   ? Database['public']['Tables']['users']['Row']
   : {
       id: string;
@@ -20,12 +20,12 @@ interface UseSupabaseAuthResult {
   initializing: boolean;
   
   // Auth methods
-  signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<any>;
-  signIn: (email: string, password: string) => Promise<any>;
-  signInWithProvider: (provider: string) => Promise<any>;
+  signUp: (email: string, password: string, metadata?: Record<string, unknown>) => Promise<unknown>;
+  signIn: (email: string, password: string) => Promise<unknown>;
+  signInWithProvider: (provider: string) => Promise<unknown>;
   signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<any>;
-  updatePassword: (newPassword: string) => Promise<any>;
+  resetPassword: (email: string) => Promise<unknown>;
+  updatePassword: (newPassword: string) => Promise<unknown>;
   
   // Profile methods
   getUserProfile: () => Promise<UserProfile | null>;
@@ -170,7 +170,7 @@ export const useSupabaseAuth = (): UseSupabaseAuthResult => {
   };
 
   // Sign up with email and password
-  const signUp = useCallback(async (email: string, password: string, metadata: Record<string, any> = {}) => {
+  const signUp = useCallback(async (email: string, password: string, metadata: Record<string, unknown> = {}) => {
     setLoading(true);
     try {
       const { data, error } = await supabaseBrowserClient.auth.signUp({
@@ -221,7 +221,7 @@ export const useSupabaseAuth = (): UseSupabaseAuthResult => {
     setLoading(true);
     try {
       const { data, error } = await supabaseBrowserClient.auth.signInWithOAuth({
-        provider: provider as any,
+        provider: provider as 'google' | 'github' | 'facebook' | 'twitter',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
         },
@@ -251,7 +251,7 @@ export const useSupabaseAuth = (): UseSupabaseAuthResult => {
       const signOutPromise = supabaseBrowserClient.auth.signOut();
       
       const result = await Promise.race([signOutPromise, timeoutPromise]);
-      const error = (result as any)?.error;
+      const error = (result as { error?: unknown })?.error;
       
       if (error) {
         console.warn('Sign out error (will clear state anyway):', error);

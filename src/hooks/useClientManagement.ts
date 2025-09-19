@@ -15,7 +15,7 @@ interface Client {
   user_role: 'standard' | 'verified_members' | 'customer' | 'admin';
   business_name?: string;
   phone_number?: string;
-  address?: any;
+  address?: string | null;
   status: 'active' | 'inactive' | 'suspended';
   created_at: string;
   updated_at: string;
@@ -54,7 +54,7 @@ interface ApiResponse {
 export const useClientManagement = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
-  const [availableFilters, setAvailableFilters] = useState<any>({});
+  const [availableFilters, setAvailableFilters] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<PaginationState>({
@@ -64,7 +64,7 @@ export const useClientManagement = () => {
     totalPages: 0
   });
 
-  const fetchClients = useCallback(async (page = 1, limit = 10, filters: any = {}) => {
+  const fetchClients = useCallback(async (page = 1, limit = 10, filters: Record<string, unknown> = {}) => {
     try {
       setLoading(true);
       setError(null);
@@ -72,10 +72,11 @@ export const useClientManagement = () => {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
-        ...(filters.search && { search: filters.search }),
-        ...(filters.user_role && { user_role: filters.user_role }),
-        ...(filters.status && { status: filters.status })
       });
+      
+      if (filters.search) params.append('search', String(filters.search));
+      if (filters.user_role) params.append('user_role', String(filters.user_role));
+      if (filters.status) params.append('status', String(filters.status));
 
       const response = await fetch(`/api/admin/client-management?${params}`);
       
@@ -103,7 +104,7 @@ export const useClientManagement = () => {
 
   const fetchUserRoles = useCallback(async () => {
     try {
-      const constantRoles: UserRole[] = Object.entries(USERS_TABLE.enums.USER_ROLES).map(([key, value], index) => ({
+      const constantRoles: UserRole[] = Object.entries(USERS_TABLE.enums.USER_ROLES).map(([_key, value], index) => ({ // eslint-disable-line @typescript-eslint/no-unused-vars
         id: (index + 1).toString(),
         name: value,
         permissions: [], // Permissions can be expanded later
@@ -120,7 +121,7 @@ export const useClientManagement = () => {
     fetchUserRoles();
   }, [fetchClients, fetchUserRoles]);
 
-  const handleSaveClient = useCallback(async (clientData: any, selectedClient?: Client) => {
+  const handleSaveClient = useCallback(async (clientData: Record<string, unknown>, selectedClient?: Client) => {
     const url = '/api/admin/client-management';
     const method = selectedClient ? 'PUT' : 'POST';
 

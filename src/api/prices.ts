@@ -91,7 +91,7 @@ export const getPrice = async (productRef: string): Promise<PriceInfo | null> =>
 export const canViewPrices = async (): Promise<boolean> => {
   try {
     // Try to fetch a single price to test permissions
-    const { data, error } = await supabaseBrowserClient
+    const { error } = await supabaseBrowserClient
       .from('prices')
       .select('product_ref')
       .limit(1);

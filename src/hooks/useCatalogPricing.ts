@@ -2,7 +2,6 @@
  * Custom hook for loading and managing prices in catalog components
  */
 
-import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { usePricing } from './usePricing';
 import { Product } from '@/types/product';

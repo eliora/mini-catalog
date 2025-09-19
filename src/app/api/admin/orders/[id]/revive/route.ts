@@ -11,13 +11,11 @@ import { createAuthedAdminClient, AuthError } from '@/lib/api/admin/auth';
 import {
   successResponse,
   errorResponse,
-  validationErrorResponse,
-  unauthorizedResponse,
   forbiddenResponse,
   notFoundResponse,
   internalErrorResponse
 } from '@/lib/api/admin/responses';
-import { transformOrder, validateOrder } from '@/lib/api/admin/orders-service';
+import { transformOrder } from '@/lib/api/admin/orders-service';
 
 // Helper function to extract order ID from URL
 function extractOrderId(url: string): string {
@@ -46,7 +44,7 @@ export async function POST(request: NextRequest) {
     let body;
     try {
       body = await request.json();
-    } catch (parseError) {
+    } catch {
       return errorResponse('Invalid JSON in request body', 400);
     }
 

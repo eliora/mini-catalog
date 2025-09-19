@@ -44,7 +44,7 @@ interface UseOrderSubmissionResult {
 }
 
 // Client-side API function for creating orders
-const createOrder = async (orderData: any): Promise<{ id: string }> => {
+const createOrder = async (orderData: Record<string, unknown>): Promise<{ id: string }> => {
   const response = await fetch('/api/orders', {
     method: 'POST',
     headers: {

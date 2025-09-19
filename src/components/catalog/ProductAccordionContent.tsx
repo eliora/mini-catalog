@@ -47,22 +47,36 @@ import ImageGallery from './ImageGallery';
 import ContentRenderer from '@/components/catalog/ContentRenderer';
 import { Product } from '@/types/product';
 
+interface ProductDetails {
+  ref: string;
+  description?: string;
+  description_he?: string;
+  active_ingredients?: string;
+  active_ingredients_he?: string;
+  usage_instructions?: string;
+  usage_instructions_he?: string;
+  ingredients?: string;
+  header?: string;
+  frenchName?: string;
+  french_name?: string;
+  pics?: string[];
+  accordionDataLoaded: boolean;
+}
+
 interface ProductAccordionContentProps {
   product: Product;
-  accordionData?: any;
+  accordionData?: Record<string, unknown> | ProductDetails | null;
   isLoadingDetails: boolean;
-  shouldRenderContent: (content: any) => boolean;
-  parseJsonField?: (field: any) => any;
+  shouldRenderContent: (content: unknown) => boolean;
   onImageClick?: (imageSrc: string) => void;
 }
 
-const ProductAccordionContent: React.FC<ProductAccordionContentProps> = React.memo(({ 
-  product, 
-  accordionData, 
-  isLoadingDetails, 
-  shouldRenderContent, 
-  parseJsonField,
-  onImageClick 
+const ProductAccordionContent: React.FC<ProductAccordionContentProps> = React.memo(({
+  product,
+  accordionData,
+  isLoadingDetails,
+  shouldRenderContent,
+  onImageClick
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -152,7 +166,7 @@ const ProductAccordionContent: React.FC<ProductAccordionContentProps> = React.me
           />
 
           {/* Active Ingredients */}
-          {shouldRenderContent(productData.activeIngredients || productData.wirkunginhaltsstoffe_he || productData.active_ingredients_he) && (
+          {shouldRenderContent(productData.active_ingredients || productData.active_ingredients_he) && (
             <Box sx={{ mt: { xs: isUltraSmall ? 1.5 : 2, md: 3 } }}>
               <Typography 
                 variant={isUltraSmall ? "body1" : "h6"} 
@@ -166,7 +180,7 @@ const ProductAccordionContent: React.FC<ProductAccordionContentProps> = React.me
                 רכיבים פעילים
               </Typography>
               <ContentRenderer
-                content={productData.activeIngredients || productData.wirkunginhaltsstoffe_he || productData.active_ingredients_he}
+                content={productData.active_ingredients || productData.active_ingredients_he}
                 shouldRenderContent={shouldRenderContent}
               />
             </Box>
@@ -202,7 +216,7 @@ const ProductAccordionContent: React.FC<ProductAccordionContentProps> = React.me
       {/* Row 2: Inner Accordions */}
       <Stack spacing={isUltraSmall ? 1 : 1.5} sx={{ mt: { xs: isUltraSmall ? 1.5 : 2, md: 3 } }}>
         {/* Usage Instructions Accordion - Show only if data exists */}
-        {shouldRenderContent(productData.usageInstructions || productData.anwendung_he || productData.usage_instructions_he) && (
+        {shouldRenderContent(productData.usage_instructions || productData.usage_instructions_he) && (
           <Accordion 
             elevation={0} 
             sx={{ 
@@ -242,7 +256,7 @@ const ProductAccordionContent: React.FC<ProductAccordionContentProps> = React.me
                 lineHeight: 1.4
               }}>
                 <ContentRenderer
-                  content={productData.usageInstructions || productData.anwendung_he || productData.usage_instructions_he}
+                  content={productData.usage_instructions || productData.usage_instructions_he}
                   shouldRenderContent={shouldRenderContent}
                   fallback={
                     <Typography 

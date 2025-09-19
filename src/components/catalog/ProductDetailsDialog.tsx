@@ -63,9 +63,9 @@ interface ProductDetailsDialogProps {
   onIncrement?: () => void;
   onQuantityChange?: (quantity: number | string) => void;
   onImageClick?: (src: string) => void;
-  shouldRenderContent?: (content: any) => boolean;
+  shouldRenderContent?: (content: unknown) => boolean;
   canViewPrices?: boolean;
-  productPrice?: any;
+  productPrice?: { unitPrice?: number; unit_price?: number; currency?: string } | null;
 }
 
 const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = React.memo(({
@@ -78,13 +78,13 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = React.memo(({
   onIncrement,
   onQuantityChange,
   onImageClick,
-  shouldRenderContent = (content: any) => content && content !== '',
+  shouldRenderContent = (content: unknown): boolean => content != null && content !== '',
   canViewPrices = false,
   productPrice
 }) => {
   // Memoize expensive operations
   const images = useMemo(() => getAllImages(product || undefined), [product]);
-  const productName = product?.product_name || product?.productName || '';
+  const productName = String(product?.product_name || product?.productName || '');
   const finalQuantity = currentQuantity || quantity;
 
   if (!product) return null;
@@ -156,7 +156,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = React.memo(({
                   
                   {(product.product_name_2 || product.productName2) && (
                     <Typography variant="h6" color="text.secondary" gutterBottom>
-                      {product.product_name_2 || product.productName2}
+                      {String(product.product_name_2 || product.productName2)}
                     </Typography>
                   )}
 

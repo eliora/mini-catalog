@@ -32,7 +32,7 @@ import { usePricing } from '@/hooks/usePricing';
 import useCatalogPricing from '@/hooks/useCatalogPricing';
 import { useMobileFilterDrawer } from './FilterPanel';
 import { useCatalogFilters } from '@/hooks/useCatalogFilters';
-import { parseJsonField, shouldRenderContent } from '@/utils/dataHelpers';
+import { shouldRenderContent } from '@/utils/dataHelpers';
 import { SearchLoadingOverlay, SearchResultsSkeleton } from '@/components/common/SkeletonLoading';
 
 // Components
@@ -70,7 +70,7 @@ const CatalogClean: React.FC = () => {
   
   // ===== PRICING HOOKS (after products are available) =====
   const { canViewPrices } = usePricing();
-  const { pricesData: prices, pricesLoading } = useCatalogPricing({ 
+  const { pricesData: prices } = useCatalogPricing({ 
     products: products, 
     enabled: !!products?.length 
   });
@@ -175,12 +175,6 @@ const CatalogClean: React.FC = () => {
 
   // View mode change handler removed (list view only)
 
-  const handleFilterClick = () => {
-    if (isMobile) {
-      mobileFilter.openDrawer();
-    }
-  };
-
   // ===== INFINITE SCROLL HANDLER =====
   const handleLoadMore = useCallback(async () => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -271,7 +265,6 @@ const CatalogClean: React.FC = () => {
               onProductInfoClick={setSelectedProduct}
               onImageClick={handleZoom}
               shouldRenderContent={shouldRenderContent}
-              parseJsonField={parseJsonField}
               loading={false} // TanStack Query handles loading
               loadingMore={isFetchingNextPage}
               hasMore={hasNextPage}
