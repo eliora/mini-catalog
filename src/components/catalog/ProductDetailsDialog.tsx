@@ -83,7 +83,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = React.memo(({
   productPrice
 }) => {
   // Memoize expensive operations
-  const images = useMemo(() => getAllImages(product || undefined), [product]);
+  const images = useMemo(() => getAllImages(product as unknown as Record<string, unknown> || {}), [product]);
   const productName = String(product?.product_name || product?.productName || '');
   const finalQuantity = currentQuantity || quantity;
 

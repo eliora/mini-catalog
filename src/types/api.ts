@@ -1,5 +1,5 @@
 // Generic API response interfaces
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data?: T;
   error?: string | ApiError;
   success: boolean;
@@ -11,11 +11,11 @@ export interface ApiError {
   message: string;
   code?: string;
   status?: number;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   field?: string; // For validation errors
 }
 
-export interface PaginatedResponse<T = any> {
+export interface PaginatedResponse<T = unknown> {
   data: T[];
   pagination: {
     page: number;
@@ -29,7 +29,7 @@ export interface PaginatedResponse<T = any> {
   error?: string;
 }
 
-export interface InfiniteScrollResponse<T = any> {
+export interface InfiniteScrollResponse<T = unknown> {
   data: T[];
   nextCursor?: string;
   hasMore: boolean;
@@ -56,7 +56,7 @@ export interface SearchParams {
 }
 
 export interface FilterParams {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ApiRequestParams extends PaginationParams, SortParams, SearchParams {
@@ -79,7 +79,7 @@ export interface ValidationError {
   field: string;
   message: string;
   code: string;
-  value?: any;
+  value?: unknown;
 }
 
 export interface ValidationErrorResponse {
@@ -102,7 +102,7 @@ export interface FileUploadResponse {
 }
 
 // Bulk operation response
-export interface BulkOperationResponse<T = any> {
+export interface BulkOperationResponse<T = unknown> {
   success: boolean;
   data?: {
     successful: T[];
@@ -118,13 +118,13 @@ export interface BulkOperationResponse<T = any> {
 }
 
 // Real-time subscription types
-export interface RealtimeEvent<T = any> {
+export interface RealtimeEvent<T = unknown> {
   eventType: 'INSERT' | 'UPDATE' | 'DELETE';
   schema: string;
   table: string;
   new?: T;
   old?: T;
-  errors?: any[];
+  errors?: unknown[];
 }
 
 export interface SubscriptionConfig {

@@ -42,7 +42,7 @@ interface OptimizedImageProps {
   placeholder?: 'blur' | 'empty';
   blurDataURL?: string;
   // Allow any additional props to be passed through
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 type LoadState = 'idle' | 'loading' | 'loaded' | 'error';

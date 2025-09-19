@@ -76,10 +76,10 @@ export interface SortConfig {
 export interface FilterConfig {
   field: string;
   operator: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'like' | 'in';
-  value: any;
+  value: string | number | boolean | string[] | number[];
 }
 
-export interface ColumnConfig<T = any> {
+export interface ColumnConfig<T = Record<string, unknown>> {
   id: string;
   label: string;
   field: keyof T;
@@ -88,7 +88,7 @@ export interface ColumnConfig<T = any> {
   width?: number;
   minWidth?: number;
   align?: 'left' | 'center' | 'right';
-  render?: (value: any, row: T) => React.ReactNode;
+  render?: (value: unknown, row: T) => React.ReactNode;
 }
 
 // API Response Types

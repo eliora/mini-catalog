@@ -112,21 +112,21 @@ export interface SelectOption<T = string> {
   disabled?: boolean;
 }
 
-export interface TableColumn<T = any> {
+export interface TableColumn<T = Record<string, unknown>> {
   key: keyof T;
   label: string;
   sortable?: boolean;
   width?: string | number;
   align?: 'left' | 'center' | 'right';
-  render?: (value: any, row: T) => React.ReactNode;
+  render?: (value: unknown, row: T) => React.ReactNode;
 }
 
 export interface DialogState {
   open: boolean;
-  data?: any;
+  data?: unknown;
 }
 
-export interface FormState<T = any> {
+export interface FormState<T = Record<string, unknown>> {
   data: T;
   errors: Partial<Record<keyof T, string>>;
   isSubmitting: boolean;

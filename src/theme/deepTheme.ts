@@ -175,7 +175,7 @@ export const createDeepTheme = () => {
     palette: {
       ...deepColors,
       mode: 'light',
-    } as any,
+    } as Record<string, unknown>,
     
     typography: {
       fontFamily: [
@@ -515,7 +515,7 @@ export const createDeepTheme = () => {
     
     // Custom shadow system - MUI expects 25 shadow values (0-24)
     shadows: [
-      'none', // 0
+      'none' as const, // 0
       deepShadows[1], // 1
       deepShadows[2], // 2
       deepShadows[3], // 3
@@ -540,13 +540,13 @@ export const createDeepTheme = () => {
       deepShadows[8], // 22 - reuse 8
       deepShadows[8], // 23 - reuse 8
       deepShadows[8], // 24 - reuse 8 (for Dialog default elevation)
-    ] as any,
+    ] as any, // eslint-disable-line @typescript-eslint/no-explicit-any
   });
   
   // Add custom properties
-  (theme as any).customShadows = deepShadows;
-  (theme as any).gradients = deepGradients;
-  (theme as any).deepColors = deepColors;
+  (theme as unknown as Record<string, unknown>).customShadows = deepShadows;
+  (theme as unknown as Record<string, unknown>).gradients = deepGradients;
+  (theme as unknown as Record<string, unknown>).deepColors = deepColors;
   
   return theme;
 };

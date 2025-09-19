@@ -38,14 +38,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Create profile object
       const profileData: UserProfile = userData ? {
-        ...userData,
-        user_role: userData.user_role || 'standard'
+        id: String((userData as Record<string, unknown>).id || ''),
+        email: String((userData as Record<string, unknown>).email || ''),
+        name: String((userData as Record<string, unknown>).name || ''),
+        business_name: (userData as Record<string, unknown>).business_name as string | null,
+        phone_number: (userData as Record<string, unknown>).phone_number as string | null,
+        address: (userData as Record<string, unknown>).address as unknown,
+        user_roles: (userData as Record<string, unknown>).user_roles as string[] || ['standard'],
+        status: String((userData as Record<string, unknown>).status || 'active'),
+        created_at: String((userData as Record<string, unknown>).created_at || ''),
+        updated_at: String((userData as Record<string, unknown>).updated_at || ''),
+        last_login: (userData as Record<string, unknown>).last_login as string | null,
+        user_role: String((userData as Record<string, unknown>).user_role || 'standard'),
+        first_name: String((userData as Record<string, unknown>).name || '').split(' ')[0] || '',
+        last_name: String((userData as Record<string, unknown>).name || '').split(' ').slice(1).join(' ') || ''
       } : {
         id: userId,
         email: user?.email || '',
-        user_role: 'standard',
+        name: '',
+        business_name: null,
+        phone_number: null,
+        address: null,
+        user_roles: ['standard'],
+        status: 'active',
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        last_login: null,
+        user_role: 'standard',
+        first_name: '',
+        last_name: ''
       };
 
       setProfile(profileData);
@@ -288,10 +309,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Update local profile state
       if (data) {
-        setProfile(data as UserProfile);
+        setProfile(data as unknown as UserProfile);
         setUser(prev => prev ? {
           ...prev,
-          profile: data as UserProfile
+          profile: data as unknown as UserProfile
         } : null);
       }
 

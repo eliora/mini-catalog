@@ -15,7 +15,7 @@ import {
 import { CartItem } from '../../types/cart';
 
 // Helper function to get cart length and total quantity
-function getCartStats(cart: any[]): { length: number; totalQuantity: number } {
+function getCartStats(cart: CartItem[]): { length: number; totalQuantity: number } {
   return {
     length: cart.length,
     totalQuantity: cart.reduce((sum, item) => sum + (item.quantity || 0), 0)
@@ -26,7 +26,7 @@ import { CompanySettings } from '../../types/company';
 interface OrderSummaryProps {
   customerName: string;
   onCustomerNameChange: (name: string) => void;
-  cart: any[]; // Support both legacy and new cart formats
+  cart: CartItem[]; // Support both legacy and new cart formats
   subtotal: number;
   tax: number;
   total: number;

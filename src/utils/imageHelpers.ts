@@ -88,7 +88,7 @@ export const isStaticImport = (src: ImageSource): src is StaticImageData => {
 export const getOptimizedImageUrl = (url: string, options: ImageTransformOptions = {}): string => {
   if (!url) return '';
   
-  const { width, height, quality = 80 } = options;
+  const { width: _width, height: _height, quality: _quality = 80 } = options; // eslint-disable-line @typescript-eslint/no-unused-vars
   
   // For Next.js Image component, we return the original URL
   // The Image component handles optimization automatically
@@ -120,20 +120,20 @@ export const parseImageUrls = (imageString: string | string[] | null | undefined
 /**
  * Get the primary image from a product
  */
-export const getPrimaryImage = (product: any): string => {
+export const getPrimaryImage = (product: Record<string, unknown>): string => {
   if (!product) return '';
   
   // Check for main image
-  if (product.mainPic && isValidImageUrl(product.mainPic)) {
-    return product.mainPic;
+  if (product.mainPic && isValidImageUrl(String(product.mainPic))) {
+    return String(product.mainPic);
   }
   
-  if (product.pic && isValidImageUrl(product.pic)) {
-    return product.pic;
+  if (product.pic && isValidImageUrl(String(product.pic))) {
+    return String(product.pic);
   }
   
   // Check additional images
-  const additionalImages = parseImageUrls(product.pics || product.all_pics);
+  const additionalImages = parseImageUrls((product.pics || product.all_pics) as string | string[] | null | undefined);
   if (additionalImages.length > 0) {
     return additionalImages[0];
   }
@@ -144,7 +144,7 @@ export const getPrimaryImage = (product: any): string => {
 /**
  * Get all images from a product
  */
-export const getAllImages = (product: any): string[] => {
+export const getAllImages = (product: Record<string, unknown>): string[] => {
   if (!product) return [];
   
   const images: string[] = [];
@@ -156,7 +156,7 @@ export const getAllImages = (product: any): string[] => {
   }
   
   // Add additional images
-  const additionalImages = parseImageUrls(product.pics || product.all_pics);
+  const additionalImages = parseImageUrls((product.pics || product.all_pics) as string | string[] | null | undefined);
   additionalImages.forEach(url => {
     if (!images.includes(url)) {
       images.push(url);

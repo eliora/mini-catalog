@@ -10,6 +10,7 @@ export interface JsonObject {
 }
 export interface JsonArray extends Array<JsonValue> {
   // This interface extends Array to provide JsonValue typing
+  [key: string]: unknown; // Add index signature to avoid empty object type error
 }
 
 export type CurrencyCode = 'ILS' | 'USD' | 'EUR' | 'GBP';
@@ -27,7 +28,7 @@ export const parseJsonField = (field: unknown): JsonValue | null => {
   
   try {
     return JSON.parse(field as string);
-  } catch (error) {
+  } catch {
     console.warn('Failed to parse JSON field:', field);
     return null;
   }
@@ -169,7 +170,7 @@ export const deepClone = <T>(obj: T): T => {
 /**
  * Debounce function for performance optimization
  */
-export const debounce = <T extends (...args: any[]) => any>(
+export const debounce = <T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): ((...args: Parameters<T>) => void) => {
@@ -184,7 +185,7 @@ export const debounce = <T extends (...args: any[]) => any>(
 /**
  * Throttle function for performance optimization
  */
-export const throttle = <T extends (...args: any[]) => any>(
+export const throttle = <T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number
 ): ((...args: Parameters<T>) => void) => {

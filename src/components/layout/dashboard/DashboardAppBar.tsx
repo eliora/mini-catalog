@@ -135,7 +135,7 @@ const DashboardAppBar: React.FC<DashboardAppBarProps> = ({
       standard: 'משתמש רגיל'
     };
     
-    return roleMap[user.profile.user_role] || 'משתמש';
+    return roleMap[user.profile.user_role || 'standard'] || 'משתמש';
   };
 
   /**

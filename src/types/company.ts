@@ -1,7 +1,7 @@
 import { Database } from './supabase';
 
 // Supabase generated types for company settings (fallback if table doesn't exist)
-export type CompanySettingsRow = Database['public']['Tables'] extends { company_settings: any }
+export type CompanySettingsRow = Database['public']['Tables'] extends { company_settings: { Row: unknown } }
   ? Database['public']['Tables']['company_settings']['Row']
   : {
       id: string;
@@ -17,11 +17,11 @@ export type CompanySettingsRow = Database['public']['Tables'] extends { company_
       updated_at: string;
     };
 
-export type CompanySettingsInsert = Database['public']['Tables'] extends { company_settings: any }
+export type CompanySettingsInsert = Database['public']['Tables'] extends { company_settings: { Insert: unknown } }
   ? Database['public']['Tables']['company_settings']['Insert']
   : Partial<CompanySettingsRow>;
 
-export type CompanySettingsUpdate = Database['public']['Tables'] extends { company_settings: any }
+export type CompanySettingsUpdate = Database['public']['Tables'] extends { company_settings: { Update: unknown } }
   ? Database['public']['Tables']['company_settings']['Update']
   : Partial<CompanySettingsRow>;
 

@@ -20,7 +20,7 @@ export interface Order extends OrderRow {
     email: string;
     phone_number?: string;
     business_name?: string;
-    address?: any;
+    address?: string | null;
     user_roles: string[];
     status: 'active' | 'inactive' | 'suspended';
   };

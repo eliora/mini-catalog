@@ -12,22 +12,22 @@ const CartContext = createContext<CartState | null>(null);
 const CART_STORAGE_KEY = 'mini-catalog-cart';
 const CART_VERSION = '1.0';
 
-function sanitizeCartItem(item: any): CartItem {
+function sanitizeCartItem(item: Record<string, unknown>): CartItem {
   return {
     product_id: String(item.product_id || item.ref || ''),
-    product_name: item.product_name || item.productName || '',
-    quantity: Math.max(1, parseInt(item.quantity) || 1),
-    unit_price: parseFloat(item.unit_price || item.unitPrice) || 0,
+    product_name: String(item.product_name || item.productName || ''),
+    quantity: Math.max(1, parseInt(String(item.quantity)) || 1),
+    unit_price: parseFloat(String(item.unit_price || item.unitPrice)) || 0,
     total_price: 0, // Will be calculated
-    unit_type: item.unit_type || '',
-    notes: item.notes || item.notice || '',
+    unit_type: String(item.unit_type || ''),
+    notes: String(item.notes || item.notice || ''),
     // Optional product details for display
     product: item.product ? {
-      id: item.product.id,
-      ref: item.product.ref,
-      product_name: item.product.product_name || item.product.name,
-      main_pic: item.product.main_pic || item.product.mainPic,
-      product_type: item.product.product_type || item.product.productType,
+      id: String((item.product as Record<string, unknown>).id || ''),
+      ref: String((item.product as Record<string, unknown>).ref || ''),
+      product_name: String((item.product as Record<string, unknown>).product_name || (item.product as Record<string, unknown>).name || ''),
+      main_pic: String((item.product as Record<string, unknown>).main_pic || (item.product as Record<string, unknown>).mainPic || ''),
+      product_type: String((item.product as Record<string, unknown>).product_type || (item.product as Record<string, unknown>).productType || ''),
     } : undefined,
   };
 }
@@ -55,7 +55,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (stored) {
         const data: CartStorageData = JSON.parse(stored);
         if (data.version === CART_VERSION) {
-          const sanitizedItems = data.items.map(sanitizeCartItem).filter(item => item.product_id);
+          const sanitizedItems = (data.items as unknown as Record<string, unknown>[]).map(sanitizeCartItem).filter(item => item.product_id);
           const totals = calculateCartTotals(sanitizedItems);
           
           return {

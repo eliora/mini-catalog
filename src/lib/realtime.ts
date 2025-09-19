@@ -14,7 +14,7 @@ export class RealtimeManager {
   /**
    * Subscribe to real-time changes on a table
    */
-  subscribe<T = any>(
+  subscribe<T = unknown>(
     config: SubscriptionConfig,
     callback: (event: RealtimeEvent<T>) => void
   ): string {
@@ -26,21 +26,21 @@ export class RealtimeManager {
     const channel = this.client
       .channel(`realtime:${subscriptionId}`)
       .on(
-        'postgres_changes' as any,
+        'postgres_changes' as any, // eslint-disable-line @typescript-eslint/no-explicit-any
         {
           event: config.event || '*',
           schema: config.schema || 'public',
           table: config.table,
           filter: config.filter,
-        } as any,
-        (payload: any) => {
+        } as Record<string, unknown>,
+        (payload: Record<string, unknown>) => {
           callback({
-            eventType: payload.eventType as any,
-            schema: payload.schema,
-            table: payload.table,
+            eventType: payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE',
+            schema: String(payload.schema),
+            table: String(payload.table),
             new: payload.new as T,
             old: payload.old as T,
-            errors: payload.errors,
+            errors: payload.errors as unknown[] | undefined,
           });
         }
       )

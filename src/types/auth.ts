@@ -2,7 +2,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { Database } from './supabase';
 
 // Supabase generated types for profiles (fallback if table doesn't exist)
-export type ProfileRow = Database['public']['Tables'] extends { profiles: any } 
+export type ProfileRow = Database['public']['Tables'] extends { profiles: unknown } 
   ? Database['public']['Tables']['profiles']['Row'] 
   : {
       id: string;
@@ -14,11 +14,11 @@ export type ProfileRow = Database['public']['Tables'] extends { profiles: any }
       updated_at: string;
     };
 
-export type ProfileInsert = Database['public']['Tables'] extends { profiles: any }
+export type ProfileInsert = Database['public']['Tables'] extends { profiles: unknown }
   ? Database['public']['Tables']['profiles']['Insert']
   : Partial<ProfileRow>;
 
-export type ProfileUpdate = Database['public']['Tables'] extends { profiles: any }
+export type ProfileUpdate = Database['public']['Tables'] extends { profiles: unknown }
   ? Database['public']['Tables']['profiles']['Update']
   : Partial<ProfileRow>;
 
@@ -27,11 +27,27 @@ export interface AuthUser extends User {
   profile?: UserProfile;
 }
 
-export interface UserProfile extends ProfileRow {
+export interface UserProfile {
+  // Core fields from ProfileRow
+  id: string;
+  email: string;
+  name: string;
+  business_name: string | null;
+  phone_number: string | null;
+  address: unknown;
+  user_roles: string[];
+  status: string;
+  created_at: string;
+  updated_at: string;
+  last_login: string | null;
   // Add any computed fields here
   displayName?: string;
   isAdmin?: boolean;
   isVerified?: boolean;
+  // Legacy compatibility fields
+  first_name?: string;
+  last_name?: string;
+  user_role?: string;
 }
 
 export interface AuthState {
@@ -87,7 +103,7 @@ export interface AuthError {
   code?: string;
 }
 
-export interface AuthResponse<T = any> {
+export interface AuthResponse<T = unknown> {
   data?: T;
   error?: AuthError;
   success: boolean;

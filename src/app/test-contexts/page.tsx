@@ -4,6 +4,7 @@ import { Container, Typography, Card, CardContent, Box, Button, Stack } from '@m
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { useCompany } from '@/context/CompanyContext';
+import { Product } from '@/types/product';
 
 export default function TestContextsPage() {
   const auth = useAuth();
@@ -19,7 +20,7 @@ export default function TestContextsPage() {
       main_pic: null,
       size: 'Medium',
       product_type: 'Test',
-    } as any, 2, 'Test notes');
+    } as Product, 2, 'Test notes');
   };
 
   return (
