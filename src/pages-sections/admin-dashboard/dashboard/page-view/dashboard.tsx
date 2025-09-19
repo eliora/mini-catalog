@@ -5,7 +5,6 @@ import {
   People, 
   Inventory,
   TrendingUp,
-  Assessment,
   Notifications
 } from "@mui/icons-material";
 // LOCAL CUSTOM COMPONENTS

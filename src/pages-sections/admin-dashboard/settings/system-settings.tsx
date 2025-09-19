@@ -25,13 +25,11 @@ import {
 import { 
   Save, 
   Refresh,
-  Settings,
   Security,
   Speed,
   Storage,
   Backup,
   Download,
-  Upload,
   Delete
 } from "@mui/icons-material";
 import { H5, H6, Paragraph } from "@/components/Typography";
@@ -141,9 +139,9 @@ export default function SystemSettings() {
       >
         {({ values, errors, touched, handleChange, handleBlur, handleSubmit, setFieldValue, isSubmitting }) => (
           <form onSubmit={handleSubmit}>
-            <Grid container {...({} as any)} spacing={3}>
+            <Grid container spacing={3}>
               {/* Security Settings */}
-              <Grid item {...({} as any)} xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "error.200" }}>
                   <CardContent>
                     <FlexBox alignItems="center" gap={2} mb={2}>
@@ -151,8 +149,8 @@ export default function SystemSettings() {
                       <H6 sx={{ fontWeight: 700 }}>אבטחה</H6>
                     </FlexBox>
                     
-                    <Grid container {...({} as any)} spacing={2}>
-                      <Grid item {...({} as any)} md={6} xs={12}>
+                    <Grid container spacing={2}>
+                      <Grid size={{ md: 6, xs: 12 }}>
                         <TextField
                           fullWidth
                           name="sessionTimeout"
@@ -167,7 +165,7 @@ export default function SystemSettings() {
                         />
                       </Grid>
 
-                      <Grid item {...({} as any)} md={6} xs={12}>
+                      <Grid size={{ md: 6, xs: 12 }}>
                         <Box sx={{ pt: 2 }}>
                           <FormControlLabel
                             control={
@@ -187,7 +185,7 @@ export default function SystemSettings() {
               </Grid>
 
               {/* Performance Settings */}
-              <Grid item {...({} as any)} xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "info.200" }}>
                   <CardContent>
                     <FlexBox alignItems="center" gap={2} mb={2}>
@@ -195,8 +193,8 @@ export default function SystemSettings() {
                       <H6 sx={{ fontWeight: 700 }}>ביצועים</H6>
                     </FlexBox>
                     
-                    <Grid container {...({} as any)} spacing={2}>
-                      <Grid item {...({} as any)} md={4} xs={12}>
+                    <Grid container spacing={2}>
+                      <Grid size={{ md: 4, xs: 12 }}>
                         <TextField
                           fullWidth
                           name="maxFileSize"
@@ -211,7 +209,7 @@ export default function SystemSettings() {
                         />
                       </Grid>
 
-                      <Grid item {...({} as any)} md={4} xs={12}>
+                      <Grid size={{ md: 4, xs: 12 }}>
                         <TextField
                           fullWidth
                           name="cacheTimeout"
@@ -224,7 +222,7 @@ export default function SystemSettings() {
                         />
                       </Grid>
 
-                      <Grid item {...({} as any)} md={4} xs={12}>
+                      <Grid size={{ md: 4, xs: 12 }}>
                         <FormControl fullWidth>
                           <InputLabel>רמת לוגים</InputLabel>
                           <Select
@@ -243,7 +241,7 @@ export default function SystemSettings() {
                         </FormControl>
                       </Grid>
 
-                      <Grid item {...({} as any)} xs={12}>
+                      <Grid size={{ xs: 12 }}>
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                           <FormControlLabel
                             control={
@@ -273,7 +271,7 @@ export default function SystemSettings() {
               </Grid>
 
               {/* Backup Settings */}
-              <Grid item {...({} as any)} xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "success.200" }}>
                   <CardContent>
                     <FlexBetween mb={2}>
@@ -292,8 +290,8 @@ export default function SystemSettings() {
                       </Button>
                     </FlexBetween>
                     
-                    <Grid container {...({} as any)} spacing={2} mb={3}>
-                      <Grid item {...({} as any)} md={4} xs={12}>
+                    <Grid container  spacing={2} mb={3}>
+                      <Grid size={{ md: 4, xs: 12 }}>
                         <FormControl fullWidth>
                           <InputLabel>תדירות גיבוי</InputLabel>
                           <Select
@@ -312,7 +310,7 @@ export default function SystemSettings() {
                         </FormControl>
                       </Grid>
 
-                      <Grid item {...({} as any)} md={4} xs={12}>
+                      <Grid size={{ md: 4, xs: 12 }}>
                         <TextField
                           fullWidth
                           name="backupRetention"
@@ -328,7 +326,7 @@ export default function SystemSettings() {
                         />
                       </Grid>
 
-                      <Grid item {...({} as any)} md={4} xs={12}>
+                      <Grid size={{ md: 4, xs: 12 }}>
                         <Box sx={{ pt: 2 }}>
                           <FormControlLabel
                             control={
@@ -359,7 +357,7 @@ export default function SystemSettings() {
                                 <FlexBox alignItems="center" gap={1}>
                                   <Chip
                                     label={getStatusText(backup.status)}
-                                    color={getStatusColor(backup.status) as any}
+                                    color={getStatusColor(backup.status) as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
                                     size="small"
                                   />
                                   {backup.status === "success" && (
@@ -385,7 +383,7 @@ export default function SystemSettings() {
               </Grid>
 
               {/* System Status */}
-              <Grid item {...({} as any)} xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "warning.200" }}>
                   <CardContent>
                     <FlexBox alignItems="center" gap={2} mb={2}>
@@ -393,8 +391,8 @@ export default function SystemSettings() {
                       <H6 sx={{ fontWeight: 700 }}>מצב מערכת</H6>
                     </FlexBox>
                     
-                    <Grid container {...({} as any)} spacing={2}>
-                      <Grid item {...({} as any)} xs={12}>
+                    <Grid container spacing={2}>
+                      <Grid size={{ xs: 12 }}>
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                           <FormControlLabel
                             control={
@@ -424,7 +422,7 @@ export default function SystemSettings() {
               </Grid>
 
               {/* Action Buttons */}
-              <Grid item {...({} as any)} xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Divider sx={{ my: 2 }} />
                 <FlexBetween>
                   <Alert severity="error" sx={{ flex: 1, mr: 2 }}>

@@ -13,9 +13,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Box,
   Typography,
-  Divider,
   Card,
   CardContent,
   IconButton,
@@ -31,14 +29,13 @@ import {
   Close,
   Add,
   Delete,
-  Edit,
   Restore,
   Person,
   ShoppingCart,
   Payment
 } from "@mui/icons-material";
 import { FlexBetween, FlexBox } from "@/components/flex-box";
-import { H6, Paragraph } from "@/components/Typography";
+import { H6 } from "@/components/Typography";
 import { currency } from "@/lib/currency";
 
 interface OrderItem {
@@ -141,7 +138,7 @@ export default function OrderRevivalDialog({
     { value: "completed", label: "הושלם" }
   ];
 
-  const paymentStatuses = [
+  const paymentStatuses: Array<{ value: string; label: string }> = [ // eslint-disable-line @typescript-eslint/no-unused-vars
     { value: "pending", label: "ממתין לתשלום" },
     { value: "paid", label: "שולם" },
     { value: "failed", label: "נכשל" },

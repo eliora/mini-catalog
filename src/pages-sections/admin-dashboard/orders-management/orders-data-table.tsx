@@ -23,17 +23,14 @@ import {
   Tooltip
 } from "@mui/material";
 import {
-  Edit,
   Delete,
   MoreVert,
   Print,
   Email,
   Restore,
-  Visibility,
   LocalShipping
 } from "@mui/icons-material";
 import { FlexBox } from "@/components/flex-box";
-import { Paragraph } from "@/components/Typography";
 import { currency } from "@/lib/currency";
 
 interface Order {
@@ -331,7 +328,7 @@ export default function OrdersDataTable({
                   <TableCell>
                     <Chip
                       label={getStatusText(orderItem.status)}
-                      color={getStatusColor(orderItem.status) as any}
+                      color={getStatusColor(orderItem.status) as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
                       size="small"
                       sx={{ borderRadius: 2 }}
                     />
@@ -342,7 +339,7 @@ export default function OrdersDataTable({
                   <TableCell>
                     <Chip
                       label={getPaymentStatusText(orderItem.payment_status)}
-                      color={getPaymentStatusColor(orderItem.payment_status) as any}
+                      color={getPaymentStatusColor(orderItem.payment_status) as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
                       size="small"
                       variant="outlined"
                       sx={{ borderRadius: 2 }}

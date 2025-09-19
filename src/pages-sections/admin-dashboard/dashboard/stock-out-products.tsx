@@ -5,67 +5,30 @@ import {
   Box,
   Avatar,
   Chip,
-  IconButton,
   Divider,
   List,
   ListItem,
   ListItemAvatar,
   ListItemText,
-  ListItemSecondaryAction,
   Button
 } from "@mui/material";
 import { H6, Paragraph } from "@/components/Typography";
 import { FlexBetween, FlexBox } from "@/components/flex-box";
 import { Warning, Error, Add, Notifications } from "@mui/icons-material";
 
-// Mock data for stock out products
-const mockStockOut = [
-  {
-    id: 1,
-    name: "סרום היאלורון",
-    category: "סרומים",
-    stock: 0,
-    image: "🧴",
-    lastOrder: "לפני 3 ימים",
-    supplier: "ספק א'"
-  },
-  {
-    id: 2,
-    name: "קרם עיניים",
-    category: "טיפוח עיניים",
-    stock: 2,
-    image: "👁️",
-    lastOrder: "לפני שבוע",
-    supplier: "ספק ב'"
-  },
-  {
-    id: 3,
-    name: "מסכת זהב",
-    category: "מסכות",
-    stock: 1,
-    image: "✨",
-    lastOrder: "לפני 5 ימים",
-    supplier: "ספק ג'"
-  },
-  {
-    id: 4,
-    name: "שמן ארגן",
-    category: "שמנים",
-    stock: 0,
-    image: "🌿",
-    lastOrder: "לפני שבועיים",
-    supplier: "ספק ד'"
-  },
-  {
-    id: 5,
-    name: "קרם לילה",
-    category: "קרמים",
-    stock: 3,
-    image: "🌙",
-    lastOrder: "אתמול",
-    supplier: "ספק ה'"
-  }
-];
+// Define StockProduct interface
+interface StockProduct {
+  id: number;
+  name: string;
+  category: string;
+  stock: number;
+  image: string;
+  lastOrder: string;
+  supplier: string;
+}
+
+// Stock out products data will be loaded from API
+const mockStockOut: StockProduct[] = [];
 
 export default function StockOutProducts() {
   const criticalCount = mockStockOut.filter(p => p.stock === 0).length;

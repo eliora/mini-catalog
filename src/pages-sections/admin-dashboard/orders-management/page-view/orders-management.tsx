@@ -17,24 +17,13 @@ import {
   Checkbox,
   FormControlLabel,
   Alert,
-  Snackbar,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Typography
+  Snackbar
 } from "@mui/material";
 import {
   Search,
-  Add,
-  FilterList,
   ViewColumn,
   FileDownload,
   Refresh,
-  Print,
-  Email,
-  Edit,
-  Restore,
   Code
 } from "@mui/icons-material";
 import { H5, Paragraph } from "@/components/Typography";
@@ -44,61 +33,60 @@ import OrderRevivalDialog from "../order-revival-dialog";
 import SqlEditorDialog from "../sql-editor-dialog";
 import BulkOrderActions from "../bulk-order-actions";
 
-// Mock orders data
-const mockOrders = [
-  {
-    id: "ORD-001",
-    customer_name: "שרה כהן",
-    customer_email: "sarah@example.com",
-    customer_phone: "050-1234567",
-    total_amount: 485.50,
-    status: "completed",
-    payment_status: "paid",
-    items_count: 3,
-    created_at: "2024-01-20T10:30:00Z",
-    updated_at: "2024-01-20T14:45:00Z",
-    items: [
-      { product_name: "סרום ויטמין C", quantity: 2, price: 189 },
-      { product_name: "קרם לחות", quantity: 1, price: 145 }
-    ]
-  },
-  {
-    id: "ORD-002",
-    customer_name: "רחל לוי",
-    customer_email: "rachel@example.com", 
-    customer_phone: "052-9876543",
-    total_amount: 299.00,
-    status: "processing",
-    payment_status: "paid",
-    items_count: 1,
-    created_at: "2024-01-21T09:15:00Z",
-    updated_at: "2024-01-21T09:15:00Z",
-    items: [
-      { product_name: "מסכת זהב", quantity: 1, price: 299 }
-    ]
-  },
-  {
-    id: "ORD-003",
-    customer_name: "מיכל אברהם",
-    customer_email: "michal@example.com",
-    customer_phone: "054-5555555",
-    total_amount: 178.00,
-    status: "cancelled",
-    payment_status: "refunded",
-    items_count: 2,
-    created_at: "2024-01-19T16:20:00Z",
-    updated_at: "2024-01-20T08:30:00Z",
-    items: [
-      { product_name: "שמן ארגן", quantity: 2, price: 89 }
-    ]
-  }
-];
+// Define Order interface for data table
+interface Order {
+  id: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  total_amount: number;
+  status: string;
+  payment_status: string;
+  items_count: number;
+  created_at: string;
+  updated_at: string;
+  items: Array<{
+    product_name: string;
+    quantity: number;
+    price: number;
+  }>;
+}
+
+// Define Order interface for revival dialog
+interface OrderForRevival {
+  id: string;
+  client_id: string;
+  total_amount: number;
+  status: string;
+  items_count: number;
+  created_at: string;
+  updated_at: string;
+  items: Array<{
+    product_name: string;
+    quantity: number;
+    price: number;
+  }>;
+  client?: {
+    id: string;
+    name: string;
+    email: string;
+    phone_number?: string;
+    business_name?: string;
+    address?: string | null;
+    user_roles: string[];
+    status: string;
+  };
+}
+
+// Orders data will be loaded from API
+const mockOrders: Order[] = [];
 
 interface OrdersManagementViewProps {
   // Props can be added here when needed
+  [key: string]: unknown;
 }
 
-export default function OrdersManagementView(_props: OrdersManagementViewProps) {
+export default function OrdersManagementView(_props: OrdersManagementViewProps) { // eslint-disable-line @typescript-eslint/no-unused-vars
   const [orders, setOrders] = useState(mockOrders);
   const [filteredOrders, setFilteredOrders] = useState(mockOrders);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
@@ -107,7 +95,7 @@ export default function OrdersManagementView(_props: OrdersManagementViewProps) 
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [isRevivalDialogOpen, setIsRevivalDialogOpen] = useState(false);
   const [isSqlEditorOpen, setIsSqlEditorOpen] = useState(false);
-  const [editingOrder, setEditingOrder] = useState<any>(null);
+  const [editingOrder, setEditingOrder] = useState<OrderForRevival | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" as "success" | "error" });
 
@@ -149,7 +137,29 @@ export default function OrdersManagementView(_props: OrdersManagementViewProps) 
     setFilteredOrders(filtered);
   }, [orders, searchTerm, statusFilter, paymentFilter]);
 
-  const handleOrderRevive = (orderData: any) => {
+  // Convert Order to OrderForRevival
+  const convertOrderForRevival = (order: Order): OrderForRevival => {
+    return {
+      id: order.id,
+      client_id: order.customer_email, // Use email as client_id for now
+      total_amount: order.total_amount,
+      status: order.status,
+      items_count: order.items_count,
+      created_at: order.created_at,
+      updated_at: order.updated_at,
+      items: order.items,
+      client: {
+        id: order.customer_email,
+        name: order.customer_name,
+        email: order.customer_email,
+        phone_number: order.customer_phone,
+        user_roles: [],
+        status: 'active'
+      }
+    };
+  };
+
+  const handleOrderRevive = (orderData: OrderForRevival) => {
     if (editingOrder) {
       // Update existing order
       setOrders(prev => prev.map(o => o.id === orderData.id ? { ...o, ...orderData, status: "processing" } : o));
@@ -362,7 +372,7 @@ export default function OrdersManagementView(_props: OrdersManagementViewProps) 
         onSelectionChange={setSelectedOrders}
         visibleColumns={visibleColumns}
         onRevive={(order) => {
-          setEditingOrder(order);
+          setEditingOrder(convertOrderForRevival(order));
           setIsRevivalDialogOpen(true);
         }}
         onDelete={handleOrderDelete}

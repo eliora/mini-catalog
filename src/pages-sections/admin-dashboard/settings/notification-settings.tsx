@@ -154,18 +154,18 @@ export default function NotificationSettings() {
         </Paragraph>
       </Box>
 
-      <Grid container {...({} as any)} spacing={3}>
+      <Grid container spacing={3}>
         {Object.entries(groupedSettings).map(([category, settings]) => (
-          <Grid item {...({} as any)} xs={12} key={category}>
+          <Grid size={{ xs: 12 }} key={category}>
             <Card sx={{ borderRadius: 2, border: "1px solid", borderColor: `${getCategoryColor(category)}.200` }}>
               <CardContent>
                 <FlexBox alignItems="center" gap={2} mb={2}>
-                  <Notifications color={getCategoryColor(category) as any} />
+                  <Notifications color={getCategoryColor(category) as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"} />
                   <H6 sx={{ fontWeight: 700 }}>{getCategoryTitle(category)}</H6>
                   <Chip 
                     label={`${settings.length} התראות`} 
                     size="small" 
-                    color={getCategoryColor(category) as any}
+                    color={getCategoryColor(category) as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
                   />
                 </FlexBox>
 
@@ -236,7 +236,7 @@ export default function NotificationSettings() {
         ))}
 
         {/* Legend */}
-        <Grid item {...({} as any)} xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Card sx={{ bgcolor: "grey.50", borderRadius: 2 }}>
             <CardContent>
               <H6 sx={{ fontWeight: 700, mb: 2 }}>מקרא</H6>
@@ -259,7 +259,7 @@ export default function NotificationSettings() {
         </Grid>
 
         {/* Action Buttons */}
-        <Grid item {...({} as any)} xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Divider sx={{ my: 2 }} />
           <FlexBetween>
             <Alert severity="info" sx={{ flex: 1, mr: 2 }}>

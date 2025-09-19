@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Grid, Box } from "@mui/material";
+import { Card, Box } from "@mui/material";
 import { H6, Paragraph } from "@/components/Typography";
 import { FlexBetween, FlexBox } from "@/components/flex-box";
 

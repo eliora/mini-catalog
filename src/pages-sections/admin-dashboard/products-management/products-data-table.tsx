@@ -24,7 +24,7 @@ interface Product {
   description?: string;
   description_he?: string;
   main_pic?: string;
-  pics?: any;
+  pics?: string[] | null;
   created_at: string;
   updated_at: string;
   // Computed fields from helper functions
@@ -32,7 +32,7 @@ interface Product {
   formatted_price?: string;
   stock_status?: string;
   stock_status_color?: string;
-  parsed_images?: any;
+  parsed_images?: string[] | null;
 }
 
 interface ProductDataTableProps {

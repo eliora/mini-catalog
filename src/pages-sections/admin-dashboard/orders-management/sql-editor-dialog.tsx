@@ -21,8 +21,7 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Chip,
-  Divider
+  Chip
 } from "@mui/material";
 import {
   Close,
@@ -31,11 +30,10 @@ import {
   History,
   Code,
   Storage,
-  Warning,
   CheckCircle
 } from "@mui/icons-material";
 import { FlexBetween, FlexBox } from "@/components/flex-box";
-import { H6, Paragraph } from "@/components/Typography";
+import { H6 } from "@/components/Typography";
 
 interface SqlEditorDialogProps {
   open: boolean;
@@ -45,7 +43,7 @@ interface SqlEditorDialogProps {
 
 interface QueryResult {
   columns: string[];
-  rows: any[][];
+  rows: (string | number | boolean | null)[][];
   rowCount: number;
   executionTime: number;
 }
@@ -102,27 +100,23 @@ export default function SqlEditorDialog({
       // Simulate query execution
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Mock results based on query type
-      if (query.toLowerCase().includes("select")) {
-        // Mock SELECT results
-        const mockResults: QueryResult = {
-          columns: ["id", "customer_name", "total_amount", "status", "created_at"],
-          rows: [
-            ["ORD-001", "שרה כהן", 485.50, "completed", "2024-01-20T10:30:00Z"],
-            ["ORD-002", "רחל לוי", 299.00, "processing", "2024-01-21T09:15:00Z"],
-            ["ORD-003", "מיכל אברהם", 178.00, "cancelled", "2024-01-19T16:20:00Z"]
-          ],
-          rowCount: 3,
-          executionTime: 45
+      // Execute actual SQL query
+      try {
+        // TODO: Replace with actual API call
+        const results: QueryResult = {
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          executionTime: 0
         };
-        setResults(mockResults);
-      } else {
-        // Mock UPDATE/INSERT/DELETE results
+        setResults(results);
+      } catch (error) {
+        console.error('SQL execution error:', error);
         setResults({
           columns: [],
           rows: [],
-          rowCount: 1,
-          executionTime: 23
+          rowCount: 0,
+          executionTime: 0
         });
       }
 

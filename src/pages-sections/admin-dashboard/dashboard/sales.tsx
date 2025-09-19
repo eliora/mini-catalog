@@ -2,7 +2,7 @@
 
 import { Grid, Card, Box } from "@mui/material";
 import { H3, H6, Paragraph } from "@/components/Typography";
-import { FlexBetween, FlexBox } from "@/components/flex-box";
+import { FlexBetween } from "@/components/flex-box";
 import { currency } from "@/lib/currency";
 
 // Mock chart component for now

@@ -45,11 +45,11 @@ const ClientManagementView: React.FC = () => {
   const {
     clients,
     userRoles,
-    availableFilters,
+    availableFilters: _availableFilters, // eslint-disable-line @typescript-eslint/no-unused-vars
     loading,
     error,
     pagination,
-    fetchClients,
+    fetchClients: _fetchClients, // eslint-disable-line @typescript-eslint/no-unused-vars
     handleSaveClient,
     handleDeleteClient,
   } = useClientManagement();
@@ -68,7 +68,7 @@ const ClientManagementView: React.FC = () => {
   // --- Permissions (Placeholder) ---
   const canRead = true;
   const canWrite = true;
-  const canDelete = true;
+  const canDelete: boolean = true; // eslint-disable-line @typescript-eslint/no-unused-vars
 
   // --- Handlers ---
   const handleEditClient = (client: Client) => {

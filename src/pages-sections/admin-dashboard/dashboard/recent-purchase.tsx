@@ -18,59 +18,20 @@ import { FlexBetween, FlexBox } from "@/components/flex-box";
 import { currency } from "@/lib/currency";
 import { MoreVert, TrendingUp, AccessTime } from "@mui/icons-material";
 
-// Mock data for recent purchases
-const mockPurchases = [
-  {
-    id: 1,
-    customer: "שרה כהן",
-    product: "סרום ויטמין C",
-    amount: 189,
-    status: "completed",
-    date: "היום",
-    time: "14:30",
-    avatar: "ש"
-  },
-  {
-    id: 2,
-    customer: "רחל לוי",
-    product: "קרם לחות יום",
-    amount: 245,
-    status: "pending",
-    date: "אתמול",
-    time: "16:45",
-    avatar: "ר"
-  },
-  {
-    id: 3,
-    customer: "מיכל אברהם",
-    product: "מסכת פנים",
-    amount: 156,
-    status: "completed",
-    date: "אתמול",
-    time: "09:20",
-    avatar: "מ"
-  },
-  {
-    id: 4,
-    customer: "דנה רוזן",
-    product: "תחליב ניקוי",
-    amount: 98,
-    status: "completed",
-    date: "לפני יומיים",
-    time: "11:15",
-    avatar: "ד"
-  },
-  {
-    id: 5,
-    customer: "עדן מזרחי",
-    product: "שמן ארגן",
-    amount: 320,
-    status: "completed",
-    date: "לפני יומיים",
-    time: "13:40",
-    avatar: "ע"
-  }
-];
+// Define Purchase interface
+interface Purchase {
+  id: number;
+  customer: string;
+  product: string;
+  amount: number;
+  status: string;
+  date: string;
+  time: string;
+  avatar: string;
+}
+
+// Recent purchases data will be loaded from API
+const mockPurchases: Purchase[] = [];
 
 const getStatusColor = (status: string) => {
   switch (status) {

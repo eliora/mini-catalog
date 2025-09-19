@@ -2,8 +2,8 @@
 
 import { Card, Box, Avatar, Chip } from "@mui/material";
 import { ArrowUpward, ArrowDownward } from "@mui/icons-material";
-import { H3, H5, Paragraph } from "@/components/Typography";
-import { FlexBetween, FlexBox } from "@/components/flex-box";
+import { H3, Paragraph } from "@/components/Typography";
+import { FlexBetween } from "@/components/flex-box";
 
 // ========================================================
 interface Props {

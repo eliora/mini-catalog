@@ -23,16 +23,13 @@ import {
 import {
   Search,
   Add,
-  FilterList,
   ViewColumn,
   FileDownload,
-  Refresh,
-  MoreVert
+  Refresh
 } from "@mui/icons-material";
 import { H5, Paragraph } from "@/components/Typography";
 import { FlexBetween, FlexBox } from "@/components/flex-box";
 import ProductsDataTable from "../products-data-table";
-import ProductFormDialog from "../product-form-dialog";
 import BulkActionsToolbar from "../bulk-actions-toolbar";
 
 // Product interface matching database schema
@@ -51,7 +48,7 @@ interface Product {
   description?: string;
   description_he?: string;
   main_pic?: string;
-  pics?: any;
+  pics?: string[] | null;
   created_at: string;
   updated_at: string;
   // Computed fields
@@ -59,7 +56,7 @@ interface Product {
   formatted_price?: string;
   stock_status?: string;
   stock_status_color?: string;
-  parsed_images?: any;
+  parsed_images?: string[] | null;
 }
 
 interface ApiResponse {
@@ -87,9 +84,10 @@ interface ApiResponse {
 
 interface ProductsManagementViewProps {
   // Props can be added here when needed
+  [key: string]: unknown;
 }
 
-export default function ProductsManagementView(_props: ProductsManagementViewProps) {
+export default function ProductsManagementView(_props: ProductsManagementViewProps) { // eslint-disable-line @typescript-eslint/no-unused-vars
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -97,7 +95,7 @@ export default function ProductsManagementView(_props: ProductsManagementViewPro
   const [searchTerm, setSearchTerm] = useState("");
   const [productLineFilter, setProductLineFilter] = useState("all");
   const [stockStatusFilter, setStockStatusFilter] = useState("all");
-  const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
+  const [isProductDialogOpen, setIsProductDialogOpen] = useState(false); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" as "success" | "error" });
@@ -107,8 +105,8 @@ export default function ProductsManagementView(_props: ProductsManagementViewPro
     total: 0,
     totalPages: 0
   });
-  const [stats, setStats] = useState<any>({});
-  const [availableFilters, setAvailableFilters] = useState<any>({});
+  const [stats, setStats] = useState<Record<string, unknown>>({}); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const [availableFilters, setAvailableFilters] = useState<Record<string, unknown>>({});
 
   // Column visibility state
   const [visibleColumns, setVisibleColumns] = useState({
@@ -122,7 +120,7 @@ export default function ProductsManagementView(_props: ProductsManagementViewPro
   });
 
   // Fetch products from API
-  const fetchProducts = useCallback(async (page = 1, limit = 10, filters: any = {}) => {
+  const fetchProducts = useCallback(async (page = 1, limit = 10, filters: Record<string, unknown> = {}) => {
     try {
       setLoading(true);
       setError(null);
@@ -176,7 +174,7 @@ export default function ProductsManagementView(_props: ProductsManagementViewPro
     fetchProducts();
   }, [fetchProducts]);
 
-  const handleProductSave = async (productData: any) => {
+  const handleProductSave = async (productData: Record<string, unknown>) => { // eslint-disable-line @typescript-eslint/no-unused-vars
     try {
       setLoading(true);
       const url = '/api/admin/products';
@@ -206,8 +204,8 @@ export default function ProductsManagementView(_props: ProductsManagementViewPro
       });
       setIsProductDialogOpen(false);
       setEditingProduct(null);
-    } catch (err: any) {
-      setSnackbar({ open: true, message: err.message || 'שגיאה בשמירת המוצר', severity: "error" });
+    } catch (err: unknown) {
+      setSnackbar({ open: true, message: (err as Error).message || 'שגיאה בשמירת המוצר', severity: "error" });
     } finally {
       setLoading(false);
     }
@@ -231,8 +229,8 @@ export default function ProductsManagementView(_props: ProductsManagementViewPro
 
       await fetchProducts(pagination.page, pagination.limit);
       setSnackbar({ open: true, message: "המוצר נמחק בהצלחה", severity: "success" });
-    } catch (err: any) {
-      setSnackbar({ open: true, message: err.message || 'שגיאה במחיקת המוצר', severity: "error" });
+    } catch (err: unknown) {
+      setSnackbar({ open: true, message: (err as Error).message || 'שגיאה במחיקת המוצר', severity: "error" });
     } finally {
       setLoading(false);
     }
@@ -261,7 +259,7 @@ export default function ProductsManagementView(_props: ProductsManagementViewPro
     setSnackbar({ open: true, message: "הקובץ יוצא בהצלחה", severity: "success" });
   };
 
-  const productLines = availableFilters.available_product_lines || [];
+  const productLines = (availableFilters.available_product_lines as string[]) || [];
   const stockStatuses = [
     { value: "in_stock", label: "במלאי" },
     { value: "low_stock", label: "מלאי נמוך" },

@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import React from "react";
 import {
   Grid,
   Button,
   TextField,
   Box,
-  Typography,
   Alert,
   Card,
   CardContent,
@@ -97,9 +96,9 @@ export default function TaxSettings() {
       >
         {({ values, errors, touched, handleChange, handleBlur, handleSubmit, setFieldValue, isSubmitting }) => (
           <form onSubmit={handleSubmit}>
-            <Grid container {...({} as any)} spacing={3}>
+            <Grid container spacing={3}>
               {/* VAT Settings */}
-              <Grid item {...({} as any)} xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "primary.200" }}>
                   <CardContent>
                     <FlexBox alignItems="center" gap={2} mb={2}>
@@ -107,8 +106,8 @@ export default function TaxSettings() {
                       <H6 sx={{ fontWeight: 700 }}>הגדרות מע&quot;מ</H6>
                     </FlexBox>
                     
-                    <Grid container {...({} as any)} spacing={2}>
-                      <Grid item {...({} as any)} md={6} xs={12}>
+                    <Grid container spacing={2}>
+                      <Grid size={{ md: 6, xs: 12 }}>
                         <TextField
                           fullWidth
                           name="vatRate"
@@ -126,7 +125,7 @@ export default function TaxSettings() {
                         />
                       </Grid>
 
-                      <Grid item {...({} as any)} md={6} xs={12}>
+                      <Grid size={{ md: 6, xs: 12 }}>
                         <FormControl fullWidth>
                           <InputLabel>שיטת עיגול</InputLabel>
                           <Select
@@ -143,7 +142,7 @@ export default function TaxSettings() {
                         </FormControl>
                       </Grid>
 
-                      <Grid item {...({} as any)} xs={12}>
+                      <Grid size={{ xs: 12 }}>
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                           <FormControlLabel
                             control={
@@ -183,7 +182,7 @@ export default function TaxSettings() {
               </Grid>
 
               {/* Currency Settings */}
-              <Grid item {...({} as any)} xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "success.200" }}>
                   <CardContent>
                     <FlexBox alignItems="center" gap={2} mb={2}>
@@ -191,8 +190,8 @@ export default function TaxSettings() {
                       <H6 sx={{ fontWeight: 700 }}>הגדרות מטבע</H6>
                     </FlexBox>
                     
-                    <Grid container {...({} as any)} spacing={2}>
-                      <Grid item {...({} as any)} md={6} xs={12}>
+                    <Grid container spacing={2}>
+                      <Grid size={{ md: 6, xs: 12 }}>
                         <FormControl fullWidth>
                           <InputLabel>מטבע</InputLabel>
                           <Select
@@ -224,7 +223,7 @@ export default function TaxSettings() {
                         </FormControl>
                       </Grid>
 
-                      <Grid item {...({} as any)} md={6} xs={12}>
+                      <Grid size={{ md: 6, xs: 12 }}>
                         <TextField
                           fullWidth
                           name="currencySymbol"
@@ -241,7 +240,7 @@ export default function TaxSettings() {
               </Grid>
 
               {/* Shipping Settings */}
-              <Grid item {...({} as any)} xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "info.200" }}>
                   <CardContent>
                     <FlexBox alignItems="center" gap={2} mb={2}>
@@ -249,8 +248,8 @@ export default function TaxSettings() {
                       <H6 sx={{ fontWeight: 700 }}>הגדרות משלוח</H6>
                     </FlexBox>
                     
-                    <Grid container {...({} as any)} spacing={2}>
-                      <Grid item {...({} as any)} md={6} xs={12}>
+                    <Grid container spacing={2}>
+                      <Grid size={{ md: 6, xs: 12 }}>
                         <TextField
                           fullWidth
                           name="shippingCost"
@@ -268,7 +267,7 @@ export default function TaxSettings() {
                         />
                       </Grid>
 
-                      <Grid item {...({} as any)} md={6} xs={12}>
+                      <Grid size={{ md: 6, xs: 12 }}>
                         <TextField
                           fullWidth
                           name="freeShippingThreshold"
@@ -287,7 +286,7 @@ export default function TaxSettings() {
                         />
                       </Grid>
 
-                      <Grid item {...({} as any)} xs={12}>
+                      <Grid size={{ xs: 12 }}>
                         <FormControlLabel
                           control={
                             <Switch
@@ -310,7 +309,7 @@ export default function TaxSettings() {
               </Grid>
 
               {/* Invoice Settings */}
-              <Grid item {...({} as any)} xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "warning.200" }}>
                   <CardContent>
                     <FlexBox alignItems="center" gap={2} mb={2}>
@@ -318,8 +317,8 @@ export default function TaxSettings() {
                       <H6 sx={{ fontWeight: 700 }}>הגדרות חשבוניות</H6>
                     </FlexBox>
                     
-                    <Grid container {...({} as any)} spacing={2}>
-                      <Grid item {...({} as any)} xs={12}>
+                    <Grid container spacing={2}>
+                      <Grid size={{ xs: 12 }}>
                         <TextField
                           fullWidth
                           multiline
@@ -338,7 +337,7 @@ export default function TaxSettings() {
               </Grid>
 
               {/* Action Buttons */}
-              <Grid item {...({} as any)} xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Divider sx={{ my: 2 }} />
                 <FlexBetween>
                   <Alert severity="warning" sx={{ flex: 1, mr: 2 }}>
