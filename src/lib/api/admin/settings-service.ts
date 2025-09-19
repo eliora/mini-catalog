@@ -9,7 +9,7 @@ export interface CompanySettings {
   description?: string;
   email?: string;
   phone?: string;
-  address?: any;
+  address?: string | null;
   logo_url?: string;
   primary_color?: string;
   secondary_color?: string;
@@ -29,13 +29,7 @@ export const DEFAULT_SETTINGS: CompanySettings = {
   description: '',
   email: '',
   phone: '',
-  address: {
-    street: '',
-    city: '',
-    state: '',
-    postal_code: '',
-    country: 'Israel'
-  },
+  address: null,
   logo_url: undefined,
   primary_color: '#1976d2',
   secondary_color: '#dc004e',
@@ -49,7 +43,7 @@ export const DEFAULT_SETTINGS: CompanySettings = {
   debug_mode: false
 };
 
-export async function getSettings(supabase: any): Promise<CompanySettings> {
+export async function getSettings(supabase: any): Promise<CompanySettings> { // eslint-disable-line @typescript-eslint/no-explicit-any
   const { data: settings, error } = await supabase
     .from('settings')
     .select('*')
@@ -62,7 +56,7 @@ export async function getSettings(supabase: any): Promise<CompanySettings> {
   return settings || DEFAULT_SETTINGS;
 }
 
-export async function updateSettings(supabase: any, settingsData: Partial<CompanySettings>): Promise<CompanySettings> {
+export async function updateSettings(supabase: any, settingsData: Partial<CompanySettings>): Promise<CompanySettings> { // eslint-disable-line @typescript-eslint/no-explicit-any
   const { data: settings, error } = await supabase
     .from('settings')
     .upsert({
@@ -80,14 +74,14 @@ export async function updateSettings(supabase: any, settingsData: Partial<Compan
   return settings;
 }
 
-export function validateSettings(data: any): { isValid: boolean; errors: string[] } {
+export function validateSettings(data: Record<string, unknown>): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
 
-  if (!data.company_name || data.company_name.trim().length < 2) {
+  if (!data.company_name || String(data.company_name).trim().length < 2) {
     errors.push('Company name must be at least 2 characters');
   }
 
-  if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+  if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(data.email))) {
     errors.push('Invalid email format');
   }
 
@@ -95,11 +89,11 @@ export function validateSettings(data: any): { isValid: boolean; errors: string[
     errors.push('Tax rate must be a number between 0 and 100');
   }
 
-  if (data.primary_color && !/^#[0-9A-F]{6}$/i.test(data.primary_color)) {
+  if (data.primary_color && !/^#[0-9A-F]{6}$/i.test(String(data.primary_color))) {
     errors.push('Primary color must be a valid hex color');
   }
 
-  if (data.secondary_color && !/^#[0-9A-F]{6}$/i.test(data.secondary_color)) {
+  if (data.secondary_color && !/^#[0-9A-F]{6}$/i.test(String(data.secondary_color))) {
     errors.push('Secondary color must be a valid hex color');
   }
 

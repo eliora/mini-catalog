@@ -120,13 +120,13 @@ export async function POST(request: NextRequest) {
     const { email } = validation.cleanData!;
     
     // Check if a user with this email already exists
-    const emailExists = await checkEmailExists(supabaseAdmin, email);
+    const emailExists = await checkEmailExists(supabaseAdmin, email as string);
     if (emailExists) {
       return conflictResponse('A user with this email already exists.');
     }
 
     // Create the new client in the database
-    const client = await createClientService(supabaseAdmin, validation.cleanData);
+    const client = await createClientService(supabaseAdmin, validation.cleanData!);
     return successResponse({
       client,
       message: 'Client created successfully'
@@ -180,14 +180,14 @@ export async function PUT(request: NextRequest) {
 
     // If email is being updated, check if the new email is already taken
     if (validation.cleanData!.email) {
-      const emailExists = await checkEmailExists(supabaseAdmin, validation.cleanData!.email, id);
+      const emailExists = await checkEmailExists(supabaseAdmin, validation.cleanData!.email as string, id);
       if (emailExists) {
         return conflictResponse('The new email is already in use by another user.');
       }
     }
 
     // Perform the update
-    const client = await updateClientService(supabaseAdmin, id, validation.cleanData);
+    const client = await updateClientService(supabaseAdmin, id, validation.cleanData!);
     return successResponse({
       client,
       message: 'Client updated successfully'

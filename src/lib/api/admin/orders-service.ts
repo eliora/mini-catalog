@@ -24,7 +24,7 @@ export interface Order {
   notes?: string;
   created_at: string;
   updated_at: string;
-  client?: any;
+  client?: Record<string, unknown>;
 }
 
 export function getStatusLabel(status: string): string {
@@ -40,25 +40,25 @@ export function getStatusLabel(status: string): string {
   return statusLabels[status] || status;
 }
 
-export function transformOrder(order: any) {
+export function transformOrder(order: Record<string, unknown>) {
   return {
     ...order,
-    parsedItems: Array.isArray(order.items) ? order.items : JSON.parse(order.items || '[]'),
+    parsedItems: Array.isArray(order.items) ? order.items : JSON.parse(String(order.items || '[]')),
     formattedTotal: new Intl.NumberFormat('he-IL', {
       style: 'currency',
       currency: 'ILS'
-    }).format(order.total_amount),
-    statusLabel: getStatusLabel(order.status),
-    formattedDate: new Date(order.created_at).toLocaleDateString('he-IL'),
+    }).format(order.total_amount as number),
+    statusLabel: getStatusLabel(order.status as string),
+    formattedDate: new Date(order.created_at as string).toLocaleDateString('he-IL'),
     itemsCount: Array.isArray(order.items) 
       ? order.items.length 
-      : JSON.parse(order.items || '[]').length
+      : JSON.parse(String(order.items || '[]')).length
   };
 }
 
-export async function getOrders(supabase: any, filters: any, pagination: any) {
+export async function getOrders(supabase: any, filters: Record<string, unknown>, pagination: Record<string, unknown>) { // eslint-disable-line @typescript-eslint/no-explicit-any
   const { page, limit } = pagination;
-  const offset = (page - 1) * limit;
+  const offset = ((page as number) - 1) * (limit as number);
 
   // Build main query
   let query = supabase
@@ -76,7 +76,7 @@ export async function getOrders(supabase: any, filters: any, pagination: any) {
         status
       )
     `, { count: 'exact' })
-    .range(offset, offset + limit - 1)
+    .range(offset, offset + (limit as number) - 1)
     .order('created_at', { ascending: false });
 
   // Apply filters
@@ -105,7 +105,7 @@ export async function getOrders(supabase: any, filters: any, pagination: any) {
   };
 }
 
-export async function createOrder(supabase: any, orderData: any) {
+export async function createOrder(supabase: any, orderData: Record<string, unknown>) { // eslint-disable-line @typescript-eslint/no-explicit-any
   // Validate client exists
   const { data: client, error: clientError } = await supabase
     .from('users')
@@ -149,7 +149,7 @@ export async function createOrder(supabase: any, orderData: any) {
   return transformOrder(order);
 }
 
-export function validateOrder(data: any): { isValid: boolean; errors: string[] } {
+export function validateOrder(data: Record<string, unknown>): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
 
   if (!data.client_id) {
@@ -166,14 +166,14 @@ export function validateOrder(data: any): { isValid: boolean; errors: string[] }
 
   // Validate items
   if (data.items && Array.isArray(data.items)) {
-    data.items.forEach((item: any, index: number) => {
+    data.items.forEach((item: Record<string, unknown>, index: number) => {
       if (!item.product_id) {
         errors.push(`Item ${index + 1}: Product ID is required`);
       }
-      if (!item.quantity || item.quantity <= 0) {
+      if (!item.quantity || (item.quantity as number) <= 0) {
         errors.push(`Item ${index + 1}: Quantity must be positive`);
       }
-      if (!item.unit_price || item.unit_price <= 0) {
+      if (!item.unit_price || (item.unit_price as number) <= 0) {
         errors.push(`Item ${index + 1}: Unit price must be positive`);
       }
     });

@@ -3,14 +3,13 @@
  * @description Validation engine for product data using the products schema.
  */
 
-import { PRODUCTS_TABLE } from '@/constants/products-schema.js';
 
 // --- Type Definitions ---
 
 export interface ProductValidationResult {
   isValid: boolean;
   errors: string[];
-  cleanData?: any;
+  cleanData?: Record<string, unknown>;
 }
 
 interface ProductValidationOptions {
@@ -19,12 +18,12 @@ interface ProductValidationOptions {
 
 // --- Validation Helpers ---
 
-const validateRef = (ref: any): boolean => typeof ref === 'string' && ref.trim().length >= 2;
-const validateQuantity = (qty: any): boolean => Number.isInteger(qty) && qty >= 0;
-const validatePrice = (price: any): boolean => !price || (typeof price === 'number' && price >= 0);
-const sanitizeString = (str: any): string => typeof str === 'string' ? str.trim().replace(/[<>\"']/g, '') : '';
-const sanitizeNumber = (num: any): number | null => {
-  const parsed = parseFloat(num);
+const validateRef = (ref: unknown): boolean => typeof ref === 'string' && ref.trim().length >= 2;
+const validateQuantity = (qty: unknown): boolean => Number.isInteger(qty) && (qty as number) >= 0;
+const validatePrice = (price: unknown): boolean => !price || (typeof price === 'number' && price >= 0);
+const sanitizeString = (str: unknown): string => typeof str === 'string' ? str.trim().replace(/[<>\"']/g, '') : '';
+const sanitizeNumber = (num: unknown): number | null => {
+  const parsed = parseFloat(String(num));
   return !isNaN(parsed) ? parsed : null;
 };
 
@@ -34,17 +33,17 @@ const sanitizeNumber = (num: any): number | null => {
  * @param options Validation options (isUpdate, etc.)
  * @returns A ProductValidationResult object.
  */
-function validateProductData(data: any, options: ProductValidationOptions = {}): ProductValidationResult {
+function validateProductData(data: Record<string, unknown>, options: ProductValidationOptions = {}): ProductValidationResult {
   const { isUpdate = false } = options;
   const errors: string[] = [];
-  const cleanData: any = {};
+  const cleanData: Record<string, unknown> = {};
 
   // --- Unified Field Validation Rules ---
   const fieldRules: Array<{
     name: string;
     required?: boolean;
-    validate?: (val: any) => boolean;
-    sanitize?: (val: any) => any;
+    validate?: (val: unknown) => boolean;
+    sanitize?: (val: unknown) => unknown;
     error?: string;
   }> = [
     // Required fields
@@ -62,7 +61,7 @@ function validateProductData(data: any, options: ProductValidationOptions = {}):
     { name: 'size', sanitize: sanitizeString },
     
     // Numeric fields
-    { name: 'qty', validate: validateQuantity, sanitize: (val: any) => val === null || val === undefined ? 0 : parseInt(val, 10), error: 'Quantity must be a non-negative integer.' },
+    { name: 'qty', validate: validateQuantity, sanitize: (val: unknown) => val === null || val === undefined ? 0 : parseInt(String(val), 10), error: 'Quantity must be a non-negative integer.' },
     { name: 'unit_price', validate: validatePrice, sanitize: sanitizeNumber, error: 'Price must be a non-negative number.' },
     
     // Description fields
@@ -78,7 +77,7 @@ function validateProductData(data: any, options: ProductValidationOptions = {}):
     
     // Image fields
     { name: 'main_pic', sanitize: sanitizeString },
-    { name: 'pics', sanitize: (val: any) => val }, // Pass through JSONB object
+    { name: 'pics', sanitize: (val: unknown) => val }, // Pass through JSONB object
   ];
 
   // --- Process All Rules ---
@@ -116,7 +115,7 @@ function validateProductData(data: any, options: ProductValidationOptions = {}):
  * @param data The raw data from the request body.
  * @returns A ProductValidationResult object.
  */
-export function validateCreateProduct(data: any): ProductValidationResult {
+export function validateCreateProduct(data: Record<string, unknown>): ProductValidationResult {
   return validateProductData(data, { isUpdate: false });
 }
 
@@ -125,6 +124,6 @@ export function validateCreateProduct(data: any): ProductValidationResult {
  * @param data The raw data from the request body.
  * @returns A ProductValidationResult object.
  */
-export function validateUpdateProduct(data: any): ProductValidationResult {
+export function validateUpdateProduct(data: Record<string, unknown>): ProductValidationResult {
   return validateProductData(data, { isUpdate: true });
 }

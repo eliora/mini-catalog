@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
 
     // Get orders
     try {
-      const result = await getOrders(supabaseAdmin, filters, pagination);
+      const result = await getOrders(supabaseAdmin, filters, pagination as unknown as Record<string, unknown>);
       
       return successResponse({
         orders: result.orders,

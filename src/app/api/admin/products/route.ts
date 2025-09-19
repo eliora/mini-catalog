@@ -113,13 +113,13 @@ export async function POST(request: NextRequest) {
     const { ref } = validation.cleanData!;
     
     // Check if a product with this reference already exists
-    const refExists = await checkRefExists(supabaseAdmin, ref);
+    const refExists = await checkRefExists(supabaseAdmin, ref as string);
     if (refExists) {
       return conflictResponse('A product with this reference already exists.');
     }
 
     // Create the new product in the database
-    const product = await createProduct(supabaseAdmin, validation.cleanData);
+    const product = await createProduct(supabaseAdmin, validation.cleanData!);
     return successResponse({
       product,
       message: 'Product created successfully'
@@ -169,14 +169,14 @@ export async function PUT(request: NextRequest) {
 
     // If reference is being updated, check if the new reference is already taken
     if (validation.cleanData!.ref) {
-      const refExists = await checkRefExists(supabaseAdmin, validation.cleanData!.ref, id);
+      const refExists = await checkRefExists(supabaseAdmin, validation.cleanData!.ref as string, id);
       if (refExists) {
         return conflictResponse('The new reference is already in use by another product.');
       }
     }
 
     // Perform the update
-    const product = await updateProduct(supabaseAdmin, id, validation.cleanData);
+    const product = await updateProduct(supabaseAdmin, id, validation.cleanData!);
     return successResponse({
       product,
       message: 'Product updated successfully'

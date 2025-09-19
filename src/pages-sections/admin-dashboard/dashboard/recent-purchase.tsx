@@ -172,7 +172,7 @@ export default function RecentPurchase() {
                     </Paragraph>
                     <Chip
                       label={getStatusText(purchase.status)}
-                      color={getStatusColor(purchase.status) as any}
+                      color={getStatusColor(purchase.status) as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
                       size="small"
                       sx={{
                         height: 20,

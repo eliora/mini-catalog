@@ -11,6 +11,7 @@ import { Box, Card, Alert, CircularProgress } from '@mui/material';
 import { useClientManagement } from '@/hooks/useClientManagement';
 import ClientDataTable from '@/components/admin/data-tables/ClientDataTable';
 import ClientEditDialog from '@/components/admin/dialogs/ClientEditDialog';
+// Types will be inferred from the components
 import PageWrapper from '../../page-wrapper';
 import ClientManagementHeader from '@/components/admin/client-management/ClientManagementHeader';
 import ClientStatsGrid from '@/components/admin/client-management/ClientStatsGrid';

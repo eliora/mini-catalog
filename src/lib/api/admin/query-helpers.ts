@@ -79,40 +79,40 @@ export function parseSortParams(searchParams: URLSearchParams): SortParams {
  * @param client The raw user object from the Supabase query.
  * @returns A transformed client object.
  */
-export function transformClient(client: any) {
+export function transformClient(client: Record<string, unknown>) {
   // Fallback helper functions if USERS_HELPERS is not available
-  const getDisplayName = (cli: any) => {
+  const getDisplayName = (cli: Record<string, unknown>) => {
     if (cli.full_name) return cli.full_name;
     if (cli.business_name) return cli.business_name;
     return cli.email;
   };
 
-  const formatAddress = (address: any) => {
+  const formatAddress = (address: unknown) => {
     if (!address) return '';
     if (typeof address === 'string') return address;
     if (typeof address === 'object') {
-      const parts = [address.street, address.city, address.postal_code, address.country].filter(Boolean);
+      const parts = [(address as Record<string, unknown>).street, (address as Record<string, unknown>).city, (address as Record<string, unknown>).postal_code, (address as Record<string, unknown>).country].filter(Boolean);
       return parts.join(', ');
     }
     return '';
   };
 
-  const isAdmin = (cli: any) => {
+  const isAdmin = (cli: Record<string, unknown>) => {
     return cli.user_role === 'admin';
   };
 
-  const isVerifiedMember = (cli: any) => {
+  const isVerifiedMember = (cli: Record<string, unknown>) => {
     return cli.user_role === 'verified_members';
   };
 
-  const isActive = (cli: any) => {
+  const isActive = (cli: Record<string, unknown>) => {
     return cli.status === 'active';
   };
 
   // Extract city from address if it's an object
   let city = '';
-  if (client.address && typeof client.address === 'object' && client.address.city) {
-    city = client.address.city;
+  if (client.address && typeof client.address === 'object' && (client.address as Record<string, unknown>).city) {
+    city = (client.address as Record<string, unknown>).city as string;
   }
 
   try {
@@ -124,10 +124,10 @@ export function transformClient(client: any) {
       is_admin: USERS_HELPERS?.isAdmin ? USERS_HELPERS.isAdmin(client) : isAdmin(client),
       is_verified: USERS_HELPERS?.isVerifiedMember ? USERS_HELPERS.isVerifiedMember(client) : isVerifiedMember(client),
       is_active: USERS_HELPERS?.isActive ? USERS_HELPERS.isActive(client) : isActive(client),
-      avatar_initials: client.full_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || '??',
-      last_activity: client.last_login ? new Date(client.last_login).toLocaleDateString('he-IL') : 'אף פעם',
+      avatar_initials: (client.full_name as string)?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || '??',
+      last_activity: client.last_login ? new Date(client.last_login as string).toLocaleDateString('he-IL') : 'אף פעם',
     };
-  } catch (e) {
+  } catch {
     console.warn('USERS_HELPERS not available, using fallback logic');
     return {
       ...client,
@@ -137,8 +137,8 @@ export function transformClient(client: any) {
       is_admin: isAdmin(client),
       is_verified: isVerifiedMember(client),
       is_active: isActive(client),
-      avatar_initials: client.full_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || '??',
-      last_activity: client.last_login ? new Date(client.last_login).toLocaleDateString('he-IL') : 'אף פעם',
+      avatar_initials: (client.full_name as string)?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || '??',
+      last_activity: client.last_login ? new Date(client.last_login as string).toLocaleDateString('he-IL') : 'אף פעם',
     };
   }
 }
@@ -152,7 +152,7 @@ export function transformClient(client: any) {
  * @param pagination The parsed pagination parameters.
  * @returns A Supabase query builder instance. The caller is responsible for `await`ing it.
  */
-export function buildClientQuery(supabase: any, filters: FilterParams, sort: SortParams, pagination: PaginationParams) {
+export function buildClientQuery(supabase: any, filters: FilterParams, sort: SortParams, pagination: PaginationParams) { // eslint-disable-line @typescript-eslint/no-explicit-any
   let query = supabase
     .from('users')
     .select(`
@@ -183,7 +183,7 @@ export function buildClientQuery(supabase: any, filters: FilterParams, sort: Sor
   return query;
 }
 
-export function calculateStats(clients: any[]) {
+export function calculateStats(clients: Record<string, unknown>[]) {
   return {
     total: clients.length,
     active: clients.filter(c => c.is_active).length,

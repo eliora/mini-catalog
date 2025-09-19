@@ -15,7 +15,7 @@ import { transformClient } from './query-helpers';
  * @param excludeId An optional user ID to exclude from the search.
  * @returns `true` if the email exists, `false` otherwise.
  */
-export async function checkEmailExists(supabase: any, email: string, excludeId?: string) {
+export async function checkEmailExists(supabase: any, email: string, excludeId?: string) { // eslint-disable-line @typescript-eslint/no-explicit-any
   let query = supabase
     .from('users')
     .select('id, email')
@@ -46,7 +46,7 @@ export async function checkEmailExists(supabase: any, email: string, excludeId?:
  * @param clientData The validated and sanitized data for the new user (includes password).
  * @returns The newly created client object, transformed for the API response.
  */
-export async function createClient(supabase: any, clientData: any) {
+export async function createClient(supabase: any, clientData: Record<string, unknown>) { // eslint-disable-line @typescript-eslint/no-explicit-any
   const { password, ...profileData } = clientData;
 
   // First, create the user in Supabase Auth
@@ -99,7 +99,7 @@ export async function createClient(supabase: any, clientData: any) {
  * @returns The updated client object, transformed for the API response.
  * @throws An error if the client with the specified ID is not found.
  */
-export async function updateClient(supabase: any, id: string, updateData: any) {
+export async function updateClient(supabase: any, id: string, updateData: Record<string, unknown>) { // eslint-disable-line @typescript-eslint/no-explicit-any
   // First, check if the client exists to provide a clearer error
   const { data: existingClient, error: checkError } = await supabase
     .from('users')
@@ -111,7 +111,7 @@ export async function updateClient(supabase: any, id: string, updateData: any) {
     if (checkError.code === 'PGRST116') {
       // No record found
       const notFoundError = new Error(`Client with ID ${id} not found.`);
-      (notFoundError as any).code = 'PGRST116';
+      (notFoundError as Error & { code: string }).code = 'PGRST116';
       throw notFoundError;
     }
     // Other database error
@@ -121,7 +121,7 @@ export async function updateClient(supabase: any, id: string, updateData: any) {
   if (!existingClient) {
     // This shouldn't happen if no error, but just in case
     const notFoundError = new Error(`Client with ID ${id} not found.`);
-    (notFoundError as any).code = 'PGRST116';
+    (notFoundError as Error & { code: string }).code = 'PGRST116';
     throw notFoundError;
   }
 
@@ -154,7 +154,7 @@ export async function updateClient(supabase: any, id: string, updateData: any) {
  * @returns An object confirming the operation and the affected client data.
  * @throws An error if the client with the specified ID is not found.
  */
-export async function deleteClient(supabase: any, id: string, hardDelete = false) {
+export async function deleteClient(supabase: any, id: string, hardDelete = false) { // eslint-disable-line @typescript-eslint/no-explicit-any
   // Check if client exists first
   const { data: existingClient, error: checkError } = await supabase
     .from('users')

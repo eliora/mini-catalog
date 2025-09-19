@@ -12,7 +12,7 @@ import { USERS_TABLE } from '@/constants/users-schema.js';
 export interface ValidationResult {
   isValid: boolean;
   errors: string[];
-  cleanData?: any;
+  cleanData?: Record<string, unknown>;
 }
 
 interface ValidationOptions {
@@ -21,9 +21,9 @@ interface ValidationOptions {
 
 // --- Validation Helpers ---
 
-const validateEmail = (email: any): boolean => typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-const validatePhoneNumber = (phone: any): boolean => typeof phone === 'string' && /^[\+]?[1-9][\d]{0,15}$/.test(phone.replace(/[\s\-\(\)]/g, ''));
-const sanitizeString = (str: any): string => typeof str === 'string' ? str.trim().replace(/[<>\"']/g, '') : '';
+const validateEmail = (email: unknown): boolean => typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const validatePhoneNumber = (phone: unknown): boolean => typeof phone === 'string' && /^[\+]?[1-9][\d]{0,15}$/.test(phone.replace(/[\s\-\(\)]/g, ''));
+const sanitizeString = (str: unknown): string => typeof str === 'string' ? str.trim().replace(/[<>\"']/g, '') : '';
 
 /**
  * A reusable helper to validate a value against a list of allowed enum values.
@@ -32,12 +32,12 @@ const sanitizeString = (str: any): string => typeof str === 'string' ? str.trim(
  * @param fieldName The name of the field for clear error messages.
  * @returns An object with either the validated `value` or an `error` string.
  */
-function validateEnum(value: any, validValues: string[], fieldName: string): { value?: string; error?: string } {
+function validateEnum(value: unknown, validValues: string[], fieldName: string): { value?: string; error?: string } {
   if (value !== undefined) {
-    if (!validValues.includes(value)) {
+    if (!validValues.includes(value as string)) {
       return { error: `Invalid ${fieldName}. Must be one of: ${validValues.join(', ')}` };
     }
-    return { value };
+    return { value: value as string };
   }
   return {};
 }
@@ -53,34 +53,34 @@ function validateEnum(value: any, validValues: string[], fieldName: string): { v
  * @param options `isUpdate`: If true, treats fields marked as `required` as optional.
  * @returns A `ValidationResult` object containing the outcome.
  */
-function validateClientData(data: any, options: ValidationOptions = {}): ValidationResult {
+function validateClientData(data: Record<string, unknown>, options: ValidationOptions = {}): ValidationResult {
   const { isUpdate = false } = options;
   const errors: string[] = [];
-  const cleanData: any = {};
+  const cleanData: Record<string, unknown> = {};
 
   // --- Unified Field Validation Rules ---
   const fieldRules: Array<{
     name: string;
     required?: boolean;
-    validate?: (val: any) => boolean;
-    sanitize?: (val: any) => any;
+    validate?: (val: unknown) => boolean;
+    sanitize?: (val: unknown) => unknown;
     error?: string;
     enum?: string[];
     defaultValue?: string;
-    postProcess?: (val: any, currentData: any) => void;
+    postProcess?: (val: unknown, currentData: Record<string, unknown>) => void;
   }> = [
     // Required on Create
-    { name: 'email', required: true, validate: validateEmail, sanitize: (val: string) => val.toLowerCase().trim(), error: 'A valid email is required.' },
-    { name: 'full_name', required: true, validate: (val: string) => Boolean(val && val.trim().length >= 2), sanitize: sanitizeString, error: 'Full name must be at least 2 characters.' },
-    { name: 'password', required: true, validate: (val: string) => Boolean(val && val.length >= 6), sanitize: (val: string) => val, error: 'Password must be at least 6 characters.' },
+    { name: 'email', required: true, validate: validateEmail, sanitize: (val: unknown) => String(val).toLowerCase().trim(), error: 'A valid email is required.' },
+    { name: 'full_name', required: true, validate: (val: unknown) => Boolean(val && String(val).trim().length >= 2), sanitize: sanitizeString, error: 'Full name must be at least 2 characters.' },
+    { name: 'password', required: true, validate: (val: unknown) => Boolean(val && String(val).length >= 6), sanitize: (val: unknown) => val, error: 'Password must be at least 6 characters.' },
     
     // Optional
-    { name: 'phone_number', validate: (val: string) => !val || val.trim() === '' || validatePhoneNumber(val), sanitize: (val: string) => val && val.trim() !== '' ? val.trim() : null, error: 'Invalid phone number format.' },
-    { name: 'business_name', sanitize: (val: string) => val && val.trim() !== '' ? sanitizeString(val) : null },
-    { name: 'address', sanitize: (val: any) => val }, // Pass through JSONB object
-    { name: 'city', sanitize: sanitizeString, postProcess: (val: string, currentData: any) => {
+    { name: 'phone_number', validate: (val: unknown) => !val || String(val).trim() === '' || validatePhoneNumber(val), sanitize: (val: unknown) => val && String(val).trim() !== '' ? String(val).trim() : null, error: 'Invalid phone number format.' },
+    { name: 'business_name', sanitize: (val: unknown) => val && String(val).trim() !== '' ? sanitizeString(val) : null },
+    { name: 'address', sanitize: (val: unknown) => val }, // Pass through JSONB object
+    { name: 'city', sanitize: sanitizeString, postProcess: (val: unknown, currentData: Record<string, unknown>) => {
       if (currentData.address && typeof currentData.address === 'object') {
-        currentData.address.city = val;
+        (currentData.address as Record<string, unknown>).city = val;
       }
     }},
     
@@ -149,7 +149,7 @@ function validateClientData(data: any, options: ValidationOptions = {}): Validat
  * @param data The raw data from the request body.
  * @returns A `ValidationResult` object.
  */
-export function validateCreateClient(data: any): ValidationResult {
+export function validateCreateClient(data: Record<string, unknown>): ValidationResult {
   return validateClientData(data, { isUpdate: false });
 }
 
@@ -159,6 +159,6 @@ export function validateCreateClient(data: any): ValidationResult {
  * @param data The raw data from the request body.
  * @returns A `ValidationResult` object.
  */
-export function validateUpdateClient(data: any): ValidationResult {
+export function validateUpdateClient(data: Record<string, unknown>): ValidationResult {
   return validateClientData(data, { isUpdate: true });
 }

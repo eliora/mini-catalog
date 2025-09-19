@@ -77,12 +77,12 @@ export class DatabaseOperations {
 		} = options;
 
 		return retryOperation(async () => {
-			let query = this.supabase.from(table as any).select(columns);
+			let query = this.supabase.from(table as any).select(columns); // eslint-disable-line @typescript-eslint/no-explicit-any
 
 			// Apply filters
 			Object.entries(filters).forEach(([key, value]) => {
 				if (value !== undefined && value !== null && value !== "") {
-					query = query.eq(key, value as any);
+					query = query.eq(key, value as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 				}
 			});
 
@@ -125,7 +125,7 @@ export class DatabaseOperations {
 
 		return retryOperation(async () => {
 			return await this.supabase
-				.from(table as any)
+				.from(table as any) // eslint-disable-line @typescript-eslint/no-explicit-any
 				.insert(data as Record<string, unknown>)
 				.select(returning)
 				.single();
@@ -143,12 +143,12 @@ export class DatabaseOperations {
 
 		return retryOperation(async () => {
 			let query = this.supabase
-				.from(table as any)
+				.from(table as any) // eslint-disable-line @typescript-eslint/no-explicit-any
 				.update(data as Record<string, unknown>);
 
 			// Apply conditions
 			Object.entries(conditions).forEach(([key, value]) => {
-				query = query.eq(key, value as any);
+				query = query.eq(key, value as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 			});
 
 			return await query.select(returning).single();
@@ -164,11 +164,11 @@ export class DatabaseOperations {
 		const { returning = "*" } = options;
 
 		return retryOperation(async () => {
-			let query = this.supabase.from(table as any).delete();
+			let query = this.supabase.from(table as any).delete(); // eslint-disable-line @typescript-eslint/no-explicit-any
 
 			// Apply conditions
 			Object.entries(conditions).forEach(([key, value]) => {
-				query = query.eq(key, value as any);
+				query = query.eq(key, value as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 			});
 
 			return await query.select(returning).single();
@@ -189,7 +189,7 @@ export class DatabaseOperations {
 
 		return retryOperation(async () => {
 			const query = this.supabase
-				.from(table as any)
+				.from(table as any) // eslint-disable-line @typescript-eslint/no-explicit-any
 				.upsert(data as Record<string, unknown>, {
 					onConflict,
 					ignoreDuplicates,
@@ -206,13 +206,13 @@ export class DatabaseOperations {
 	): Promise<{ count: number; error: unknown }> {
 		return retryOperation(async () => {
 			let query = this.supabase
-				.from(table as any)
+				.from(table as any) // eslint-disable-line @typescript-eslint/no-explicit-any
 				.select("*", { count: "exact", head: true });
 
 			// Apply filters
 			Object.entries(filters).forEach(([key, value]) => {
 				if (value !== undefined && value !== null && value !== "") {
-					query = query.eq(key, value as any);
+					query = query.eq(key, value as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 				}
 			});
 
@@ -227,11 +227,11 @@ export class DatabaseOperations {
 		conditions: Record<string, unknown>,
 	): Promise<{ exists: boolean; error: unknown }> {
 		return retryOperation(async () => {
-			let query = this.supabase.from(table as any).select("id", { head: true });
+			let query = this.supabase.from(table as any).select("id", { head: true }); // eslint-disable-line @typescript-eslint/no-explicit-any
 
 			// Apply conditions
 			Object.entries(conditions).forEach(([key, value]) => {
-				query = query.eq(key, value as any);
+				query = query.eq(key, value as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 			});
 
 			const result = await query.single();

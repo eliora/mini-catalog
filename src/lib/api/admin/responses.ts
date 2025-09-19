@@ -4,15 +4,15 @@
 
 import { NextResponse } from 'next/server';
 
-export function successResponse(data: any, status = 200) {
+export function successResponse(data: Record<string, unknown>, status = 200) {
   return NextResponse.json({
     success: true,
     ...data
   }, { status });
 }
 
-export function errorResponse(error: string, status = 500, details?: any) {
-  const response: any = {
+export function errorResponse(error: string, status = 500, details?: unknown) {
+  const response: Record<string, unknown> = {
     success: false,
     error
   };
@@ -44,15 +44,15 @@ export function conflictResponse(message = 'Resource already exists') {
   return errorResponse(message, 409);
 }
 
-export function internalErrorResponse(message = 'Internal server error', details?: any) {
+export function internalErrorResponse(message = 'Internal server error', details?: unknown) {
   return errorResponse(message, 500, details);
 }
 
 /**
  * Handles authentication errors from the auth module
  */
-export function handleAuthError(authError: any) {
-  if (authError.message?.includes('unauthorized') || authError.message?.includes('access denied')) {
+export function handleAuthError(authError: unknown) {
+  if ((authError as Error).message?.includes('unauthorized') || (authError as Error).message?.includes('access denied')) {
     return forbiddenResponse('Admin access required');
   }
   return unauthorizedResponse('Authentication failed');

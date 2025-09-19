@@ -3,7 +3,7 @@
  * @description Database operations for product management using the products schema.
  */
 
-import { PRODUCTS_TABLE, PRODUCTS_HELPERS } from '@/constants/products-schema.js';
+import { PRODUCTS_HELPERS } from '@/constants/products-schema.js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**
@@ -11,7 +11,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
  * @param product The raw product record from the database.
  * @returns The transformed product object for API responses.
  */
-function transformProduct(product: any) {
+function transformProduct(product: Record<string, unknown>) {
   if (!product) return null;
 
   return {
@@ -57,7 +57,7 @@ export async function checkRefExists(supabase: SupabaseClient, ref: string, excl
  * @param productData The validated and sanitized data for the new product.
  * @returns The newly created product object, transformed for the API response.
  */
-export async function createProduct(supabase: SupabaseClient, productData: any) {
+export async function createProduct(supabase: SupabaseClient, productData: Record<string, unknown>) {
   const { data: product, error } = await supabase
     .from('products')
     .insert({
@@ -89,7 +89,7 @@ export async function createProduct(supabase: SupabaseClient, productData: any) 
  * @param updateData The validated data to update.
  * @returns The updated product object.
  */
-export async function updateProduct(supabase: SupabaseClient, id: string, updateData: any) {
+export async function updateProduct(supabase: SupabaseClient, id: string, updateData: Record<string, unknown>) {
   // First check if the product exists
   const { data: existingProduct, error: checkError } = await supabase
     .from('products')
@@ -100,7 +100,7 @@ export async function updateProduct(supabase: SupabaseClient, id: string, update
   if (checkError) {
     if (checkError.code === 'PGRST116') {
       const notFoundError = new Error(`Product with ID ${id} not found.`);
-      (notFoundError as any).code = 'PGRST116';
+      (notFoundError as Error & { code: string }).code = 'PGRST116';
       throw notFoundError;
     }
     throw checkError;
@@ -147,7 +147,7 @@ export async function deleteProduct(supabase: SupabaseClient, id: string): Promi
   if (checkError) {
     if (checkError.code === 'PGRST116') {
       const notFoundError = new Error(`Product with ID ${id} not found.`);
-      (notFoundError as any).code = 'PGRST116';
+      (notFoundError as Error & { code: string }).code = 'PGRST116';
       throw notFoundError;
     }
     throw checkError;
@@ -171,7 +171,7 @@ export async function deleteProduct(supabase: SupabaseClient, id: string): Promi
  * @param params Query parameters for filtering and pagination.
  * @returns Object containing products array and pagination info.
  */
-export async function getProducts(supabase: SupabaseClient, params: any = {}) {
+export async function getProducts(supabase: SupabaseClient, params: Record<string, unknown> = {}) {
   const {
     page = 1,
     limit = 10,
@@ -181,7 +181,7 @@ export async function getProducts(supabase: SupabaseClient, params: any = {}) {
     stock_status = ''
   } = params;
 
-  const offset = (page - 1) * limit;
+  const offset = ((page as number) - 1) * (limit as number);
 
   // Build query
   let query = supabase
@@ -226,7 +226,7 @@ export async function getProducts(supabase: SupabaseClient, params: any = {}) {
   // Apply pagination and ordering
   const { data: products, error, count } = await query
     .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+    .range(offset, offset + (limit as number) - 1);
 
   if (error) {
     throw error;
@@ -241,7 +241,7 @@ export async function getProducts(supabase: SupabaseClient, params: any = {}) {
       page,
       limit,
       total: count || 0,
-      totalPages: Math.ceil((count || 0) / limit)
+      totalPages: Math.ceil((count || 0) / (limit as number))
     }
   };
 }
