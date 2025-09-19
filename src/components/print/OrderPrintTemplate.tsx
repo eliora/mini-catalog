@@ -47,10 +47,11 @@ const OrderPrintTemplate = forwardRef<HTMLDivElement, OrderPrintTemplateProps>((
   const { settings } = useCompany();
   
   // Get company details from settings
-  const companyName = settings?.company_name || 'חברת י.ד.א';
-  const companyPhone = settings?.contact_phone || '';
-  const companyEmail = settings?.contact_email || '';
-  const companyAddress = settings?.address || '';
+  const companyName = settings?.company_name || '';
+  const companyPhone = settings?.company_phone || '';
+  const companyEmail = settings?.company_email || '';
+  const companyAddress = settings?.company_address || '';
+  const logoUrl = settings?.logo_url || settings?.company_logo;
 
   // Format order number
   const formatOrderNumber = (id: string): string => {
@@ -82,6 +83,20 @@ const OrderPrintTemplate = forwardRef<HTMLDivElement, OrderPrintTemplateProps>((
         alignItems: 'flex-start'
       }}>
         <div>
+          {logoUrl && (
+            <div style={{ marginBottom: '10px' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img 
+                src={logoUrl} 
+                alt={companyName}
+                style={{
+                  height: '40px',
+                  width: 'auto',
+                  maxWidth: '200px'
+                }}
+              />
+            </div>
+          )}
           <h1 style={{ 
             margin: '0 0 10px 0', 
             fontSize: '24px', 

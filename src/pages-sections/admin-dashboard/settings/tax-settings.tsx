@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Grid,
   Button,
@@ -17,66 +17,96 @@ import {
   FormControl,
   InputLabel,
   InputAdornment,
-  Chip
+  Snackbar
 } from "@mui/material";
 import { 
   Save, 
   Refresh,
   Receipt,
   LocalShipping,
-  CurrencyExchange,
   Percent
 } from "@mui/icons-material";
 import { H5, H6, Paragraph } from "@/components/Typography";
 import { FlexBetween, FlexBox } from "@/components/flex-box";
 import { Formik } from "formik";
 import * as yup from "yup";
+import { useCompany } from "@/context/CompanyContext";
 
 // Form validation schema
 const validationSchema = yup.object().shape({
-  vatRate: yup.number().min(0).max(100).required('שיעור מע"מ הוא שדה חובה'),
+  taxRate: yup.number().min(0).max(100).required('שיעור מע״מ הוא שדה חובה'),
   currency: yup.string().required("מטבע הוא שדה חובה"),
-  shippingCost: yup.number().min(0).required("עלות משלוח הוא שדה חובה"),
+  standardShippingCost: yup.number().min(0).required("עלות משלוח רגיל הוא שדה חובה"),
   freeShippingThreshold: yup.number().min(0)
 });
 
 interface TaxSettingsFormValues {
-  vatRate: number;
-  vatIncluded: boolean;
+  taxRate: number;
+  pricesIncludeTax: boolean;
   currency: string;
-  currencySymbol: string;
-  shippingCost: number;
-  freeShippingEnabled: boolean;
+  standardShippingCost: number;
+  expressShippingCost: number;
   freeShippingThreshold: number;
-  taxExemptProducts: boolean;
-  roundingMethod: string;
-  displayPricesWithVat: boolean;
+  enableTaxExempt: boolean;
+  showPricesWithTax: boolean;
   invoiceFooterText: string;
 }
 
 export default function TaxSettings() {
+  const { settings, updateSettings, isLoading } = useCompany();
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+
   const initialValues: TaxSettingsFormValues = {
-    vatRate: 17,
-    vatIncluded: true,
-    currency: "ILS",
-    currencySymbol: "₪",
-    shippingCost: 25,
-    freeShippingEnabled: true,
-    freeShippingThreshold: 200,
-    taxExemptProducts: false,
-    roundingMethod: "round",
-    displayPricesWithVat: true,
-    invoiceFooterText: 'תודה שבחרתם בנו! המחירים כולל מע"מ'
+    taxRate: settings?.tax_rate ? (settings.tax_rate * 100) : 18, // Convert from decimal to percentage
+    pricesIncludeTax: settings?.prices_include_tax || true,
+    currency: settings?.currency || 'ILS',
+    standardShippingCost: settings?.standard_shipping_cost || 0,
+    expressShippingCost: settings?.express_shipping_cost || 0,
+    freeShippingThreshold: settings?.free_shipping_threshold || 0,
+    enableTaxExempt: settings?.enable_tax_exempt || false,
+    showPricesWithTax: settings?.show_prices_with_tax || true,
+    invoiceFooterText: settings?.invoice_footer_text || '',
   };
 
   const handleFormSubmit = async (values: TaxSettingsFormValues) => {
     try {
       console.log("Saving tax settings:", values);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert("הגדרות המיסוי נשמרו בהצלחה!");
+      
+      // Map form values to database fields
+      const updates = {
+        tax_rate: values.taxRate / 100, // Convert percentage to decimal
+        prices_include_tax: values.pricesIncludeTax,
+        currency: values.currency,
+        standard_shipping_cost: values.standardShippingCost,
+        express_shipping_cost: values.expressShippingCost,
+        free_shipping_threshold: values.freeShippingThreshold,
+        enable_tax_exempt: values.enableTaxExempt,
+        show_prices_with_tax: values.showPricesWithTax,
+        invoice_footer_text: values.invoiceFooterText,
+      };
+
+      const result = await updateSettings(updates);
+      
+      if (result.error) {
+        setSnackbar({
+          open: true,
+          message: `שגיאה בשמירת הגדרות המיסוי: ${result.error}`,
+          severity: 'error'
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: "הגדרות המיסוי נשמרו בהצלחה!",
+          severity: 'success'
+        });
+      }
     } catch (error) {
       console.error("Error saving tax settings:", error);
-      alert("שגיאה בשמירת הגדרות המיסוי");
+      setSnackbar({
+        open: true,
+        message: "שגיאה בשמירת הגדרות המיסוי",
+        severity: 'error'
+      });
     }
   };
 
@@ -85,7 +115,7 @@ export default function TaxSettings() {
       <Box sx={{ mb: 3 }}>
         <H5 sx={{ fontWeight: 700, mb: 1 }}>מיסוי ומשלוח</H5>
         <Paragraph color="grey.600">
-          נהל הגדרות מע&quot;מ, מטבע, משלוח ותצוגת מחירים
+          נהל הגדרות מע״מ, מטבע, משלוח ותצוגת מחירים
         </Paragraph>
       </Box>
 
@@ -93,6 +123,7 @@ export default function TaxSettings() {
         initialValues={initialValues}
         validationSchema={validationSchema}
         onSubmit={handleFormSubmit}
+        enableReinitialize={true}
       >
         {({ values, errors, touched, handleChange, handleBlur, handleSubmit, setFieldValue, isSubmitting }) => (
           <form onSubmit={handleSubmit}>
@@ -103,23 +134,24 @@ export default function TaxSettings() {
                   <CardContent>
                     <FlexBox alignItems="center" gap={2} mb={2}>
                       <Receipt color="primary" />
-                      <H6 sx={{ fontWeight: 700 }}>הגדרות מע&quot;מ</H6>
+                      <H6 sx={{ fontWeight: 700 }}>הגדרות מע״מ</H6>
                     </FlexBox>
-                    
-                    <Grid container spacing={2}>
+                    <Divider sx={{ mb: 3 }} />
+
+                    <Grid container spacing={3}>
                       <Grid size={{ md: 6, xs: 12 }}>
                         <TextField
                           fullWidth
-                          name="vatRate"
-                          label='שיעור מע"מ'
+                          name="taxRate"
+                          label="שיעור מע״מ (%)"
                           type="number"
-                          value={values.vatRate}
+                          value={values.taxRate}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          error={Boolean(touched.vatRate && errors.vatRate)}
-                          helperText={touched.vatRate && errors.vatRate}
+                          error={Boolean(touched.taxRate && errors.taxRate)}
+                          helperText={touched.taxRate && errors.taxRate}
                           InputProps={{
-                            endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                            endAdornment: <InputAdornment position="end"><Percent /></InputAdornment>,
                           }}
                           sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                         />
@@ -127,111 +159,57 @@ export default function TaxSettings() {
 
                       <Grid size={{ md: 6, xs: 12 }}>
                         <FormControl fullWidth>
-                          <InputLabel>שיטת עיגול</InputLabel>
+                          <InputLabel>מטבע</InputLabel>
                           <Select
-                            name="roundingMethod"
-                            value={values.roundingMethod}
-                            label="שיטת עיגול"
+                            name="currency"
+                            value={values.currency}
                             onChange={handleChange}
+                            label="מטבע"
                             sx={{ borderRadius: 2 }}
                           >
-                            <MenuItem value="round">עיגול רגיל</MenuItem>
-                            <MenuItem value="floor">עיגול כלפי מטה</MenuItem>
-                            <MenuItem value="ceil">עיגול כלפי מעלה</MenuItem>
+                            <MenuItem value="ILS">₪ שקל ישראלי</MenuItem>
+                            <MenuItem value="USD">$ דולר אמריקאי</MenuItem>
+                            <MenuItem value="EUR">€ יורו</MenuItem>
                           </Select>
                         </FormControl>
                       </Grid>
 
                       <Grid size={{ xs: 12 }}>
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                          <FormControlLabel
-                            control={
-                              <Switch
-                                checked={values.vatIncluded}
-                                onChange={(e) => setFieldValue("vatIncluded", e.target.checked)}
-                                color="primary"
-                              />
-                            }
-                            label='המחירים כוללים מע"מ'
-                          />
-                          <FormControlLabel
-                            control={
-                              <Switch
-                                checked={values.displayPricesWithVat}
-                                onChange={(e) => setFieldValue("displayPricesWithVat", e.target.checked)}
-                                color="primary"
-                              />
-                            }
-                            label='הצג מחירים כולל מע"מ בקטלוג'
-                          />
-                          <FormControlLabel
-                            control={
-                              <Switch
-                                checked={values.taxExemptProducts}
-                                onChange={(e) => setFieldValue("taxExemptProducts", e.target.checked)}
-                                color="primary"
-                              />
-                            }
-                            label='אפשר מוצרים פטורים ממע"מ'
-                          />
-                        </Box>
-                      </Grid>
-                    </Grid>
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              {/* Currency Settings */}
-              <Grid size={{ xs: 12 }}>
-                <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "success.200" }}>
-                  <CardContent>
-                    <FlexBox alignItems="center" gap={2} mb={2}>
-                      <CurrencyExchange color="success" />
-                      <H6 sx={{ fontWeight: 700 }}>הגדרות מטבע</H6>
-                    </FlexBox>
-                    
-                    <Grid container spacing={2}>
-                      <Grid size={{ md: 6, xs: 12 }}>
-                        <FormControl fullWidth>
-                          <InputLabel>מטבע</InputLabel>
-                          <Select
-                            name="currency"
-                            value={values.currency}
-                            label="מטבע"
-                            onChange={handleChange}
-                            sx={{ borderRadius: 2 }}
-                          >
-                            <MenuItem value="ILS">
-                              <FlexBox alignItems="center" gap={1}>
-                                <Chip label="₪" size="small" />
-                                שקל ישראלי (ILS)
-                              </FlexBox>
-                            </MenuItem>
-                            <MenuItem value="USD">
-                              <FlexBox alignItems="center" gap={1}>
-                                <Chip label="$" size="small" />
-                                דולר אמריקאי (USD)
-                              </FlexBox>
-                            </MenuItem>
-                            <MenuItem value="EUR">
-                              <FlexBox alignItems="center" gap={1}>
-                                <Chip label="€" size="small" />
-                                יורו (EUR)
-                              </FlexBox>
-                            </MenuItem>
-                          </Select>
-                        </FormControl>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={values.pricesIncludeTax}
+                              onChange={(e) => setFieldValue('pricesIncludeTax', e.target.checked)}
+                              color="primary"
+                            />
+                          }
+                          label="המחירים כוללים מע״מ"
+                        />
                       </Grid>
 
-                      <Grid size={{ md: 6, xs: 12 }}>
-                        <TextField
-                          fullWidth
-                          name="currencySymbol"
-                          label="סמל מטבע"
-                          value={values.currencySymbol}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                      <Grid size={{ xs: 12 }}>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={values.showPricesWithTax}
+                              onChange={(e) => setFieldValue('showPricesWithTax', e.target.checked)}
+                              color="primary"
+                            />
+                          }
+                          label="הצג מחירים עם מע״מ"
+                        />
+                      </Grid>
+
+                      <Grid size={{ xs: 12 }}>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={values.enableTaxExempt}
+                              onChange={(e) => setFieldValue('enableTaxExempt', e.target.checked)}
+                              color="primary"
+                            />
+                          }
+                          label="אפשר פטור ממע״מ"
                         />
                       </Grid>
                     </Grid>
@@ -241,27 +219,28 @@ export default function TaxSettings() {
 
               {/* Shipping Settings */}
               <Grid size={{ xs: 12 }}>
-                <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "info.200" }}>
+                <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "primary.200" }}>
                   <CardContent>
                     <FlexBox alignItems="center" gap={2} mb={2}>
-                      <LocalShipping color="info" />
+                      <LocalShipping color="primary" />
                       <H6 sx={{ fontWeight: 700 }}>הגדרות משלוח</H6>
                     </FlexBox>
-                    
-                    <Grid container spacing={2}>
+                    <Divider sx={{ mb: 3 }} />
+
+                    <Grid container spacing={3}>
                       <Grid size={{ md: 6, xs: 12 }}>
                         <TextField
                           fullWidth
-                          name="shippingCost"
-                          label="עלות משלוח"
+                          name="standardShippingCost"
+                          label="עלות משלוח רגיל"
                           type="number"
-                          value={values.shippingCost}
+                          value={values.standardShippingCost}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          error={Boolean(touched.shippingCost && errors.shippingCost)}
-                          helperText={touched.shippingCost && errors.shippingCost}
+                          error={Boolean(touched.standardShippingCost && errors.standardShippingCost)}
+                          helperText={touched.standardShippingCost && errors.standardShippingCost}
                           InputProps={{
-                            endAdornment: <InputAdornment position="end">{values.currencySymbol}</InputAdornment>,
+                            startAdornment: <InputAdornment position="start">₪</InputAdornment>,
                           }}
                           sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                         />
@@ -270,38 +249,35 @@ export default function TaxSettings() {
                       <Grid size={{ md: 6, xs: 12 }}>
                         <TextField
                           fullWidth
-                          name="freeShippingThreshold"
-                          label="סכום למשלוח חינם"
+                          name="expressShippingCost"
+                          label="עלות משלוח מהיר"
                           type="number"
-                          value={values.freeShippingThreshold}
+                          value={values.expressShippingCost}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          error={Boolean(touched.freeShippingThreshold && errors.freeShippingThreshold)}
-                          helperText={touched.freeShippingThreshold && errors.freeShippingThreshold}
-                          disabled={!values.freeShippingEnabled}
                           InputProps={{
-                            endAdornment: <InputAdornment position="end">{values.currencySymbol}</InputAdornment>,
+                            startAdornment: <InputAdornment position="start">₪</InputAdornment>,
                           }}
                           sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                         />
                       </Grid>
 
                       <Grid size={{ xs: 12 }}>
-                        <FormControlLabel
-                          control={
-                            <Switch
-                              checked={values.freeShippingEnabled}
-                              onChange={(e) => setFieldValue("freeShippingEnabled", e.target.checked)}
-                              color="primary"
-                            />
-                          }
-                          label="אפשר משלוח חינם מסכום מינימלי"
+                        <TextField
+                          fullWidth
+                          name="freeShippingThreshold"
+                          label="סכום משלוח חינם"
+                          type="number"
+                          value={values.freeShippingThreshold}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={Boolean(touched.freeShippingThreshold && errors.freeShippingThreshold)}
+                          helperText={touched.freeShippingThreshold && errors.freeShippingThreshold}
+                          InputProps={{
+                            startAdornment: <InputAdornment position="start">₪</InputAdornment>,
+                          }}
+                          sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                         />
-                        {values.freeShippingEnabled && (
-                          <Alert severity="info" sx={{ mt: 2 }}>
-                            משלוח חינם יופעל אוטומטית עבור הזמנות מעל {values.freeShippingThreshold} {values.currencySymbol}
-                          </Alert>
-                        )}
                       </Grid>
                     </Grid>
                   </CardContent>
@@ -310,24 +286,26 @@ export default function TaxSettings() {
 
               {/* Invoice Settings */}
               <Grid size={{ xs: 12 }}>
-                <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "warning.200" }}>
+                <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "primary.200" }}>
                   <CardContent>
                     <FlexBox alignItems="center" gap={2} mb={2}>
-                      <Percent color="warning" />
-                      <H6 sx={{ fontWeight: 700 }}>הגדרות חשבוניות</H6>
+                      <Receipt color="primary" />
+                      <H6 sx={{ fontWeight: 700 }}>הגדרות חשבונית</H6>
                     </FlexBox>
-                    
-                    <Grid container spacing={2}>
+                    <Divider sx={{ mb: 3 }} />
+
+                    <Grid container spacing={3}>
                       <Grid size={{ xs: 12 }}>
                         <TextField
                           fullWidth
                           multiline
                           rows={3}
                           name="invoiceFooterText"
-                          label="טקסט בתחתית החשבונית"
+                          label="טקסט תחתון בחשבונית"
                           value={values.invoiceFooterText}
                           onChange={handleChange}
                           onBlur={handleBlur}
+                          placeholder="תודה שבחרתם בנו! המחירים כולל מע״מ"
                           sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                         />
                       </Grid>
@@ -340,14 +318,15 @@ export default function TaxSettings() {
               <Grid size={{ xs: 12 }}>
                 <Divider sx={{ my: 2 }} />
                 <FlexBetween>
-                  <Alert severity="warning" sx={{ flex: 1, mr: 2 }}>
-                    שינויים בהגדרות המיסוי ישפיעו על כל המחירים והחשבוניות
+                  <Alert severity="info" sx={{ flex: 1, mr: 2 }}>
+                    שינויים יכנסו לתוקף מיד לאחר השמירה
                   </Alert>
                   <FlexBox gap={2}>
                     <Button
                       variant="outlined"
                       startIcon={<Refresh />}
                       sx={{ borderRadius: 2 }}
+                      onClick={() => window.location.reload()}
                     >
                       איפוס
                     </Button>
@@ -355,7 +334,7 @@ export default function TaxSettings() {
                       type="submit"
                       variant="contained"
                       startIcon={<Save />}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isLoading}
                       sx={{ borderRadius: 2, minWidth: 120 }}
                     >
                       {isSubmitting ? "שומר..." : "שמור שינויים"}
@@ -367,6 +346,22 @@ export default function TaxSettings() {
           </form>
         )}
       </Formik>
+
+      {/* Success/Error Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} 
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

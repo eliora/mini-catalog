@@ -142,9 +142,9 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
     setMobileSearchOpen(false);
   };
 
-  // Get company name with fallback
-  const companyName = companySettings?.company_name || 'Jean D\'Arcel';
-  const logoUrl = companySettings?.logo_url;
+  // Get company name and logo from settings
+  const companyName = companySettings?.company_name || '';
+  const logoUrl = companySettings?.logo_url || companySettings?.company_logo;
 
   return (
     <>

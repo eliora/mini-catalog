@@ -1,37 +1,59 @@
-import { Database } from './supabase';
 
-// Supabase generated types for company settings (fallback if table doesn't exist)
-export type CompanySettingsRow = Database['public']['Tables'] extends { company_settings: { Row: unknown } }
-  ? Database['public']['Tables']['company_settings']['Row']
-  : {
-      id: string;
-      company_name: string;
-      company_description?: string;
-      contact_email?: string;
-      contact_phone?: string;
-      address?: string;
-      website?: string;
-      logo_url?: string;
-      tax_rate?: number;
-      created_at: string;
-      updated_at: string;
-    };
-
-export type CompanySettingsInsert = Database['public']['Tables'] extends { company_settings: { Insert: unknown } }
-  ? Database['public']['Tables']['company_settings']['Insert']
-  : Partial<CompanySettingsRow>;
-
-export type CompanySettingsUpdate = Database['public']['Tables'] extends { company_settings: { Update: unknown } }
-  ? Database['public']['Tables']['company_settings']['Update']
-  : Partial<CompanySettingsRow>;
-
-// Application-specific Company interfaces
-export interface CompanySettings extends CompanySettingsRow {
-  // Add any computed fields here
+// Direct CompanySettings interface based on actual database schema
+export interface CompanySettings {
+  id: string;
+  company_name: string | null;
+  company_description: string | null;
+  company_email: string | null;
+  company_phone: string | null;
+  company_address: string | null;
+  company_logo: string | null;
+  tagline: string | null;
+  logo_url: string | null;
+  primary_color: string | null;
+  secondary_color: string | null;
+  timezone: string | null;
+  business_name: string | null;
+  registration_number: string | null;
+  tax_id: string | null;
+  is_vat_registered: boolean | null;
+  currency: string | null;
+  tax_rate: number | null;
+  prices_include_tax: boolean | null;
+  show_prices_with_tax: boolean | null;
+  enable_tax_exempt: boolean | null;
+  invoice_footer_text: string | null;
+  free_shipping_threshold: number | null;
+  standard_shipping_cost: number | null;
+  express_shipping_cost: number | null;
+  enable_local_delivery: boolean | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  notification_settings: any | null;
+  maintenance_mode: boolean | null;
+  debug_mode: boolean | null;
+  enable_reviews: boolean | null;
+  enable_wishlist: boolean | null;
+  enable_notifications: boolean | null;
+  session_timeout: number | null;
+  max_login_attempts: number | null;
+  backup_frequency: string | null;
+  cache_duration: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+  // Legacy field mappings for backward compatibility
+  contact_email?: string;
+  contact_phone?: string;
+  address?: string;
+  website?: string;
   logoUrl?: string;
   formattedAddress?: string;
   socialLinks?: SocialLink[];
 }
+
+export type CompanySettingsInsert = Partial<CompanySettings>;
+export type CompanySettingsUpdate = Partial<CompanySettings>;
+
+// Application-specific Company interfaces
 
 export interface SocialLink {
   platform: 'facebook' | 'instagram' | 'whatsapp' | 'email' | 'website';
@@ -46,7 +68,7 @@ export interface CompanyState {
   error?: string;
   lastUpdated?: Date;
   // Actions
-  updateSettings: (updates: Partial<CompanySettingsUpdate>) => Promise<{ error?: string }>;
+  updateSettings: (updates: Partial<CompanySettings>) => Promise<{ error?: string }>;
   refreshSettings: () => Promise<void>;
   // Utilities
   getSetting: <K extends keyof CompanySettings>(key: K) => CompanySettings[K] | undefined;
@@ -65,19 +87,50 @@ export interface ContactInfo {
 export interface CompanyFormData {
   company_name?: string;
   company_description?: string;
+  company_email?: string;
+  company_phone?: string;
+  company_address?: string;
+  business_name?: string;
+  registration_number?: string;
+  tax_id?: string;
+  tagline?: string;
+  company_logo?: string;
+  logo_url?: string;
+  primary_color?: string;
+  secondary_color?: string;
+  timezone?: string;
+  currency?: string;
+  is_vat_registered?: boolean;
+  tax_rate?: number;
+  prices_include_tax?: boolean;
+  show_prices_with_tax?: boolean;
+  enable_tax_exempt?: boolean;
+  free_shipping_threshold?: number;
+  standard_shipping_cost?: number;
+  express_shipping_cost?: number;
+  enable_local_delivery?: boolean;
+  invoice_footer_text?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  notification_settings?: any;
+  maintenance_mode?: boolean;
+  debug_mode?: boolean;
+  enable_reviews?: boolean;
+  enable_wishlist?: boolean;
+  enable_notifications?: boolean;
+  session_timeout?: number;
+  max_login_attempts?: number;
+  backup_frequency?: string;
+  cache_duration?: number;
+  // Legacy fields for backward compatibility
   contact_email?: string;
   contact_phone?: string;
   address?: string;
   website?: string;
-  logo_url?: string;
   // Invoice settings
   invoice_prefix?: string;
-  tax_rate?: number;
   payment_terms?: string;
   bank_details?: string;
   // Display settings
-  primary_color?: string;
-  secondary_color?: string;
   show_prices?: boolean;
   allow_orders?: boolean;
 }

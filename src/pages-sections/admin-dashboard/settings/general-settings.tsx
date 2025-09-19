@@ -47,18 +47,25 @@ interface GeneralSettingsFormValues {
 }
 
 export default function GeneralSettings() {
-  const { settings, updateSettings, isLoading } = useCompany();
+  const { settings, updateSettings } = useCompany();
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
+  // Set logo preview from existing settings
+  useEffect(() => {
+    if (settings?.logo_url || settings?.company_logo) {
+      setLogoPreview(settings.logo_url || settings.company_logo || null);
+    }
+  }, [settings]);
+
   const initialValues: GeneralSettingsFormValues = {
-    siteName: settings?.company_name || "פורטל לקוסמטיקאיות",
-    siteDescription: settings?.company_description || "מערכת הזמנות מתקדמת לקוסמטיקאיות עם קטלוג מוצרים, מערכת תשלומים ופאנל ניהול",
-    welcomeMessage: settings?.company_description || "ברוכים הבאים לפורטל הקוסמטיקה המתקדם שלנו",
-    contactEmail: settings?.contact_email || "info@cosmetics-portal.co.il",
-    supportPhone: settings?.contact_phone || "03-1234567"
+    siteName: settings?.company_name || "",
+    siteDescription: settings?.company_description || "",
+    welcomeMessage: settings?.company_description || "",
+    contactEmail: settings?.company_email || "",
+    supportPhone: settings?.company_phone || ""
   };
 
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,8 +107,9 @@ export default function GeneralSettings() {
       const updates = {
         company_name: values.siteName,
         company_description: values.siteDescription,
-        contact_email: values.contactEmail,
-        contact_phone: values.supportPhone,
+        company_email: values.contactEmail,
+        company_phone: values.supportPhone,
+        logo_url: logoPreview, // Include logo URL if uploaded
       };
 
       const result = await updateSettings(updates);

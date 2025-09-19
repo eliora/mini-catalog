@@ -7,15 +7,55 @@ import { ApiResponse } from '@/types/api';
 // Default company settings
 const DEFAULT_SETTINGS: CompanySettings = {
   id: '1',
-  company_name: 'Jean Darcel',
-  company_description: 'מערכת ניהול הזמנות',
+  company_name: null,
+  company_description: null,
+  company_email: null,
+  company_phone: null,
+  company_address: null,
+  business_name: '',
+  registration_number: '',
+  tax_id: '',
+  tagline: '',
+  company_logo: '',
+  logo_url: '',
+  primary_color: '#1976d2',
+  secondary_color: '#dc004e',
+  timezone: 'Asia/Jerusalem',
+  currency: 'ILS',
+  is_vat_registered: true,
+  tax_rate: 0.18,
+  prices_include_tax: true,
+  show_prices_with_tax: true,
+  enable_tax_exempt: false,
+  free_shipping_threshold: 0,
+  standard_shipping_cost: 0,
+  express_shipping_cost: 0,
+  enable_local_delivery: true,
+  invoice_footer_text: '',
+  notification_settings: {
+    categories: {
+      orders: { sms: false, push: true, email: true, inApp: true },
+      system: { sms: false, push: true, email: true, inApp: true },
+      customers: { sms: false, push: false, email: false, inApp: true },
+      inventory: { sms: false, push: false, email: true, inApp: true }
+    }
+  },
+  maintenance_mode: false,
+  debug_mode: false,
+  enable_reviews: true,
+  enable_wishlist: true,
+  enable_notifications: true,
+  session_timeout: 3600,
+  max_login_attempts: 5,
+  backup_frequency: 'daily',
+  cache_duration: 300,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  // Legacy fields for backward compatibility
   contact_email: '',
   contact_phone: '',
   address: '',
   website: '',
-  logo_url: '',
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
 };
 
 // GET /api/settings - Get company settings
@@ -29,6 +69,15 @@ export async function GET() {
       .single();
 
     if (error) {
+      // Handle RLS permission errors gracefully (like prices API)
+      if (error.code === 'PGRST301' || error.message.includes('policy')) {
+        console.log('RLS permission denied for settings, returning defaults');
+        return NextResponse.json(
+          { success: true, data: DEFAULT_SETTINGS } as ApiResponse<CompanySettings>,
+          { status: 200 }
+        );
+      }
+      
       if (error.code === 'PGRST116') { // No rows returned
         // Return defaults if no settings exist
         return NextResponse.json(
@@ -52,18 +101,55 @@ export async function GET() {
       );
     }
 
+    // Cast data to our CompanySettings type to avoid TypeScript errors
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dbData = data as any;
+    
     // Map database fields to application structure
     const settings: CompanySettings = {
-      id: data.id,
-      company_name: data.company_name || DEFAULT_SETTINGS.company_name,
-      company_description: data.company_description || DEFAULT_SETTINGS.company_description,
-      contact_email: data.company_email || DEFAULT_SETTINGS.contact_email,
-      contact_phone: data.company_phone || DEFAULT_SETTINGS.contact_phone,
-      address: data.company_address || DEFAULT_SETTINGS.address,
-      website: DEFAULT_SETTINGS.website, // No website field in database
-      logo_url: data.company_logo || DEFAULT_SETTINGS.logo_url,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
+      id: dbData.id,
+      company_name: dbData.company_name || DEFAULT_SETTINGS.company_name,
+      company_description: dbData.company_description || DEFAULT_SETTINGS.company_description,
+      company_email: dbData.company_email || DEFAULT_SETTINGS.company_email,
+      company_phone: dbData.company_phone || DEFAULT_SETTINGS.company_phone,
+      company_address: dbData.company_address || DEFAULT_SETTINGS.company_address,
+      business_name: dbData.business_name || DEFAULT_SETTINGS.business_name,
+      registration_number: dbData.registration_number || DEFAULT_SETTINGS.registration_number,
+      tax_id: dbData.tax_id || DEFAULT_SETTINGS.tax_id,
+      tagline: dbData.tagline || DEFAULT_SETTINGS.tagline,
+      company_logo: dbData.company_logo || DEFAULT_SETTINGS.company_logo,
+      logo_url: dbData.logo_url || DEFAULT_SETTINGS.logo_url,
+      primary_color: dbData.primary_color || DEFAULT_SETTINGS.primary_color,
+      secondary_color: dbData.secondary_color || DEFAULT_SETTINGS.secondary_color,
+      timezone: dbData.timezone || DEFAULT_SETTINGS.timezone,
+      currency: dbData.currency || DEFAULT_SETTINGS.currency,
+      is_vat_registered: dbData.is_vat_registered ?? DEFAULT_SETTINGS.is_vat_registered,
+      tax_rate: dbData.tax_rate || DEFAULT_SETTINGS.tax_rate,
+      prices_include_tax: dbData.prices_include_tax ?? DEFAULT_SETTINGS.prices_include_tax,
+      show_prices_with_tax: dbData.show_prices_with_tax ?? DEFAULT_SETTINGS.show_prices_with_tax,
+      enable_tax_exempt: dbData.enable_tax_exempt ?? DEFAULT_SETTINGS.enable_tax_exempt,
+      free_shipping_threshold: dbData.free_shipping_threshold || DEFAULT_SETTINGS.free_shipping_threshold,
+      standard_shipping_cost: dbData.standard_shipping_cost || DEFAULT_SETTINGS.standard_shipping_cost,
+      express_shipping_cost: dbData.express_shipping_cost || DEFAULT_SETTINGS.express_shipping_cost,
+      enable_local_delivery: dbData.enable_local_delivery ?? DEFAULT_SETTINGS.enable_local_delivery,
+      invoice_footer_text: dbData.invoice_footer_text || DEFAULT_SETTINGS.invoice_footer_text,
+      notification_settings: dbData.notification_settings || DEFAULT_SETTINGS.notification_settings,
+      maintenance_mode: dbData.maintenance_mode ?? DEFAULT_SETTINGS.maintenance_mode,
+      debug_mode: dbData.debug_mode ?? DEFAULT_SETTINGS.debug_mode,
+      enable_reviews: dbData.enable_reviews ?? DEFAULT_SETTINGS.enable_reviews,
+      enable_wishlist: dbData.enable_wishlist ?? DEFAULT_SETTINGS.enable_wishlist,
+      enable_notifications: dbData.enable_notifications ?? DEFAULT_SETTINGS.enable_notifications,
+      session_timeout: dbData.session_timeout || DEFAULT_SETTINGS.session_timeout,
+      max_login_attempts: dbData.max_login_attempts || DEFAULT_SETTINGS.max_login_attempts,
+      backup_frequency: dbData.backup_frequency || DEFAULT_SETTINGS.backup_frequency,
+      cache_duration: dbData.cache_duration || DEFAULT_SETTINGS.cache_duration,
+      created_at: dbData.created_at,
+      updated_at: dbData.updated_at,
+      // Legacy fields for backward compatibility
+      contact_email: dbData.company_email || DEFAULT_SETTINGS.company_email || undefined,
+      contact_phone: dbData.company_phone || DEFAULT_SETTINGS.company_phone || undefined,
+      address: dbData.company_address || DEFAULT_SETTINGS.company_address || undefined,
+      website: DEFAULT_SETTINGS.website,
     };
 
     return NextResponse.json(
@@ -142,6 +228,15 @@ export async function POST(_request: NextRequest) {
     }
 
     if (result.error) {
+      // Handle RLS permission errors gracefully (like prices API)
+      if (result.error.code === 'PGRST301' || result.error.message.includes('policy')) {
+        console.log('RLS permission denied for settings update');
+        return NextResponse.json(
+          { success: false, error: 'Insufficient permissions to update settings' } as ApiResponse<null>,
+          { status: 403 }
+        );
+      }
+      
       console.error('Error saving company settings:', result.error);
       return NextResponse.json(
         { success: false, error: result.error.message } as ApiResponse<null>,
@@ -149,18 +244,55 @@ export async function POST(_request: NextRequest) {
       );
     }
 
+    // Cast data to our CompanySettings type to avoid TypeScript errors
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dbData = result.data as any;
+    
     // Map database response to application structure
     const settings: CompanySettings = {
-      id: result.data.id,
-      company_name: result.data.company_name || DEFAULT_SETTINGS.company_name,
-      company_description: result.data.company_description || undefined,
-      contact_email: result.data.company_email || undefined,
-      contact_phone: result.data.company_phone || undefined,
-      address: result.data.company_address || undefined,
-      website: DEFAULT_SETTINGS.website, // Field doesn't exist in database
-      logo_url: result.data.company_logo || undefined,
-      created_at: result.data.created_at,
-      updated_at: result.data.updated_at,
+      id: dbData.id,
+      company_name: dbData.company_name || DEFAULT_SETTINGS.company_name,
+      company_description: dbData.company_description || DEFAULT_SETTINGS.company_description,
+      company_email: dbData.company_email || DEFAULT_SETTINGS.company_email,
+      company_phone: dbData.company_phone || DEFAULT_SETTINGS.company_phone,
+      company_address: dbData.company_address || DEFAULT_SETTINGS.company_address,
+      company_logo: dbData.company_logo || DEFAULT_SETTINGS.company_logo,
+      tagline: dbData.tagline || DEFAULT_SETTINGS.tagline,
+      logo_url: dbData.logo_url || DEFAULT_SETTINGS.logo_url,
+      primary_color: dbData.primary_color || DEFAULT_SETTINGS.primary_color,
+      secondary_color: dbData.secondary_color || DEFAULT_SETTINGS.secondary_color,
+      timezone: dbData.timezone || DEFAULT_SETTINGS.timezone,
+      business_name: dbData.business_name || DEFAULT_SETTINGS.business_name,
+      registration_number: dbData.registration_number || DEFAULT_SETTINGS.registration_number,
+      tax_id: dbData.tax_id || DEFAULT_SETTINGS.tax_id,
+      is_vat_registered: dbData.is_vat_registered ?? DEFAULT_SETTINGS.is_vat_registered,
+      currency: dbData.currency || DEFAULT_SETTINGS.currency,
+      tax_rate: dbData.tax_rate || DEFAULT_SETTINGS.tax_rate,
+      prices_include_tax: dbData.prices_include_tax ?? DEFAULT_SETTINGS.prices_include_tax,
+      show_prices_with_tax: dbData.show_prices_with_tax ?? DEFAULT_SETTINGS.show_prices_with_tax,
+      enable_tax_exempt: dbData.enable_tax_exempt ?? DEFAULT_SETTINGS.enable_tax_exempt,
+      invoice_footer_text: dbData.invoice_footer_text || DEFAULT_SETTINGS.invoice_footer_text,
+      free_shipping_threshold: dbData.free_shipping_threshold || DEFAULT_SETTINGS.free_shipping_threshold,
+      standard_shipping_cost: dbData.standard_shipping_cost || DEFAULT_SETTINGS.standard_shipping_cost,
+      express_shipping_cost: dbData.express_shipping_cost || DEFAULT_SETTINGS.express_shipping_cost,
+      enable_local_delivery: dbData.enable_local_delivery ?? DEFAULT_SETTINGS.enable_local_delivery,
+      notification_settings: dbData.notification_settings || DEFAULT_SETTINGS.notification_settings,
+      maintenance_mode: dbData.maintenance_mode ?? DEFAULT_SETTINGS.maintenance_mode,
+      debug_mode: dbData.debug_mode ?? DEFAULT_SETTINGS.debug_mode,
+      enable_reviews: dbData.enable_reviews ?? DEFAULT_SETTINGS.enable_reviews,
+      enable_wishlist: dbData.enable_wishlist ?? DEFAULT_SETTINGS.enable_wishlist,
+      enable_notifications: dbData.enable_notifications ?? DEFAULT_SETTINGS.enable_notifications,
+      session_timeout: dbData.session_timeout || DEFAULT_SETTINGS.session_timeout,
+      max_login_attempts: dbData.max_login_attempts || DEFAULT_SETTINGS.max_login_attempts,
+      backup_frequency: dbData.backup_frequency || DEFAULT_SETTINGS.backup_frequency,
+      cache_duration: dbData.cache_duration || DEFAULT_SETTINGS.cache_duration,
+      created_at: dbData.created_at,
+      updated_at: dbData.updated_at,
+      // Legacy fields for backward compatibility
+      contact_email: dbData.company_email || DEFAULT_SETTINGS.company_email || undefined,
+      contact_phone: dbData.company_phone || DEFAULT_SETTINGS.company_phone || undefined,
+      address: dbData.company_address || DEFAULT_SETTINGS.company_address || undefined,
+      website: DEFAULT_SETTINGS.website,
     };
 
     return NextResponse.json(
@@ -262,18 +394,55 @@ export async function PUT(_request: NextRequest) {
       );
     }
 
+    // Cast data to our CompanySettings type to avoid TypeScript errors
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dbData = data as any;
+    
     // Map database response to application structure
     const settings: CompanySettings = {
-      id: data.id,
-      company_name: data.company_name || DEFAULT_SETTINGS.company_name,
-      company_description: data.company_description || undefined,
-      contact_email: data.company_email || undefined,
-      contact_phone: data.company_phone || undefined,
-      address: data.company_address || undefined,
-      website: DEFAULT_SETTINGS.website, // Field doesn't exist in database
-      logo_url: data.company_logo || undefined,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
+      id: dbData.id,
+      company_name: dbData.company_name || DEFAULT_SETTINGS.company_name,
+      company_description: dbData.company_description || DEFAULT_SETTINGS.company_description,
+      company_email: dbData.company_email || DEFAULT_SETTINGS.company_email,
+      company_phone: dbData.company_phone || DEFAULT_SETTINGS.company_phone,
+      company_address: dbData.company_address || DEFAULT_SETTINGS.company_address,
+      company_logo: dbData.company_logo || DEFAULT_SETTINGS.company_logo,
+      tagline: dbData.tagline || DEFAULT_SETTINGS.tagline,
+      logo_url: dbData.logo_url || DEFAULT_SETTINGS.logo_url,
+      primary_color: dbData.primary_color || DEFAULT_SETTINGS.primary_color,
+      secondary_color: dbData.secondary_color || DEFAULT_SETTINGS.secondary_color,
+      timezone: dbData.timezone || DEFAULT_SETTINGS.timezone,
+      business_name: dbData.business_name || DEFAULT_SETTINGS.business_name,
+      registration_number: dbData.registration_number || DEFAULT_SETTINGS.registration_number,
+      tax_id: dbData.tax_id || DEFAULT_SETTINGS.tax_id,
+      is_vat_registered: dbData.is_vat_registered ?? DEFAULT_SETTINGS.is_vat_registered,
+      currency: dbData.currency || DEFAULT_SETTINGS.currency,
+      tax_rate: dbData.tax_rate || DEFAULT_SETTINGS.tax_rate,
+      prices_include_tax: dbData.prices_include_tax ?? DEFAULT_SETTINGS.prices_include_tax,
+      show_prices_with_tax: dbData.show_prices_with_tax ?? DEFAULT_SETTINGS.show_prices_with_tax,
+      enable_tax_exempt: dbData.enable_tax_exempt ?? DEFAULT_SETTINGS.enable_tax_exempt,
+      invoice_footer_text: dbData.invoice_footer_text || DEFAULT_SETTINGS.invoice_footer_text,
+      free_shipping_threshold: dbData.free_shipping_threshold || DEFAULT_SETTINGS.free_shipping_threshold,
+      standard_shipping_cost: dbData.standard_shipping_cost || DEFAULT_SETTINGS.standard_shipping_cost,
+      express_shipping_cost: dbData.express_shipping_cost || DEFAULT_SETTINGS.express_shipping_cost,
+      enable_local_delivery: dbData.enable_local_delivery ?? DEFAULT_SETTINGS.enable_local_delivery,
+      notification_settings: dbData.notification_settings || DEFAULT_SETTINGS.notification_settings,
+      maintenance_mode: dbData.maintenance_mode ?? DEFAULT_SETTINGS.maintenance_mode,
+      debug_mode: dbData.debug_mode ?? DEFAULT_SETTINGS.debug_mode,
+      enable_reviews: dbData.enable_reviews ?? DEFAULT_SETTINGS.enable_reviews,
+      enable_wishlist: dbData.enable_wishlist ?? DEFAULT_SETTINGS.enable_wishlist,
+      enable_notifications: dbData.enable_notifications ?? DEFAULT_SETTINGS.enable_notifications,
+      session_timeout: dbData.session_timeout || DEFAULT_SETTINGS.session_timeout,
+      max_login_attempts: dbData.max_login_attempts || DEFAULT_SETTINGS.max_login_attempts,
+      backup_frequency: dbData.backup_frequency || DEFAULT_SETTINGS.backup_frequency,
+      cache_duration: dbData.cache_duration || DEFAULT_SETTINGS.cache_duration,
+      created_at: dbData.created_at,
+      updated_at: dbData.updated_at,
+      // Legacy fields for backward compatibility
+      contact_email: dbData.company_email || DEFAULT_SETTINGS.company_email || undefined,
+      contact_phone: dbData.company_phone || DEFAULT_SETTINGS.company_phone || undefined,
+      address: dbData.company_address || DEFAULT_SETTINGS.company_address || undefined,
+      website: DEFAULT_SETTINGS.website,
     };
 
     return NextResponse.json(

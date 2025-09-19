@@ -18,8 +18,7 @@ import {
   Save, 
   Refresh,
   Business,
-  LocationOn,
-  Phone
+  LocationOn
 } from "@mui/icons-material";
 import { H5, H6, Paragraph } from "@/components/Typography";
 import { FlexBetween, FlexBox } from "@/components/flex-box";

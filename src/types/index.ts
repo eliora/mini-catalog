@@ -63,7 +63,6 @@ export type {
 // Company types
 export type {
   CompanySettings,
-  CompanySettingsRow,
   CompanySettingsInsert,
   CompanySettingsUpdate,
   SocialLink,

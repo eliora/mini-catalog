@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState } from "react";
 import {
   Grid,
   Button,
@@ -15,12 +16,7 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Chip,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton
+  Snackbar
 } from "@mui/material";
 import { 
   Save, 
@@ -28,98 +24,115 @@ import {
   Security,
   Speed,
   Storage,
-  Backup,
-  Download,
-  Delete
+  Backup
 } from "@mui/icons-material";
 import { H5, H6, Paragraph } from "@/components/Typography";
 import { FlexBetween, FlexBox } from "@/components/flex-box";
 import { Formik } from "formik";
 import * as yup from "yup";
+import { useCompany } from "@/context/CompanyContext";
 
 // Form validation schema
 const validationSchema = yup.object().shape({
-  sessionTimeout: yup.number().min(5).max(1440).required("זמן פג תוקף הוא שדה חובה"),
-  maxFileSize: yup.number().min(1).max(100).required("גודל קובץ מקסימלי הוא שדה חובה"),
-  backupRetention: yup.number().min(1).max(365).required("תקופת שמירת גיבויים הוא שדה חובה")
+  sessionTimeout: yup.number().min(300).max(86400).required("זמן פג תוקף הוא שדה חובה"),
+  maxLoginAttempts: yup.number().min(1).max(20).required("מספר ניסיונות התחברות מקסימלי הוא שדה חובה"),
+  cacheDuration: yup.number().min(60).max(3600).required("זמן שמירה במטמון הוא שדה חובה")
 });
 
 interface SystemSettingsFormValues {
   sessionTimeout: number;
-  enableTwoFactor: boolean;
-  maxFileSize: number;
-  enableCache: boolean;
-  cacheTimeout: number;
-  enableLogging: boolean;
-  logLevel: string;
-  enableBackup: boolean;
-  backupFrequency: string;
-  backupRetention: number;
+  maxLoginAttempts: number;
   maintenanceMode: boolean;
   debugMode: boolean;
+  enableReviews: boolean;
+  enableWishlist: boolean;
+  enableNotifications: boolean;
+  backupFrequency: string;
+  cacheDuration: number;
 }
 
 export default function SystemSettings() {
-  const initialValues: SystemSettingsFormValues = {
-    sessionTimeout: 60,
-    enableTwoFactor: false,
-    maxFileSize: 10,
-    enableCache: true,
-    cacheTimeout: 3600,
-    enableLogging: true,
-    logLevel: "info",
-    enableBackup: true,
-    backupFrequency: "daily",
-    backupRetention: 30,
-    maintenanceMode: false,
-    debugMode: false
-  };
+  const { settings, updateSettings, isLoading } = useCompany();
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
-  const backupHistory = [
-    { id: 1, date: "2024-01-15 03:00", size: "245 MB", status: "success" },
-    { id: 2, date: "2024-01-14 03:00", size: "243 MB", status: "success" },
-    { id: 3, date: "2024-01-13 03:00", size: "241 MB", status: "success" },
-    { id: 4, date: "2024-01-12 03:00", size: "238 MB", status: "failed" },
-    { id: 5, date: "2024-01-11 03:00", size: "236 MB", status: "success" }
-  ];
+  const initialValues: SystemSettingsFormValues = {
+    sessionTimeout: settings?.session_timeout || 3600, // Convert seconds to minutes for display
+    maxLoginAttempts: settings?.max_login_attempts || 5,
+    maintenanceMode: settings?.maintenance_mode || false,
+    debugMode: settings?.debug_mode || false,
+    enableReviews: settings?.enable_reviews || true,
+    enableWishlist: settings?.enable_wishlist || true,
+    enableNotifications: settings?.enable_notifications || true,
+    backupFrequency: settings?.backup_frequency || 'daily',
+    cacheDuration: settings?.cache_duration || 300,
+  };
 
   const handleFormSubmit = async (values: SystemSettingsFormValues) => {
     try {
       console.log("Saving system settings:", values);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert("הגדרות המערכת נשמרו בהצלחה!");
+      
+      // Map form values to database fields
+      const updates = {
+        session_timeout: values.sessionTimeout,
+        max_login_attempts: values.maxLoginAttempts,
+        maintenance_mode: values.maintenanceMode,
+        debug_mode: values.debugMode,
+        enable_reviews: values.enableReviews,
+        enable_wishlist: values.enableWishlist,
+        enable_notifications: values.enableNotifications,
+        backup_frequency: values.backupFrequency,
+        cache_duration: values.cacheDuration,
+      };
+
+      const result = await updateSettings(updates);
+      
+      if (result.error) {
+        setSnackbar({
+          open: true,
+          message: `שגיאה בשמירת הגדרות המערכת: ${result.error}`,
+          severity: 'error'
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: "הגדרות המערכת נשמרו בהצלחה!",
+          severity: 'success'
+        });
+      }
     } catch (error) {
       console.error("Error saving system settings:", error);
-      alert("שגיאה בשמירת הגדרות המערכת");
+      setSnackbar({
+        open: true,
+        message: "שגיאה בשמירת הגדרות המערכת",
+        severity: 'error'
+      });
     }
   };
 
   const handleBackupNow = async () => {
     try {
       console.log("Creating backup...");
+      setSnackbar({
+        open: true,
+        message: "יצירת גיבוי... (זה יכול לקחת כמה דקות)",
+        severity: 'success'
+      });
+      
+      // Simulate backup process
       await new Promise(resolve => setTimeout(resolve, 2000));
-      alert("הגיבוי נוצר בהצלחה!");
+      
+      setSnackbar({
+        open: true,
+        message: "הגיבוי נוצר בהצלחה!",
+        severity: 'success'
+      });
     } catch (error) {
       console.error("Error creating backup:", error);
-      alert("שגיאה ביצירת גיבוי");
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "success": return "success";
-      case "failed": return "error";
-      case "running": return "warning";
-      default: return "default";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "success": return "הצליח";
-      case "failed": return "נכשל";
-      case "running": return "רץ";
-      default: return status;
+      setSnackbar({
+        open: true,
+        message: "שגיאה ביצירת הגיבוי",
+        severity: 'error'
+      });
     }
   };
 
@@ -128,7 +141,7 @@ export default function SystemSettings() {
       <Box sx={{ mb: 3 }}>
         <H5 sx={{ fontWeight: 700, mb: 1 }}>הגדרות מערכת</H5>
         <Paragraph color="grey.600">
-          נהל הגדרות מתקדמות של המערכת, אבטחה, ביצועים וגיבויים
+          נהל הגדרות אבטחה, ביצועים ותחזוקה של המערכת
         </Paragraph>
       </Box>
 
@@ -136,25 +149,27 @@ export default function SystemSettings() {
         initialValues={initialValues}
         validationSchema={validationSchema}
         onSubmit={handleFormSubmit}
+        enableReinitialize={true}
       >
         {({ values, errors, touched, handleChange, handleBlur, handleSubmit, setFieldValue, isSubmitting }) => (
           <form onSubmit={handleSubmit}>
             <Grid container spacing={3}>
               {/* Security Settings */}
               <Grid size={{ xs: 12 }}>
-                <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "error.200" }}>
+                <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "primary.200" }}>
                   <CardContent>
                     <FlexBox alignItems="center" gap={2} mb={2}>
-                      <Security color="error" />
-                      <H6 sx={{ fontWeight: 700 }}>אבטחה</H6>
+                      <Security color="primary" />
+                      <H6 sx={{ fontWeight: 700 }}>הגדרות אבטחה</H6>
                     </FlexBox>
-                    
-                    <Grid container spacing={2}>
+                    <Divider sx={{ mb: 3 }} />
+
+                    <Grid container spacing={3}>
                       <Grid size={{ md: 6, xs: 12 }}>
                         <TextField
                           fullWidth
                           name="sessionTimeout"
-                          label="זמן פג תוקף (דקות)"
+                          label="זמן פג תוקף הפעלה (שניות)"
                           type="number"
                           value={values.sessionTimeout}
                           onChange={handleChange}
@@ -166,18 +181,44 @@ export default function SystemSettings() {
                       </Grid>
 
                       <Grid size={{ md: 6, xs: 12 }}>
-                        <Box sx={{ pt: 2 }}>
-                          <FormControlLabel
-                            control={
-                              <Switch
-                                checked={values.enableTwoFactor}
-                                onChange={(e) => setFieldValue("enableTwoFactor", e.target.checked)}
-                                color="primary"
-                              />
-                            }
-                            label="אפשר אימות דו-שלבי"
-                          />
-                        </Box>
+                        <TextField
+                          fullWidth
+                          name="maxLoginAttempts"
+                          label="מספר ניסיונות התחברות מקסימלי"
+                          type="number"
+                          value={values.maxLoginAttempts}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          error={Boolean(touched.maxLoginAttempts && errors.maxLoginAttempts)}
+                          helperText={touched.maxLoginAttempts && errors.maxLoginAttempts}
+                          sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                        />
+                      </Grid>
+
+                      <Grid size={{ xs: 12 }}>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={values.maintenanceMode}
+                              onChange={(e) => setFieldValue('maintenanceMode', e.target.checked)}
+                              color="primary"
+                            />
+                          }
+                          label="מצב תחזוקה - האתר יהיה זמנית לא זמין למשתמשים"
+                        />
+                      </Grid>
+
+                      <Grid size={{ xs: 12 }}>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={values.debugMode}
+                              onChange={(e) => setFieldValue('debugMode', e.target.checked)}
+                              color="primary"
+                            />
+                          }
+                          label="מצב דיבוג - הצג מידע טכני מפורט"
+                        />
                       </Grid>
                     </Grid>
                   </CardContent>
@@ -186,237 +227,137 @@ export default function SystemSettings() {
 
               {/* Performance Settings */}
               <Grid size={{ xs: 12 }}>
-                <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "info.200" }}>
+                <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "primary.200" }}>
                   <CardContent>
                     <FlexBox alignItems="center" gap={2} mb={2}>
-                      <Speed color="info" />
-                      <H6 sx={{ fontWeight: 700 }}>ביצועים</H6>
+                      <Speed color="primary" />
+                      <H6 sx={{ fontWeight: 700 }}>הגדרות ביצועים</H6>
                     </FlexBox>
-                    
-                    <Grid container spacing={2}>
-                      <Grid size={{ md: 4, xs: 12 }}>
+                    <Divider sx={{ mb: 3 }} />
+
+                    <Grid container spacing={3}>
+                      <Grid size={{ md: 6, xs: 12 }}>
                         <TextField
                           fullWidth
-                          name="maxFileSize"
-                          label="גודל קובץ מקסימלי (MB)"
+                          name="cacheDuration"
+                          label="זמן שמירה במטמון (שניות)"
                           type="number"
-                          value={values.maxFileSize}
+                          value={values.cacheDuration}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          error={Boolean(touched.maxFileSize && errors.maxFileSize)}
-                          helperText={touched.maxFileSize && errors.maxFileSize}
+                          error={Boolean(touched.cacheDuration && errors.cacheDuration)}
+                          helperText={touched.cacheDuration && errors.cacheDuration}
                           sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                         />
                       </Grid>
 
-                      <Grid size={{ md: 4, xs: 12 }}>
-                        <TextField
-                          fullWidth
-                          name="cacheTimeout"
-                          label="זמן תפוגת מטמון (שניות)"
-                          type="number"
-                          value={values.cacheTimeout}
-                          onChange={handleChange}
-                          disabled={!values.enableCache}
-                          sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-                        />
-                      </Grid>
-
-                      <Grid size={{ md: 4, xs: 12 }}>
-                        <FormControl fullWidth>
-                          <InputLabel>רמת לוגים</InputLabel>
-                          <Select
-                            name="logLevel"
-                            value={values.logLevel}
-                            label="רמת לוגים"
-                            onChange={handleChange}
-                            disabled={!values.enableLogging}
-                            sx={{ borderRadius: 2 }}
-                          >
-                            <MenuItem value="debug">Debug</MenuItem>
-                            <MenuItem value="info">Info</MenuItem>
-                            <MenuItem value="warning">Warning</MenuItem>
-                            <MenuItem value="error">Error</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </Grid>
-
-                      <Grid size={{ xs: 12 }}>
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                          <FormControlLabel
-                            control={
-                              <Switch
-                                checked={values.enableCache}
-                                onChange={(e) => setFieldValue("enableCache", e.target.checked)}
-                                color="primary"
-                              />
-                            }
-                            label="אפשר מטמון"
-                          />
-                          <FormControlLabel
-                            control={
-                              <Switch
-                                checked={values.enableLogging}
-                                onChange={(e) => setFieldValue("enableLogging", e.target.checked)}
-                                color="primary"
-                              />
-                            }
-                            label="אפשר לוגים"
-                          />
-                        </Box>
-                      </Grid>
-                    </Grid>
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              {/* Backup Settings */}
-              <Grid size={{ xs: 12 }}>
-                <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "success.200" }}>
-                  <CardContent>
-                    <FlexBetween mb={2}>
-                      <FlexBox alignItems="center" gap={2}>
-                        <Backup color="success" />
-                        <H6 sx={{ fontWeight: 700 }}>גיבויים</H6>
-                      </FlexBox>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<Backup />}
-                        onClick={handleBackupNow}
-                        sx={{ borderRadius: 2 }}
-                      >
-                        צור גיבוי עכשיו
-                      </Button>
-                    </FlexBetween>
-                    
-                    <Grid container  spacing={2} mb={3}>
-                      <Grid size={{ md: 4, xs: 12 }}>
+                      <Grid size={{ md: 6, xs: 12 }}>
                         <FormControl fullWidth>
                           <InputLabel>תדירות גיבוי</InputLabel>
                           <Select
                             name="backupFrequency"
                             value={values.backupFrequency}
-                            label="תדירות גיבוי"
                             onChange={handleChange}
-                            disabled={!values.enableBackup}
+                            label="תדירות גיבוי"
                             sx={{ borderRadius: 2 }}
                           >
-                            <MenuItem value="hourly">כל שעה</MenuItem>
+                            <MenuItem value="hourly">שעתי</MenuItem>
                             <MenuItem value="daily">יומי</MenuItem>
                             <MenuItem value="weekly">שבועי</MenuItem>
                             <MenuItem value="monthly">חודשי</MenuItem>
                           </Select>
                         </FormControl>
                       </Grid>
-
-                      <Grid size={{ md: 4, xs: 12 }}>
-                        <TextField
-                          fullWidth
-                          name="backupRetention"
-                          label="שמירת גיבויים (ימים)"
-                          type="number"
-                          value={values.backupRetention}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          error={Boolean(touched.backupRetention && errors.backupRetention)}
-                          helperText={touched.backupRetention && errors.backupRetention}
-                          disabled={!values.enableBackup}
-                          sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-                        />
-                      </Grid>
-
-                      <Grid size={{ md: 4, xs: 12 }}>
-                        <Box sx={{ pt: 2 }}>
-                          <FormControlLabel
-                            control={
-                              <Switch
-                                checked={values.enableBackup}
-                                onChange={(e) => setFieldValue("enableBackup", e.target.checked)}
-                                color="primary"
-                              />
-                            }
-                            label="אפשר גיבוי אוטומטי"
-                          />
-                        </Box>
-                      </Grid>
                     </Grid>
-
-                    {/* Backup History */}
-                    <Box>
-                      <H6 sx={{ mb: 2, fontWeight: 600 }}>היסטוריית גיבויים</H6>
-                      <List sx={{ bgcolor: "grey.50", borderRadius: 2, p: 0 }}>
-                        {backupHistory.map((backup, index) => (
-                          <Box key={backup.id}>
-                            <ListItem>
-                              <ListItemText
-                                primary={backup.date}
-                                secondary={`גודל: ${backup.size}`}
-                              />
-                              <ListItemSecondaryAction>
-                                <FlexBox alignItems="center" gap={1}>
-                                  <Chip
-                                    label={getStatusText(backup.status)}
-                                    color={getStatusColor(backup.status) as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
-                                    size="small"
-                                  />
-                                  {backup.status === "success" && (
-                                    <>
-                                      <IconButton size="small" color="primary">
-                                        <Download />
-                                      </IconButton>
-                                      <IconButton size="small" color="error">
-                                        <Delete />
-                                      </IconButton>
-                                    </>
-                                  )}
-                                </FlexBox>
-                              </ListItemSecondaryAction>
-                            </ListItem>
-                            {index < backupHistory.length - 1 && <Divider />}
-                          </Box>
-                        ))}
-                      </List>
-                    </Box>
                   </CardContent>
                 </Card>
               </Grid>
 
-              {/* System Status */}
+              {/* Feature Settings */}
               <Grid size={{ xs: 12 }}>
-                <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "warning.200" }}>
+                <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "primary.200" }}>
                   <CardContent>
                     <FlexBox alignItems="center" gap={2} mb={2}>
-                      <Storage color="warning" />
-                      <H6 sx={{ fontWeight: 700 }}>מצב מערכת</H6>
+                      <Storage color="primary" />
+                      <H6 sx={{ fontWeight: 700 }}>הגדרות תכונות</H6>
                     </FlexBox>
-                    
-                    <Grid container spacing={2}>
-                      <Grid size={{ xs: 12 }}>
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                          <FormControlLabel
-                            control={
-                              <Switch
-                                checked={values.maintenanceMode}
-                                onChange={(e) => setFieldValue("maintenanceMode", e.target.checked)}
-                                color="warning"
-                              />
-                            }
-                            label="מצב תחזוקה (המערכת תהיה לא זמינה למשתמשים)"
-                          />
-                          <FormControlLabel
-                            control={
-                              <Switch
-                                checked={values.debugMode}
-                                onChange={(e) => setFieldValue("debugMode", e.target.checked)}
-                                color="error"
-                              />
-                            }
-                            label="מצב דיבוג (הצג מידע טכני מפורט)"
-                          />
-                        </Box>
+                    <Divider sx={{ mb: 3 }} />
+
+                    <Grid container spacing={3}>
+                      <Grid size={{ md: 4, xs: 12 }}>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={values.enableReviews}
+                              onChange={(e) => setFieldValue('enableReviews', e.target.checked)}
+                              color="primary"
+                            />
+                          }
+                          label="אפשר ביקורות על מוצרים"
+                        />
+                      </Grid>
+
+                      <Grid size={{ md: 4, xs: 12 }}>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={values.enableWishlist}
+                              onChange={(e) => setFieldValue('enableWishlist', e.target.checked)}
+                              color="primary"
+                            />
+                          }
+                          label="אפשר רשימת משאלות"
+                        />
+                      </Grid>
+
+                      <Grid size={{ md: 4, xs: 12 }}>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={values.enableNotifications}
+                              onChange={(e) => setFieldValue('enableNotifications', e.target.checked)}
+                              color="primary"
+                            />
+                          }
+                          label="אפשר התראות"
+                        />
                       </Grid>
                     </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Backup Management */}
+              <Grid size={{ xs: 12 }}>
+                <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "primary.200" }}>
+                  <CardContent>
+                    <FlexBox alignItems="center" gap={2} mb={2}>
+                      <Backup color="primary" />
+                      <H6 sx={{ fontWeight: 700 }}>ניהול גיבויים</H6>
+                    </FlexBox>
+                    <Divider sx={{ mb: 3 }} />
+
+                    <FlexBox gap={2}>
+                      <Button
+                        variant="contained"
+                        startIcon={<Backup />}
+                        onClick={handleBackupNow}
+                        sx={{ borderRadius: 2 }}
+                      >
+                        צור גיבוי עכשיו
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        startIcon={<Storage />}
+                        sx={{ borderRadius: 2 }}
+                      >
+                        הורד גיבוי אחרון
+                      </Button>
+                    </FlexBox>
+
+                    <Alert severity="info" sx={{ mt: 2 }}>
+                      הגיבויים מתבצעים אוטומטית לפי התדירות שנבחרה. מומלץ ליצור גיבוי ידני לפני עדכונים חשובים.
+                    </Alert>
                   </CardContent>
                 </Card>
               </Grid>
@@ -425,14 +366,15 @@ export default function SystemSettings() {
               <Grid size={{ xs: 12 }}>
                 <Divider sx={{ my: 2 }} />
                 <FlexBetween>
-                  <Alert severity="error" sx={{ flex: 1, mr: 2 }}>
-                    שינויים בהגדרות המערכת עלולים להשפיע על יציבות המערכת
+                  <Alert severity="warning" sx={{ flex: 1, mr: 2 }}>
+                    שינויים בהגדרות המערכת יכולים להשפיע על ביצועי האתר
                   </Alert>
                   <FlexBox gap={2}>
                     <Button
                       variant="outlined"
                       startIcon={<Refresh />}
                       sx={{ borderRadius: 2 }}
+                      onClick={() => window.location.reload()}
                     >
                       איפוס
                     </Button>
@@ -440,7 +382,7 @@ export default function SystemSettings() {
                       type="submit"
                       variant="contained"
                       startIcon={<Save />}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isLoading}
                       sx={{ borderRadius: 2, minWidth: 120 }}
                     >
                       {isSubmitting ? "שומר..." : "שמור שינויים"}
@@ -452,6 +394,22 @@ export default function SystemSettings() {
           </form>
         )}
       </Formik>
+
+      {/* Success/Error Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} 
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

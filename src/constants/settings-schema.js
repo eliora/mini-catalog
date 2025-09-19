@@ -1,7 +1,7 @@
 // ============================================================================
 // SETTINGS SCHEMA CONSTANTS - Database Field Mappings
 // ============================================================================
-// Complete field definitions for the settings table based on the database schema
+// Complete field definitions for the settings table based on the actual database schema
 // ============================================================================
 
 export const SETTINGS_TABLE = {
@@ -10,9 +10,17 @@ export const SETTINGS_TABLE = {
   
   // Field definitions with types, defaults, and constraints
   fields: {
+    // Primary Key
+    id: {
+      type: 'uuid',
+      nullable: false,
+      defaultValue: 'extensions.uuid_generate_v4()',
+      isPrimaryKey: true
+    },
+
     // Basic Company Information
     company_name: {
-      type: 'varchar(255)',
+      type: 'character varying(255)',
       nullable: true,
       label: 'שם החברה',
       placeholder: 'הזן את שם החברה',
@@ -27,7 +35,7 @@ export const SETTINGS_TABLE = {
       rows: 3
     },
     company_email: {
-      type: 'varchar(255)',
+      type: 'character varying(255)',
       nullable: true,
       label: 'אימייל החברה',
       placeholder: 'company@example.com',
@@ -35,7 +43,7 @@ export const SETTINGS_TABLE = {
       validation: 'email'
     },
     company_phone: {
-      type: 'varchar(50)',
+      type: 'character varying(50)',
       nullable: true,
       label: 'טלפון החברה',
       placeholder: '050-1234567',
@@ -50,280 +58,283 @@ export const SETTINGS_TABLE = {
       multiline: true,
       rows: 2
     },
-    business_name: {
-      type: 'varchar(255)',
-      nullable: true,
-      label: 'שם העסק',
-      placeholder: 'שם העסק הרשום',
-      maxLength: 255
-    },
-    registration_number: {
-      type: 'varchar(100)',
-      nullable: true,
-      label: 'מספר רישום',
-      placeholder: '123456789',
-      maxLength: 100
-    },
-    tax_id: {
-      type: 'varchar(100)',
-      nullable: true,
-      label: 'ח.פ/ע.מ',
-      placeholder: '123456789',
-      maxLength: 100
-    },
-    tagline: {
-      type: 'varchar(255)',
-      nullable: true,
-      label: 'סלוגן',
-      placeholder: 'הסלוגן של החברה',
-      maxLength: 255
-    },
-
-    // Logo and Branding
     company_logo: {
-      type: 'varchar(500)',
+      type: 'character varying(500)',
       nullable: true,
       label: 'לוגו החברה',
-      placeholder: 'URL ללוגו',
+      placeholder: 'URL של הלוגו',
       maxLength: 500,
       validation: 'url'
     },
-    logo_url: {
-      type: 'varchar(500)',
+    tagline: {
+      type: 'character varying(255)',
       nullable: true,
-      label: 'כתובת לוגו',
+      label: 'סלוגן',
+      placeholder: 'סלוגן החברה',
+      maxLength: 255
+    },
+    logo_url: {
+      type: 'character varying(500)',
+      nullable: true,
+      label: 'URL לוגו',
       placeholder: 'https://example.com/logo.png',
       maxLength: 500,
       validation: 'url'
     },
+
+    // Branding Settings
     primary_color: {
-      type: 'varchar(7)',
+      type: 'character varying(7)',
       nullable: true,
-      default: '#1976d2',
+      defaultValue: '#1976d2',
       label: 'צבע ראשי',
       placeholder: '#1976d2',
-      validation: 'hexColor',
-      constraint: '^#[0-9A-Fa-f]{6}$'
+      maxLength: 7,
+      validation: 'hexColor'
     },
     secondary_color: {
-      type: 'varchar(7)',
+      type: 'character varying(7)',
       nullable: true,
-      default: '#dc004e',
+      defaultValue: '#dc004e',
       label: 'צבע משני',
       placeholder: '#dc004e',
-      validation: 'hexColor',
-      constraint: '^#[0-9A-Fa-f]{6}$'
+      maxLength: 7,
+      validation: 'hexColor'
     },
-
-    // Regional Settings
     timezone: {
-      type: 'varchar(50)',
+      type: 'character varying(50)',
       nullable: true,
-      default: 'Asia/Jerusalem',
+      defaultValue: 'Asia/Jerusalem',
       label: 'אזור זמן',
       placeholder: 'Asia/Jerusalem',
-      maxLength: 50,
-      options: [
-        'Asia/Jerusalem',
-        'UTC',
-        'America/New_York',
-        'Europe/London',
-        'Asia/Tokyo'
-      ]
-    },
-    currency: {
-      type: 'varchar(3)',
-      nullable: true,
-      default: 'ILS',
-      label: 'מטבע',
-      placeholder: 'ILS',
-      validation: 'currency',
-      constraint: '^[A-Z]{3}$',
-      options: ['ILS', 'USD', 'EUR', 'GBP']
+      maxLength: 50
     },
 
-    // Tax Settings
+    // Business Information
+    business_name: {
+      type: 'character varying(255)',
+      nullable: true,
+      label: 'שם העסק',
+      placeholder: 'שם העסק הרשמי',
+      maxLength: 255
+    },
+    registration_number: {
+      type: 'character varying(100)',
+      nullable: true,
+      label: 'מספר רישום',
+      placeholder: 'מספר רישום העסק',
+      maxLength: 100
+    },
+    tax_id: {
+      type: 'character varying(100)',
+      nullable: true,
+      label: 'מספר עוסק מורשה',
+      placeholder: 'מספר עוסק מורשה',
+      maxLength: 100
+    },
     is_vat_registered: {
       type: 'boolean',
       nullable: true,
-      default: true,
-      label: 'רשום למע"מ'
+      defaultValue: true,
+      label: 'עוסק מורשה',
+      description: 'האם החברה רשומה כעוסק מורשה'
     },
+    currency: {
+      type: 'character varying(3)',
+      nullable: true,
+      defaultValue: 'ILS',
+      label: 'מטבע',
+      placeholder: 'ILS',
+      maxLength: 3,
+      validation: 'currency'
+    },
+
+    // Tax Settings
     tax_rate: {
       type: 'numeric(5,4)',
       nullable: true,
-      default: 0.18,
-      label: 'שיעור מע"מ',
+      defaultValue: 0.18,
+      label: 'שיעור מע״מ',
       placeholder: '0.18',
+      validation: 'decimal',
       min: 0,
-      max: 1,
-      step: 0.01,
-      validation: 'decimal'
+      max: 1
     },
     prices_include_tax: {
       type: 'boolean',
       nullable: true,
-      default: true,
-      label: 'מחירים כוללים מע"מ'
+      defaultValue: true,
+      label: 'המחירים כוללים מע״מ',
+      description: 'האם המחירים כוללים מע״מ'
     },
     show_prices_with_tax: {
       type: 'boolean',
       nullable: true,
-      default: true,
-      label: 'הצג מחירים עם מע"מ'
+      defaultValue: true,
+      label: 'הצג מחירים עם מע״מ',
+      description: 'האם להציג מחירים עם מע״מ'
     },
     enable_tax_exempt: {
       type: 'boolean',
       nullable: true,
-      default: false,
-      label: 'אפשר פטור ממע"מ'
+      defaultValue: false,
+      label: 'אפשר פטור ממע״מ',
+      description: 'האם לאפשר פטור ממע״מ'
+    },
+    invoice_footer_text: {
+      type: 'text',
+      nullable: true,
+      label: 'טקסט תחתון בחשבונית',
+      placeholder: 'תודה שבחרתם בנו!',
+      multiline: true,
+      rows: 3
     },
 
     // Shipping Settings
     free_shipping_threshold: {
       type: 'numeric(10,2)',
       nullable: true,
-      default: 0.00,
-      label: 'סף משלוח חינם',
+      defaultValue: 0.00,
+      label: 'סכום משלוח חינם',
       placeholder: '0.00',
-      min: 0,
-      step: 0.01,
-      validation: 'decimal'
+      validation: 'decimal',
+      min: 0
     },
     standard_shipping_cost: {
       type: 'numeric(10,2)',
       nullable: true,
-      default: 0.00,
+      defaultValue: 0.00,
       label: 'עלות משלוח רגיל',
       placeholder: '0.00',
-      min: 0,
-      step: 0.01,
-      validation: 'decimal'
+      validation: 'decimal',
+      min: 0
     },
     express_shipping_cost: {
       type: 'numeric(10,2)',
       nullable: true,
-      default: 0.00,
+      defaultValue: 0.00,
       label: 'עלות משלוח מהיר',
       placeholder: '0.00',
-      min: 0,
-      step: 0.01,
-      validation: 'decimal'
+      validation: 'decimal',
+      min: 0
     },
     enable_local_delivery: {
       type: 'boolean',
       nullable: true,
-      default: true,
-      label: 'אפשר משלוח מקומי'
+      defaultValue: true,
+      label: 'אפשר משלוח מקומי',
+      description: 'האם לאפשר משלוח מקומי'
     },
 
-    // Invoice Settings
-    invoice_footer_text: {
-      type: 'text',
-      nullable: true,
-      label: 'טקסט תחתון בחשבונית',
-      placeholder: 'תודה על הקנייה!',
-      multiline: true,
-      rows: 3
-    },
-
-    // Notification Settings (JSONB)
+    // Notification Settings
     notification_settings: {
       type: 'jsonb',
       nullable: true,
-      default: {
-        categories: {
-          orders: { sms: false, push: true, email: true, inApp: true },
-          system: { sms: false, push: true, email: true, inApp: true },
-          customers: { sms: false, push: false, email: false, inApp: true },
-          inventory: { sms: false, push: false, email: true, inApp: true }
-        }
-      },
+      defaultValue: '{"categories": {"orders": {"sms": false, "push": true, "email": true, "inApp": true}, "system": {"sms": false, "push": true, "email": true, "inApp": true}, "customers": {"sms": false, "push": false, "email": false, "inApp": true}, "inventory": {"sms": false, "push": false, "email": true, "inApp": true}}}',
       label: 'הגדרות התראות',
-      isComplex: true
+      description: 'הגדרות התראות לפי קטגוריות'
     },
 
     // System Settings
     maintenance_mode: {
       type: 'boolean',
       nullable: true,
-      default: false,
-      label: 'מצב תחזוקה'
+      defaultValue: false,
+      label: 'מצב תחזוקה',
+      description: 'האם האתר במצב תחזוקה'
     },
     debug_mode: {
       type: 'boolean',
       nullable: true,
-      default: false,
-      label: 'מצב דיבוג'
+      defaultValue: false,
+      label: 'מצב דיבוג',
+      description: 'האם להציג מידע דיבוג'
     },
     enable_reviews: {
       type: 'boolean',
       nullable: true,
-      default: true,
-      label: 'אפשר ביקורות'
+      defaultValue: true,
+      label: 'אפשר ביקורות',
+      description: 'האם לאפשר ביקורות על מוצרים'
     },
     enable_wishlist: {
       type: 'boolean',
       nullable: true,
-      default: true,
-      label: 'אפשר רשימת משאלות'
+      defaultValue: true,
+      label: 'אפשר רשימת משאלות',
+      description: 'האם לאפשר רשימת משאלות'
     },
     enable_notifications: {
       type: 'boolean',
       nullable: true,
-      default: true,
-      label: 'אפשר התראות'
+      defaultValue: true,
+      label: 'אפשר התראות',
+      description: 'האם לאפשר התראות'
     },
 
     // Security Settings
     session_timeout: {
       type: 'integer',
       nullable: true,
-      default: 3600,
-      label: 'פסק זמן הפעלה (שניות)',
+      defaultValue: 3600,
+      label: 'זמן פג תוקף הפעלה (שניות)',
       placeholder: '3600',
-      min: 300,
-      max: 86400,
-      step: 60,
-      validation: 'integer'
+      validation: 'integer',
+      min: 300
     },
     max_login_attempts: {
       type: 'integer',
       nullable: true,
-      default: 5,
-      label: 'מקסימום ניסיונות התחברות',
+      defaultValue: 5,
+      label: 'מספר ניסיונות התחברות מקסימלי',
       placeholder: '5',
+      validation: 'integer',
       min: 1,
-      max: 20,
-      validation: 'integer'
+      max: 20
     },
 
     // Performance Settings
     backup_frequency: {
-      type: 'varchar(20)',
+      type: 'character varying(20)',
       nullable: true,
-      default: 'daily',
+      defaultValue: 'daily',
       label: 'תדירות גיבוי',
       placeholder: 'daily',
+      maxLength: 20,
       options: ['hourly', 'daily', 'weekly', 'monthly']
     },
     cache_duration: {
       type: 'integer',
       nullable: true,
-      default: 300,
-      label: 'משך זמן מטמון (שניות)',
+      defaultValue: 300,
+      label: 'זמן שמירה במטמון (שניות)',
       placeholder: '300',
+      validation: 'integer',
       min: 60,
-      max: 3600,
-      step: 60,
-      validation: 'integer'
+      max: 3600
+    },
+
+    // Timestamps
+    created_at: {
+      type: 'timestamp with time zone',
+      nullable: true,
+      defaultValue: 'now()',
+      label: 'נוצר ב',
+      isTimestamp: true
+    },
+    updated_at: {
+      type: 'timestamp with time zone',
+      nullable: true,
+      defaultValue: 'now()',
+      label: 'עודכן ב',
+      isTimestamp: true
     }
   },
 
   // Field groups for form organization
-  fieldGroups: {
+  groups: {
     company: {
-      label: 'מידע על החברה',
+      title: 'פרטי החברה',
       fields: [
         'company_name',
         'company_description',
@@ -337,72 +348,47 @@ export const SETTINGS_TABLE = {
       ]
     },
     branding: {
-      label: 'מיתוג וצבעים',
+      title: 'מיתוג ועיצוב',
       fields: [
         'company_logo',
         'logo_url',
         'primary_color',
-        'secondary_color'
-      ]
-    },
-    regional: {
-      label: 'הגדרות אזוריות',
-      fields: [
-        'timezone',
-        'currency'
+        'secondary_color',
+        'timezone'
       ]
     },
     tax: {
-      label: 'הגדרות מע"מ',
+      title: 'מיסוי ומשלוח',
       fields: [
         'is_vat_registered',
+        'currency',
         'tax_rate',
         'prices_include_tax',
         'show_prices_with_tax',
-        'enable_tax_exempt'
-      ]
-    },
-    shipping: {
-      label: 'הגדרות משלוח',
-      fields: [
+        'enable_tax_exempt',
+        'invoice_footer_text',
         'free_shipping_threshold',
         'standard_shipping_cost',
         'express_shipping_cost',
         'enable_local_delivery'
       ]
     },
-    invoice: {
-      label: 'הגדרות חשבונית',
-      fields: [
-        'invoice_footer_text'
-      ]
-    },
     notifications: {
-      label: 'הגדרות התראות',
+      title: 'התראות',
       fields: [
-        'notification_settings',
-        'enable_notifications'
+        'notification_settings'
       ]
     },
     system: {
-      label: 'הגדרות מערכת',
+      title: 'הגדרות מערכת',
       fields: [
         'maintenance_mode',
         'debug_mode',
         'enable_reviews',
-        'enable_wishlist'
-      ]
-    },
-    security: {
-      label: 'הגדרות אבטחה',
-      fields: [
+        'enable_wishlist',
+        'enable_notifications',
         'session_timeout',
-        'max_login_attempts'
-      ]
-    },
-    performance: {
-      label: 'הגדרות ביצועים',
-      fields: [
+        'max_login_attempts',
         'backup_frequency',
         'cache_duration'
       ]
@@ -420,33 +406,33 @@ export const SETTINGS_TABLE = {
     integer: /^\d+$/
   },
 
-  // Default values for new settings
+  // Default values
   defaults: {
-    company_name: '',
-    company_description: '',
+    company_name: 'Jean Darcel',
+    company_description: 'מערכת ניהול הזמנות',
     company_email: '',
     company_phone: '',
     company_address: '',
-    business_name: '',
-    registration_number: '',
-    tax_id: '',
-    tagline: '',
     company_logo: '',
+    tagline: '',
     logo_url: '',
     primary_color: '#1976d2',
     secondary_color: '#dc004e',
     timezone: 'Asia/Jerusalem',
-    currency: 'ILS',
+    business_name: '',
+    registration_number: '',
+    tax_id: '',
     is_vat_registered: true,
+    currency: 'ILS',
     tax_rate: 0.18,
     prices_include_tax: true,
     show_prices_with_tax: true,
     enable_tax_exempt: false,
+    invoice_footer_text: '',
     free_shipping_threshold: 0.00,
     standard_shipping_cost: 0.00,
     express_shipping_cost: 0.00,
     enable_local_delivery: true,
-    invoice_footer_text: '',
     notification_settings: {
       categories: {
         orders: { sms: false, push: true, email: true, inApp: true },
@@ -464,86 +450,102 @@ export const SETTINGS_TABLE = {
     max_login_attempts: 5,
     backup_frequency: 'daily',
     cache_duration: 300
-  }
+  },
+
+  // Constraints
+  constraints: {
+    chk_settings_primary_color: {
+      check: "((primary_color)::text ~ '^#[0-9A-Fa-f]{6}$'::text)"
+    },
+    chk_settings_secondary_color: {
+      check: "((secondary_color)::text ~ '^#[0-9A-Fa-f]{6}$'::text)"
+    },
+    chk_settings_currency: {
+      check: "((currency)::text ~ '^[A-Z]{3}$'::text)"
+    },
+    chk_settings_shipping_costs: {
+      check: "((free_shipping_threshold >= (0)::numeric) AND (standard_shipping_cost >= (0)::numeric) AND (express_shipping_cost >= (0)::numeric))"
+    },
+    chk_settings_tax_rate: {
+      check: "((tax_rate >= (0)::numeric) AND (tax_rate <= (1)::numeric))"
+    },
+    chk_settings_session_timeout: {
+      check: "(session_timeout >= 300)"
+    },
+    chk_settings_max_login_attempts: {
+      check: "((max_login_attempts > 0) AND (max_login_attempts <= 20))"
+    }
+  },
+
+  // Indexes
+  indexes: [
+    'idx_settings_company_name',
+    'idx_settings_currency',
+    'idx_settings_created_at',
+    'idx_settings_updated_at',
+    'idx_settings_notification_settings'
+  ],
+
+  // Triggers
+  triggers: [
+    'trigger_update_settings_updated_at',
+    'settings_audit_trigger'
+  ]
 };
 
-// Helper functions for working with settings
-export const SETTINGS_HELPERS = {
-  // Get field configuration by name
-  getFieldConfig: (fieldName) => {
-    return SETTINGS_TABLE.fields[fieldName] || null;
-  },
-
-  // Get all fields in a group
-  getGroupFields: (groupName) => {
-    const group = SETTINGS_TABLE.fieldGroups[groupName];
-    return group ? group.fields : [];
-  },
-
-  // Validate field value
-  validateField: (fieldName, value) => {
-    const field = SETTINGS_TABLE.fields[fieldName];
-    if (!field) return { isValid: true, error: null };
-
-    // Required field validation
-    if (!field.nullable && (value === null || value === undefined || value === '')) {
-      return { isValid: false, error: `${field.label} הוא שדה חובה` };
-    }
-
-    // Type-specific validation
-    if (value && field.validation) {
-      const regex = SETTINGS_TABLE.validation[field.validation];
-      if (regex && !regex.test(value)) {
-        return { isValid: false, error: `${field.label} אינו תקין` };
-      }
-    }
-
-    // Range validation
-    if (value && field.min !== undefined && value < field.min) {
-      return { isValid: false, error: `${field.label} חייב להיות לפחות ${field.min}` };
-    }
-    if (value && field.max !== undefined && value > field.max) {
-      return { isValid: false, error: `${field.label} חייב להיות לכל היותר ${field.max}` };
-    }
-
-    // Length validation
-    if (value && field.maxLength && value.length > field.maxLength) {
-      return { isValid: false, error: `${field.label} חייב להיות לכל היותר ${field.maxLength} תווים` };
-    }
-
-    return { isValid: true, error: null };
-  },
-
-  // Get default value for field
-  getDefaultValue: (fieldName) => {
-    const field = SETTINGS_TABLE.fields[fieldName];
-    return field ? field.default : null;
-  },
-
-  // Format field value for display
-  formatValue: (fieldName, value) => {
-    const field = SETTINGS_TABLE.fields[fieldName];
-    if (!field || value === null || value === undefined) return '-';
-
-    switch (field.type) {
-      case 'boolean':
-        return value ? 'כן' : 'לא';
-      case 'numeric(5,4)':
-        return `${(value * 100).toFixed(2)}%`;
-      case 'numeric(10,2)':
-        return `₪${value.toFixed(2)}`;
-      case 'integer':
-        return value.toString();
-      default:
-        return value.toString();
-    }
-  },
-
-  // Get field options for select fields
-  getFieldOptions: (fieldName) => {
-    const field = SETTINGS_TABLE.fields[fieldName];
-    return field ? field.options : [];
-  }
+// Helper functions
+export const getFieldDefinition = (fieldName) => {
+  return SETTINGS_TABLE.fields[fieldName];
 };
 
-export default SETTINGS_TABLE;
+export const getFieldGroup = (fieldName) => {
+  for (const [groupName, group] of Object.entries(SETTINGS_TABLE.groups)) {
+    if (group.fields.includes(fieldName)) {
+      return groupName;
+    }
+  }
+  return null;
+};
+
+export const getFieldLabel = (fieldName) => {
+  const field = getFieldDefinition(fieldName);
+  return field ? field.label : fieldName;
+};
+
+export const getFieldType = (fieldName) => {
+  const field = getFieldDefinition(fieldName);
+  return field ? field.type : 'text';
+};
+
+export const getFieldValidation = (fieldName) => {
+  const field = getFieldDefinition(fieldName);
+  return field ? field.validation : null;
+};
+
+export const getDefaultValue = (fieldName) => {
+  return SETTINGS_TABLE.defaults[fieldName];
+};
+
+export const validateField = (fieldName, value) => {
+  const field = getFieldDefinition(fieldName);
+  if (!field || !field.validation) return true;
+  
+  const validationRule = SETTINGS_TABLE.validation[field.validation];
+  if (!validationRule) return true;
+  
+  return validationRule.test(value);
+};
+
+export const getAllFields = () => {
+  return Object.keys(SETTINGS_TABLE.fields);
+};
+
+export const getFieldsByGroup = (groupName) => {
+  const group = SETTINGS_TABLE.groups[groupName];
+  return group ? group.fields : [];
+};
+
+export const getGroupTitle = (groupName) => {
+  const group = SETTINGS_TABLE.groups[groupName];
+  return group ? group.title : groupName;
+};

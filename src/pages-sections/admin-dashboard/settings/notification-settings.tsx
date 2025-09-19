@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState } from "react";
 import {
   Grid,
   Button,
@@ -14,7 +15,8 @@ import {
   ListItem,
   ListItemText,
   ListItemSecondaryAction,
-  Chip
+  Chip,
+  Snackbar
 } from "@mui/material";
 import { 
   Save, 
@@ -26,6 +28,7 @@ import {
 } from "@mui/icons-material";
 import { H5, H6, Paragraph } from "@/components/Typography";
 import { FlexBetween, FlexBox } from "@/components/flex-box";
+import { useCompany } from "@/context/CompanyContext";
 
 interface NotificationSetting {
   id: string;
@@ -34,18 +37,45 @@ interface NotificationSetting {
   email: boolean;
   sms: boolean;
   push: boolean;
+  inApp: boolean;
   category: string;
 }
 
 export default function NotificationSettings() {
+  const { settings, updateSettings, isLoading } = useCompany();
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+
+  // Parse notification settings from database or use defaults
+  const parseNotificationSettings = () => {
+    try {
+      if (settings?.notification_settings && typeof settings.notification_settings === 'object') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return settings.notification_settings as any;
+      }
+    } catch (error) {
+      console.error('Error parsing notification settings:', error);
+    }
+    
+    // Default notification settings
+    return {
+      categories: {
+        orders: { sms: false, push: true, email: true, inApp: true },
+        system: { sms: false, push: true, email: true, inApp: true },
+        customers: { sms: false, push: false, email: false, inApp: true },
+        inventory: { sms: false, push: false, email: true, inApp: true }
+      }
+    };
+  };
+
   const notificationSettings: NotificationSetting[] = [
     {
       id: "new-order",
       title: "הזמנה חדשה",
       description: "התראה כאשר מתקבלת הזמנה חדשה",
       email: true,
-      sms: true,
+      sms: false,
       push: true,
+      inApp: true,
       category: "orders"
     },
     {
@@ -55,6 +85,7 @@ export default function NotificationSettings() {
       email: true,
       sms: false,
       push: true,
+      inApp: true,
       category: "orders"
     },
     {
@@ -62,8 +93,9 @@ export default function NotificationSettings() {
       title: "מלאי נמוך",
       description: "התראה כאשר מלאי מוצר מתחת לסף המינימום",
       email: true,
-      sms: true,
-      push: true,
+      sms: false,
+      push: false,
+      inApp: true,
       category: "inventory"
     },
     {
@@ -71,17 +103,19 @@ export default function NotificationSettings() {
       title: "אזל מהמלאי",
       description: "התראה כאשר מוצר נגמר מהמלאי",
       email: true,
-      sms: true,
-      push: true,
+      sms: false,
+      push: false,
+      inApp: true,
       category: "inventory"
     },
     {
       id: "new-customer",
       title: "לקוח חדש",
       description: "התראה כאשר נרשם לקוח חדש",
-      email: true,
+      email: false,
       sms: false,
       push: false,
+      inApp: true,
       category: "customers"
     },
     {
@@ -91,7 +125,8 @@ export default function NotificationSettings() {
       email: true,
       sms: false,
       push: true,
-      category: "payments"
+      inApp: true,
+      category: "orders"
     },
     {
       id: "system-updates",
@@ -99,161 +134,201 @@ export default function NotificationSettings() {
       description: "התראות על עדכונים ושינויים במערכת",
       email: true,
       sms: false,
-      push: false,
+      push: true,
+      inApp: true,
       category: "system"
     }
   ];
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "orders": return "primary";
-      case "inventory": return "warning";
-      case "customers": return "info";
-      case "payments": return "success";
-      case "system": return "secondary";
-      default: return "default";
-    }
-  };
+  const currentSettings = parseNotificationSettings();
+  const [localSettings, setLocalSettings] = useState(currentSettings);
 
-  const getCategoryTitle = (category: string) => {
-    switch (category) {
-      case "orders": return "הזמנות";
-      case "inventory": return "מלאי";
-      case "customers": return "לקוחות";
-      case "payments": return "תשלומים";
-      case "system": return "מערכת";
-      default: return category;
-    }
+  const handleToggle = (category: string, type: 'email' | 'sms' | 'push' | 'inApp') => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    setLocalSettings((prev: any) => ({
+      ...prev,
+      categories: {
+        ...prev.categories,
+        [category]: {
+          ...prev.categories[category],
+          [type]: !prev.categories[category][type]
+        }
+      }
+    }));
   };
 
   const handleSave = async () => {
     try {
-      console.log("Saving notification settings");
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert("הגדרות ההתראות נשמרו בהצלחה!");
+      console.log("Saving notification settings:", localSettings);
+      
+      const result = await updateSettings({
+        notification_settings: localSettings
+      });
+      
+      if (result.error) {
+        setSnackbar({
+          open: true,
+          message: `שגיאה בשמירת הגדרות התראות: ${result.error}`,
+          severity: 'error'
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: "הגדרות התראות נשמרו בהצלחה!",
+          severity: 'success'
+        });
+      }
     } catch (error) {
       console.error("Error saving notification settings:", error);
-      alert("שגיאה בשמירת הגדרות ההתראות");
+      setSnackbar({
+        open: true,
+        message: "שגיאה בשמירת הגדרות התראות",
+        severity: 'error'
+      });
     }
   };
 
-  const groupedSettings = notificationSettings.reduce((acc, setting) => {
-    if (!acc[setting.category]) {
-      acc[setting.category] = [];
-    }
-    acc[setting.category].push(setting);
-    return acc;
-  }, {} as Record<string, NotificationSetting[]>);
+  const getCategorySettings = (category: string) => {
+    return localSettings.categories[category] || { sms: false, push: false, email: false, inApp: false };
+  };
 
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ mb: 3 }}>
         <H5 sx={{ fontWeight: 700, mb: 1 }}>הגדרות התראות</H5>
         <Paragraph color="grey.600">
-          נהל את ההתראות שתרצה לקבל עבור פעילויות שונות במערכת
+          נהל את סוגי ההתראות והערוצים שבהם תרצה לקבל עדכונים
         </Paragraph>
       </Box>
 
       <Grid container spacing={3}>
-        {Object.entries(groupedSettings).map(([category, settings]) => (
-          <Grid size={{ xs: 12 }} key={category}>
-            <Card sx={{ borderRadius: 2, border: "1px solid", borderColor: `${getCategoryColor(category)}.200` }}>
-              <CardContent>
-                <FlexBox alignItems="center" gap={2} mb={2}>
-                  <Notifications color={getCategoryColor(category) as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"} />
-                  <H6 sx={{ fontWeight: 700 }}>{getCategoryTitle(category)}</H6>
-                  <Chip 
-                    label={`${settings.length} התראות`} 
-                    size="small" 
-                    color={getCategoryColor(category) as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
-                  />
-                </FlexBox>
+        {/* Notification Categories */}
+        {['orders', 'inventory', 'customers', 'system'].map((category) => {
+          const categorySettings = getCategorySettings(category);
+          const categoryName = {
+            orders: 'הזמנות',
+            inventory: 'מלאי',
+            customers: 'לקוחות',
+            system: 'מערכת'
+          }[category];
 
-                <List sx={{ p: 0 }}>
-                  {settings.map((setting, index) => (
-                    <Box key={setting.id}>
-                      <ListItem sx={{ px: 0, py: 2 }}>
-                        <ListItemText
-                          primary={setting.title}
-                          secondary={setting.description}
-                        />
-                        <ListItemSecondaryAction>
-                          <FlexBox gap={1} alignItems="center">
-                            <FlexBox flexDirection="column" alignItems="center" gap={0.5}>
-                              <Email sx={{ fontSize: 16, color: setting.email ? "primary.main" : "grey.400" }} />
-                              <FormControlLabel
-                                control={
-                                  <Switch
-                                    checked={setting.email}
-                                    size="small"
-                                    color="primary"
-                                  />
-                                }
-                                label=""
-                                sx={{ m: 0 }}
-                              />
-                            </FlexBox>
-                            
-                            <FlexBox flexDirection="column" alignItems="center" gap={0.5}>
-                              <Sms sx={{ fontSize: 16, color: setting.sms ? "success.main" : "grey.400" }} />
-                              <FormControlLabel
-                                control={
-                                  <Switch
-                                    checked={setting.sms}
-                                    size="small"
-                                    color="success"
-                                  />
-                                }
-                                label=""
-                                sx={{ m: 0 }}
-                              />
-                            </FlexBox>
-                            
-                            <FlexBox flexDirection="column" alignItems="center" gap={0.5}>
-                              <NotificationsActive sx={{ fontSize: 16, color: setting.push ? "warning.main" : "grey.400" }} />
-                              <FormControlLabel
-                                control={
-                                  <Switch
-                                    checked={setting.push}
-                                    size="small"
-                                    color="warning"
-                                  />
-                                }
-                                label=""
-                                sx={{ m: 0 }}
-                              />
-                            </FlexBox>
+          return (
+            <Grid size={{ xs: 12 }} key={category}>
+              <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "primary.200" }}>
+                <CardContent>
+                  <FlexBox alignItems="center" gap={2} mb={2}>
+                    <Notifications color="primary" />
+                    <H6 sx={{ fontWeight: 700 }}>{categoryName}</H6>
+                  </FlexBox>
+                  <Divider sx={{ mb: 3 }} />
+
+                  <Grid container spacing={2}>
+                    <Grid size={{ md: 3, xs: 6 }}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={categorySettings.email}
+                            onChange={() => handleToggle(category, 'email')}
+                            color="primary"
+                          />
+                        }
+                        label={
+                          <FlexBox alignItems="center" gap={1}>
+                            <Email fontSize="small" />
+                            <span>אימייל</span>
                           </FlexBox>
-                        </ListItemSecondaryAction>
-                      </ListItem>
-                      {index < settings.length - 1 && <Divider />}
-                    </Box>
-                  ))}
-                </List>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
+                        }
+                      />
+                    </Grid>
 
-        {/* Legend */}
+                    <Grid size={{ md: 3, xs: 6 }}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={categorySettings.sms}
+                            onChange={() => handleToggle(category, 'sms')}
+                            color="primary"
+                          />
+                        }
+                        label={
+                          <FlexBox alignItems="center" gap={1}>
+                            <Sms fontSize="small" />
+                            <span>SMS</span>
+                          </FlexBox>
+                        }
+                      />
+                    </Grid>
+
+                    <Grid size={{ md: 3, xs: 6 }}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={categorySettings.push}
+                            onChange={() => handleToggle(category, 'push')}
+                            color="primary"
+                          />
+                        }
+                        label={
+                          <FlexBox alignItems="center" gap={1}>
+                            <NotificationsActive fontSize="small" />
+                            <span>Push</span>
+                          </FlexBox>
+                        }
+                      />
+                    </Grid>
+
+                    <Grid size={{ md: 3, xs: 6 }}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={categorySettings.inApp}
+                            onChange={() => handleToggle(category, 'inApp')}
+                            color="primary"
+                          />
+                        }
+                        label={
+                          <FlexBox alignItems="center" gap={1}>
+                            <Notifications fontSize="small" />
+                            <span>באפליקציה</span>
+                          </FlexBox>
+                        }
+                      />
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+          );
+        })}
+
+        {/* Notification Details */}
         <Grid size={{ xs: 12 }}>
-          <Card sx={{ bgcolor: "grey.50", borderRadius: 2 }}>
+          <Card sx={{ mb: 3, borderRadius: 2, border: "1px solid", borderColor: "primary.200" }}>
             <CardContent>
-              <H6 sx={{ fontWeight: 700, mb: 2 }}>מקרא</H6>
-              <FlexBox gap={4}>
-                <FlexBox alignItems="center" gap={1}>
-                  <Email color="primary" />
-                  <Paragraph>אימייל</Paragraph>
-                </FlexBox>
-                <FlexBox alignItems="center" gap={1}>
-                  <Sms color="success" />
-                  <Paragraph>SMS</Paragraph>
-                </FlexBox>
-                <FlexBox alignItems="center" gap={1}>
-                  <NotificationsActive color="warning" />
-                  <Paragraph>התראות דחיפה</Paragraph>
-                </FlexBox>
+              <FlexBox alignItems="center" gap={2} mb={2}>
+                <Notifications color="primary" />
+                <H6 sx={{ fontWeight: 700 }}>פירוט התראות</H6>
               </FlexBox>
+              <Divider sx={{ mb: 3 }} />
+
+              <List>
+                {notificationSettings.map((setting) => (
+                  <ListItem key={setting.id} sx={{ py: 1 }}>
+                    <ListItemText
+                      primary={setting.title}
+                      secondary={setting.description}
+                    />
+                    <ListItemSecondaryAction>
+                      <Chip
+                        label={setting.category}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                ))}
+              </List>
             </CardContent>
           </Card>
         </Grid>
@@ -263,13 +338,14 @@ export default function NotificationSettings() {
           <Divider sx={{ my: 2 }} />
           <FlexBetween>
             <Alert severity="info" sx={{ flex: 1, mr: 2 }}>
-              ההתראות יישלחו בזמן אמת לפי ההגדרות שנבחרו
+              שינויים יכנסו לתוקף מיד לאחר השמירה
             </Alert>
             <FlexBox gap={2}>
               <Button
                 variant="outlined"
                 startIcon={<Refresh />}
                 sx={{ borderRadius: 2 }}
+                onClick={() => setLocalSettings(parseNotificationSettings())}
               >
                 איפוס
               </Button>
@@ -277,14 +353,31 @@ export default function NotificationSettings() {
                 variant="contained"
                 startIcon={<Save />}
                 onClick={handleSave}
+                disabled={isLoading}
                 sx={{ borderRadius: 2, minWidth: 120 }}
               >
-                שמור שינויים
+                {isLoading ? "שומר..." : "שמור שינויים"}
               </Button>
             </FlexBox>
           </FlexBetween>
         </Grid>
       </Grid>
+
+      {/* Success/Error Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} 
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
