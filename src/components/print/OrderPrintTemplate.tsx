@@ -51,7 +51,7 @@ const OrderPrintTemplate = forwardRef<HTMLDivElement, OrderPrintTemplateProps>((
   const companyPhone = settings?.company_phone || '';
   const companyEmail = settings?.company_email || '';
   const companyAddress = settings?.company_address || '';
-  const logoUrl = settings?.logo_url || settings?.company_logo;
+  const logoUrl = settings?.logo_url;
 
   // Format order number
   const formatOrderNumber = (id: string): string => {

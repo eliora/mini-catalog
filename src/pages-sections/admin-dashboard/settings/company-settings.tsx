@@ -54,12 +54,12 @@ export default function CompanySettings() {
 
   const initialValues: CompanySettingsFormValues = {
     companyName: settings?.company_name || '',
-    businessNumber: settings?.registration_number || '',
-    vatNumber: settings?.tax_id || '',
+    businessNumber: '',
+    vatNumber: '',
     address: settings?.company_address || '',
     phone: settings?.company_phone || '',
     email: settings?.company_email || '',
-    website: settings?.website || '',
+    website: settings?.company_website || '',
     description: settings?.company_description || '',
     isVatRegistered: settings?.is_vat_registered || false,
   };

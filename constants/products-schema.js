@@ -25,7 +25,31 @@ export const PRODUCTS_TABLE = {
       type: 'text',
       nullable: true
     },
-    english_name: {
+    header: {
+      type: 'text',
+      nullable: true
+    },
+    short_description_he: {
+      type: 'text',
+      nullable: true
+    },
+    description_he: {
+      type: 'text',
+      nullable: true
+    },
+    skin_type_he: {
+      type: 'text',
+      nullable: true
+    },
+    usage_instructions_he: {
+      type: 'text',
+      nullable: true
+    },
+    active_ingredients_he: {
+      type: 'text',
+      nullable: true
+    },
+    ingredients: {
       type: 'text',
       nullable: true
     },
@@ -33,19 +57,32 @@ export const PRODUCTS_TABLE = {
       type: 'text',
       nullable: true
     },
+    english_name: {
+      type: 'text',
+      nullable: true
+    },
+    size: {
+      type: 'text',
+      nullable: true
+    },
     product_line: {
       type: 'text',
       nullable: true
     },
-    product_type: {
+    main_pic: {
       type: 'text',
       nullable: true
+    },
+    pics: {
+      type: 'jsonb',
+      nullable: true,
+      default: '[]'
     },
     type: {
       type: 'text',
       nullable: true
     },
-    size: {
+    product_type: {
       type: 'text',
       nullable: true
     },
@@ -62,31 +99,11 @@ export const PRODUCTS_TABLE = {
       type: 'text',
       nullable: true
     },
-    description_he: {
+    active_ingredients: {
       type: 'text',
       nullable: true
     },
-    short_description_he: {
-      type: 'text',
-      nullable: true
-    },
-    header: {
-      type: 'text',
-      nullable: true
-    },
-    ingredients: {
-      type: 'text',
-      nullable: true
-    },
-    active_ingredients_he: {
-      type: 'text',
-      nullable: true
-    },
-    skin_type_he: {
-      type: 'text',
-      nullable: true
-    },
-    usage_instructions_he: {
+    usage_instructions: {
       type: 'text',
       nullable: true
     },
@@ -94,12 +111,12 @@ export const PRODUCTS_TABLE = {
       type: 'text',
       nullable: true
     },
-    main_pic: {
+    product_name: {
       type: 'text',
       nullable: true
     },
-    pics: {
-      type: 'jsonb',
+    product_name_2: {
+      type: 'text',
       nullable: true
     },
     created_at: {
@@ -126,10 +143,11 @@ export const PRODUCTS_TABLE = {
   // Indexes
   indexes: [
     'idx_products_ref',
-    'idx_products_product_line',
+    'idx_products_hebrew_name',
+    'idx_products_english_name',
     'idx_products_product_type',
-    'idx_products_qty',
-    'idx_products_created_at'
+    'idx_products_type',
+    'idx_products_product_line'
   ],
 
   // Triggers

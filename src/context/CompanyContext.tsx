@@ -16,12 +16,12 @@ const DEFAULT_SETTINGS: CompanySettings = {
   company_email: null,
   company_phone: null,
   company_address: null,
-  business_name: '',
-  registration_number: '',
-  tax_id: '',
+  company_website: null,
   tagline: '',
-  company_logo: '',
   logo_url: '',
+  logo_url_extended: '',
+  company_logo_extended: '',
+  logo_url_compact: '',
   primary_color: '#1976d2',
   secondary_color: '#dc004e',
   timezone: 'Asia/Jerusalem',
@@ -56,10 +56,6 @@ const DEFAULT_SETTINGS: CompanySettings = {
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
   // Legacy fields for backward compatibility
-  contact_email: '',
-  contact_phone: '',
-  address: '',
-  website: '',
 };
 
 export const CompanyProvider = ({ children }: { children: React.ReactNode }) => {
@@ -92,7 +88,7 @@ export const CompanyProvider = ({ children }: { children: React.ReactNode }) => 
         }
       } else {
         console.log('✅ Company settings loaded:', data);
-        setSettings(data as CompanySettings);
+        setSettings(data as unknown as CompanySettings);
       }
       
       setLastUpdated(new Date());
@@ -116,46 +112,19 @@ export const CompanyProvider = ({ children }: { children: React.ReactNode }) => 
       console.log('🔄 Current settings ID:', settings?.id);
       console.log('🔄 Settings object:', settings);
 
-      // Prepare the data to be sent
-      const settingsData = {
+      // Prepare the data to be sent - only include fields that are being updated
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const settingsData: any = {
         id: settings?.id || '1', // Use existing ID or default to '1'
-        company_name: updates.company_name ?? DEFAULT_SETTINGS.company_name,
-        company_description: updates.company_description ?? DEFAULT_SETTINGS.company_description,
-        company_email: updates.company_email ?? DEFAULT_SETTINGS.company_email,
-        company_phone: updates.company_phone ?? DEFAULT_SETTINGS.company_phone,
-        company_address: updates.company_address ?? DEFAULT_SETTINGS.company_address,
-        company_logo: updates.company_logo ?? DEFAULT_SETTINGS.company_logo,
-        tagline: updates.tagline ?? DEFAULT_SETTINGS.tagline,
-        logo_url: updates.logo_url ?? DEFAULT_SETTINGS.logo_url,
-        primary_color: updates.primary_color ?? DEFAULT_SETTINGS.primary_color,
-        secondary_color: updates.secondary_color ?? DEFAULT_SETTINGS.secondary_color,
-        timezone: updates.timezone ?? DEFAULT_SETTINGS.timezone,
-        business_name: updates.business_name ?? DEFAULT_SETTINGS.business_name,
-        registration_number: updates.registration_number ?? DEFAULT_SETTINGS.registration_number,
-        tax_id: updates.tax_id ?? DEFAULT_SETTINGS.tax_id,
-        is_vat_registered: updates.is_vat_registered ?? DEFAULT_SETTINGS.is_vat_registered,
-        currency: updates.currency ?? DEFAULT_SETTINGS.currency,
-        tax_rate: updates.tax_rate ?? DEFAULT_SETTINGS.tax_rate,
-        prices_include_tax: updates.prices_include_tax ?? DEFAULT_SETTINGS.prices_include_tax,
-        show_prices_with_tax: updates.show_prices_with_tax ?? DEFAULT_SETTINGS.show_prices_with_tax,
-        enable_tax_exempt: updates.enable_tax_exempt ?? DEFAULT_SETTINGS.enable_tax_exempt,
-        invoice_footer_text: updates.invoice_footer_text ?? DEFAULT_SETTINGS.invoice_footer_text,
-        free_shipping_threshold: updates.free_shipping_threshold ?? DEFAULT_SETTINGS.free_shipping_threshold,
-        standard_shipping_cost: updates.standard_shipping_cost ?? DEFAULT_SETTINGS.standard_shipping_cost,
-        express_shipping_cost: updates.express_shipping_cost ?? DEFAULT_SETTINGS.express_shipping_cost,
-        enable_local_delivery: updates.enable_local_delivery ?? DEFAULT_SETTINGS.enable_local_delivery,
-        notification_settings: updates.notification_settings ?? DEFAULT_SETTINGS.notification_settings,
-        maintenance_mode: updates.maintenance_mode ?? DEFAULT_SETTINGS.maintenance_mode,
-        debug_mode: updates.debug_mode ?? DEFAULT_SETTINGS.debug_mode,
-        enable_reviews: updates.enable_reviews ?? DEFAULT_SETTINGS.enable_reviews,
-        enable_wishlist: updates.enable_wishlist ?? DEFAULT_SETTINGS.enable_wishlist,
-        enable_notifications: updates.enable_notifications ?? DEFAULT_SETTINGS.enable_notifications,
-        session_timeout: updates.session_timeout ?? DEFAULT_SETTINGS.session_timeout,
-        max_login_attempts: updates.max_login_attempts ?? DEFAULT_SETTINGS.max_login_attempts,
-        backup_frequency: updates.backup_frequency ?? DEFAULT_SETTINGS.backup_frequency,
-        cache_duration: updates.cache_duration ?? DEFAULT_SETTINGS.cache_duration,
         updated_at: new Date().toISOString(),
       };
+
+      // Only add fields that are actually provided in the updates
+      Object.keys(updates).forEach(key => {
+        if (key in updates && updates[key as keyof CompanySettings] !== undefined) {
+          settingsData[key] = updates[key as keyof CompanySettings];
+        }
+      });
 
       console.log('📤 Sending to database:', settingsData);
       console.log('📤 SettingsData keys:', Object.keys(settingsData));
@@ -203,7 +172,7 @@ export const CompanyProvider = ({ children }: { children: React.ReactNode }) => 
       console.log('💾 Previous settings:', settings);
       console.log('💾 New settings:', data);
       
-      setSettings(data as CompanySettings);
+      setSettings(data as unknown as CompanySettings);
       console.log('✅ Company settings saved successfully');
       console.log('✅ Settings state updated');
 
@@ -257,10 +226,10 @@ export const CompanyProvider = ({ children }: { children: React.ReactNode }) => 
   const getContactInfo = useCallback((): ContactInfo => {
     return {
       name: settings?.company_name || DEFAULT_SETTINGS.company_name || '',
-      email: settings?.company_email || settings?.contact_email || '',
-      phone: settings?.company_phone || settings?.contact_phone || '',
-      address: settings?.company_address || settings?.address || '',
-      website: settings?.website || '',
+      email: settings?.company_email || '',
+      phone: settings?.company_phone || '',
+      address: settings?.company_address || '',
+      website: settings?.company_website || '',
     };
   }, [settings]);
 

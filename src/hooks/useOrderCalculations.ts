@@ -25,7 +25,7 @@ export const useOrderCalculations = (
   }, [cart]);
 
   const tax = useMemo(() => {
-    const taxRate = (companySettings?.tax_rate || 17) / 100;
+    const taxRate = companySettings?.tax_rate || 0.18; // Use decimal format from settings
     return subtotal * taxRate;
   }, [subtotal, companySettings?.tax_rate]);
 

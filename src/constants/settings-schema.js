@@ -8,6 +8,218 @@ export const SETTINGS_TABLE = {
   name: 'settings',
   schema: 'public',
   
+  // Column definitions matching actual database schema
+  columns: {
+    id: {
+      type: 'uuid',
+      nullable: false,
+      primary: true,
+      default: 'extensions.uuid_generate_v4()'
+    },
+    company_name: {
+      type: 'character varying(255)',
+      nullable: true
+    },
+    company_description: {
+      type: 'text',
+      nullable: true
+    },
+    company_email: {
+      type: 'character varying(255)',
+      nullable: true
+    },
+    company_phone: {
+      type: 'character varying(50)',
+      nullable: true
+    },
+    company_address: {
+      type: 'text',
+      nullable: true
+    },
+    tagline: {
+      type: 'character varying(255)',
+      nullable: true
+    },
+    logo_url: {
+      type: 'character varying(2000)',
+      nullable: true
+    },
+    primary_color: {
+      type: 'character varying(7)',
+      nullable: true,
+      default: '#1976d2'
+    },
+    secondary_color: {
+      type: 'character varying(7)',
+      nullable: true,
+      default: '#dc004e'
+    },
+    timezone: {
+      type: 'character varying(50)',
+      nullable: true,
+      default: 'Asia/Jerusalem'
+    },
+    is_vat_registered: {
+      type: 'boolean',
+      nullable: true,
+      default: true
+    },
+    currency: {
+      type: 'character varying(3)',
+      nullable: true,
+      default: 'ILS'
+    },
+    tax_rate: {
+      type: 'numeric(5,4)',
+      nullable: true,
+      default: 0.18
+    },
+    prices_include_tax: {
+      type: 'boolean',
+      nullable: true,
+      default: true
+    },
+    show_prices_with_tax: {
+      type: 'boolean',
+      nullable: true,
+      default: true
+    },
+    enable_tax_exempt: {
+      type: 'boolean',
+      nullable: true,
+      default: false
+    },
+    invoice_footer_text: {
+      type: 'text',
+      nullable: true
+    },
+    free_shipping_threshold: {
+      type: 'numeric(10,2)',
+      nullable: true,
+      default: 0.00
+    },
+    standard_shipping_cost: {
+      type: 'numeric(10,2)',
+      nullable: true,
+      default: 0.00
+    },
+    express_shipping_cost: {
+      type: 'numeric(10,2)',
+      nullable: true,
+      default: 0.00
+    },
+    enable_local_delivery: {
+      type: 'boolean',
+      nullable: true,
+      default: true
+    },
+    notification_settings: {
+      type: 'jsonb',
+      nullable: true,
+      default: '{"categories": {"orders": {"sms": false, "push": true, "email": true, "inApp": true}, "system": {"sms": false, "push": true, "email": true, "inApp": true}, "customers": {"sms": false, "push": false, "email": false, "inApp": true}, "inventory": {"sms": false, "push": false, "email": true, "inApp": true}}}'
+    },
+    maintenance_mode: {
+      type: 'boolean',
+      nullable: true,
+      default: false
+    },
+    debug_mode: {
+      type: 'boolean',
+      nullable: true,
+      default: false
+    },
+    enable_reviews: {
+      type: 'boolean',
+      nullable: true,
+      default: true
+    },
+    enable_wishlist: {
+      type: 'boolean',
+      nullable: true,
+      default: true
+    },
+    enable_notifications: {
+      type: 'boolean',
+      nullable: true,
+      default: true
+    },
+    session_timeout: {
+      type: 'integer',
+      nullable: true,
+      default: 3600
+    },
+    max_login_attempts: {
+      type: 'integer',
+      nullable: true,
+      default: 5
+    },
+    backup_frequency: {
+      type: 'character varying(20)',
+      nullable: true,
+      default: 'daily'
+    },
+    cache_duration: {
+      type: 'integer',
+      nullable: true,
+      default: 300
+    },
+    created_at: {
+      type: 'timestamp with time zone',
+      nullable: true,
+      default: 'now()'
+    },
+    updated_at: {
+      type: 'timestamp with time zone',
+      nullable: true,
+      default: 'now()'
+    },
+    logo_url_extended: {
+      type: 'character varying(2000)',
+      nullable: true
+    },
+    company_logo_extended: {
+      type: 'character varying(2000)',
+      nullable: true
+    },
+    company_website: {
+      type: 'character varying(255)',
+      nullable: true
+    },
+    logo_url_compact: {
+      type: 'character varying(2000)',
+      nullable: true
+    }
+  },
+
+  // Constraints
+  constraints: {
+    primary: 'settings_pkey',
+    check: [
+      'chk_settings_max_login_attempts',
+      'chk_settings_primary_color',
+      'chk_settings_secondary_color',
+      'chk_settings_currency',
+      'chk_settings_shipping_costs',
+      'chk_settings_tax_rate',
+      'chk_settings_session_timeout'
+    ]
+  },
+
+  // Indexes
+  indexes: [
+    'idx_settings_company_name',
+    'idx_settings_currency',
+    'idx_settings_created_at',
+    'idx_settings_updated_at',
+    'idx_settings_notification_settings'
+  ],
+
+  // Triggers
+  triggers: [
+    'trigger_update_settings_updated_at',
+    'settings_audit_trigger'
+  ],
+
   // Field definitions with types, defaults, and constraints
   fields: {
     // Primary Key
@@ -58,12 +270,12 @@ export const SETTINGS_TABLE = {
       multiline: true,
       rows: 2
     },
-    company_logo: {
-      type: 'character varying(500)',
+    company_website: {
+      type: 'character varying(255)',
       nullable: true,
-      label: 'לוגו החברה',
-      placeholder: 'URL של הלוגו',
-      maxLength: 500,
+      label: 'אתר החברה',
+      placeholder: 'https://example.com',
+      maxLength: 255,
       validation: 'url'
     },
     tagline: {
@@ -74,11 +286,19 @@ export const SETTINGS_TABLE = {
       maxLength: 255
     },
     logo_url: {
-      type: 'character varying(500)',
+      type: 'character varying(2000)',
       nullable: true,
-      label: 'URL לוגו',
+      label: 'URL לוגו רגיל',
       placeholder: 'https://example.com/logo.png',
-      maxLength: 500,
+      maxLength: 2000,
+      validation: 'url'
+    },
+    logo_url_compact: {
+      type: 'character varying(2000)',
+      nullable: true,
+      label: 'URL לוגו קומפקטי',
+      placeholder: 'https://example.com/logo-compact.png',
+      maxLength: 2000,
       validation: 'url'
     },
 
@@ -111,27 +331,6 @@ export const SETTINGS_TABLE = {
     },
 
     // Business Information
-    business_name: {
-      type: 'character varying(255)',
-      nullable: true,
-      label: 'שם העסק',
-      placeholder: 'שם העסק הרשמי',
-      maxLength: 255
-    },
-    registration_number: {
-      type: 'character varying(100)',
-      nullable: true,
-      label: 'מספר רישום',
-      placeholder: 'מספר רישום העסק',
-      maxLength: 100
-    },
-    tax_id: {
-      type: 'character varying(100)',
-      nullable: true,
-      label: 'מספר עוסק מורשה',
-      placeholder: 'מספר עוסק מורשה',
-      maxLength: 100
-    },
     is_vat_registered: {
       type: 'boolean',
       nullable: true,
@@ -341,17 +540,15 @@ export const SETTINGS_TABLE = {
         'company_email',
         'company_phone',
         'company_address',
-        'business_name',
-        'registration_number',
-        'tax_id',
+        'company_website',
         'tagline'
       ]
     },
     branding: {
       title: 'מיתוג ועיצוב',
       fields: [
-        'company_logo',
         'logo_url',
+        'logo_url_compact',
         'primary_color',
         'secondary_color',
         'timezone'
@@ -413,15 +610,13 @@ export const SETTINGS_TABLE = {
     company_email: '',
     company_phone: '',
     company_address: '',
-    company_logo: '',
+    company_website: '',
     tagline: '',
     logo_url: '',
+    logo_url_compact: '',
     primary_color: '#1976d2',
     secondary_color: '#dc004e',
     timezone: 'Asia/Jerusalem',
-    business_name: '',
-    registration_number: '',
-    tax_id: '',
     is_vat_registered: true,
     currency: 'ILS',
     tax_rate: 0.18,

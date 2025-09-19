@@ -14,17 +14,33 @@ export const PRICES_TABLE = {
       type: 'uuid',
       nullable: false,
       primary: true,
-      default: 'extensions.uuid_generate_v4()'
+      default: 'gen_random_uuid()'
+    },
+    created_at: {
+      type: 'timestamp with time zone',
+      nullable: false,
+      default: "timezone('utc'::text, now())"
+    },
+    updated_at: {
+      type: 'timestamp with time zone',
+      nullable: false,
+      default: "timezone('utc'::text, now())"
     },
     product_ref: {
       type: 'text',
       nullable: false,
       references: 'products(ref)',
+      onUpdate: 'CASCADE',
       onDelete: 'CASCADE'
     },
     unit_price: {
       type: 'numeric(10,2)',
       nullable: false
+    },
+    currency: {
+      type: 'text',
+      nullable: false,
+      default: 'ILS'
     },
     cost_price: {
       type: 'numeric(10,2)',
@@ -34,33 +50,18 @@ export const PRICES_TABLE = {
       type: 'numeric(10,2)',
       nullable: true
     },
-    currency: {
-      type: 'varchar(3)',
-      nullable: false,
-      default: 'ILS'
-    },
-    created_at: {
-      type: 'timestamp with time zone',
-      nullable: false,
-      default: 'now()'
-    },
-    updated_at: {
-      type: 'timestamp with time zone',
-      nullable: false,
-      default: 'now()'
+    price_tier: {
+      type: 'text',
+      nullable: true,
+      default: 'standard'
     }
   },
 
   // Constraints
   constraints: {
     primary: 'prices_pkey',
-    foreign: ['fk_prices_product_ref'],
-    check: [
-      'prices_unit_price_check',
-      'prices_cost_price_check',
-      'prices_discount_price_check',
-      'prices_currency_check'
-    ]
+    unique: ['unique_product_pricing'],
+    foreign: ['fk_prices_product_ref']
   },
 
   // Indexes

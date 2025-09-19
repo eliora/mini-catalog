@@ -6,17 +6,14 @@ import {
   Button,
   TextField,
   Box,
-  Typography,
   Alert,
   Card,
   CardContent,
   Divider,
   Avatar,
-  LinearProgress,
   Snackbar
 } from "@mui/material";
 import { 
-  CloudUpload, 
   Delete, 
   Save, 
   Refresh,
@@ -30,11 +27,13 @@ import { useCompany } from "@/context/CompanyContext";
 
 // Form validation schema
 const validationSchema = yup.object().shape({
-  siteName: yup.string().required("שם האתר הוא שדה חובה"),
-  siteDescription: yup.string().required("תיאור האתר הוא שדה חובה"),
-  welcomeMessage: yup.string().required("הודעת ברוכים הבאים הוא שדה חובה"),
-  contactEmail: yup.string().email("כתובת אימייל לא תקינה").required("אימייל יצירת קשר הוא שדה חובה"),
-  supportPhone: yup.string().required("טלפון תמיכה הוא שדה חובה")
+  siteName: yup.string(),
+  siteDescription: yup.string(),
+  welcomeMessage: yup.string(),
+  contactEmail: yup.string().email("כתובת אימייל לא תקינה"),
+  supportPhone: yup.string(),
+  logoUrl: yup.string().url("כתובת URL לא תקינה"),
+  logoUrlCompact: yup.string().url("כתובת URL לא תקינה")
 });
 
 interface GeneralSettingsFormValues {
@@ -43,61 +42,36 @@ interface GeneralSettingsFormValues {
   welcomeMessage: string;
   contactEmail: string;
   supportPhone: string;
-  logo?: File;
+  logoUrl: string;
+  logoUrlCompact: string;
 }
 
 export default function GeneralSettings() {
   const { settings, updateSettings } = useCompany();
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [, setLogoPreview] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
   // Set logo preview from existing settings
   useEffect(() => {
-    if (settings?.logo_url || settings?.company_logo) {
-      setLogoPreview(settings.logo_url || settings.company_logo || null);
+    if (settings?.logo_url) {
+      setLogoPreview(settings.logo_url);
     }
-  }, [settings]);
+  }, [settings, setLogoPreview]);
 
   const initialValues: GeneralSettingsFormValues = {
     siteName: settings?.company_name || "",
     siteDescription: settings?.company_description || "",
     welcomeMessage: settings?.company_description || "",
     contactEmail: settings?.company_email || "",
-    supportPhone: settings?.company_phone || ""
+    supportPhone: settings?.company_phone || "",
+    logoUrl: settings?.logo_url || "",
+    logoUrlCompact: settings?.logo_url_compact || ""
   };
 
-  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setIsUploading(true);
-      setUploadProgress(0);
-      
-      // Simulate upload progress
-      const interval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setIsUploading(false);
-            return 100;
-          }
-          return prev + 10;
-        });
-      }, 100);
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setLogoPreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleLogoUrlChange = (url: string) => {
+    setLogoPreview(url);
   };
 
-  const handleRemoveLogo = () => {
-    setLogoPreview(null);
-    setUploadProgress(0);
-  };
 
   const handleFormSubmit = async (values: GeneralSettingsFormValues) => {
     try {
@@ -109,7 +83,8 @@ export default function GeneralSettings() {
         company_description: values.siteDescription,
         company_email: values.contactEmail,
         company_phone: values.supportPhone,
-        logo_url: logoPreview, // Include logo URL if uploaded
+        logo_url: values.logoUrl, // Include logo URL from form
+        logo_url_compact: values.logoUrlCompact, // Include compact logo URL from form
       };
 
       const result = await updateSettings(updates);
@@ -152,98 +127,81 @@ export default function GeneralSettings() {
         onSubmit={handleFormSubmit}
         enableReinitialize={true}
       >
-        {({ values, errors, touched, handleChange, handleBlur, handleSubmit, isSubmitting }) => (
+        {({ values, errors, touched, handleChange, handleBlur, handleSubmit, isSubmitting, setFieldValue }) => (
           <form onSubmit={handleSubmit}>
             <Grid container spacing={3}>
-              {/* Logo Upload Section */}
+              {/* Logo URL Section */}
               <Grid size={{ xs: 12 }}>
-                <Card sx={{ mb: 3, borderRadius: 2, border: "2px dashed", borderColor: "grey.300" }}>
-                  <CardContent sx={{ textAlign: "center", py: 4 }}>
-                    <FlexBox flexDirection="column" alignItems="center" gap={2}>
-                      {logoPreview ? (
-                        <Box sx={{ position: "relative" }}>
+                <Card sx={{ mb: 3, borderRadius: 2 }}>
+                  <CardContent>
+                    <FlexBox flexDirection="column" gap={2}>
+                      <H6 sx={{ mb: 1 }}>לוגו האתר</H6>
+                      <Paragraph color="grey.600" fontSize="0.85rem" sx={{ mb: 2 }}>
+                        הזן כתובת URL של הלוגו (מומלץ גודל: 300x300 פיקסלים)
+                      </Paragraph>
+                      
+                      <TextField
+                        fullWidth
+                        label="כתובת URL של הלוגו"
+                        placeholder="https://example.com/logo.png"
+                        name="logoUrl"
+                        value={values.logoUrl}
+                        onChange={(e) => {
+                          handleChange(e);
+                          handleLogoUrlChange(e.target.value);
+                        }}
+                        onBlur={handleBlur}
+                        error={touched.logoUrl && Boolean(errors.logoUrl)}
+                        helperText={touched.logoUrl && errors.logoUrl}
+                        sx={{ mb: 2 }}
+                      />
+                      
+                      <TextField
+                        fullWidth
+                        label="כתובת URL של הלוגו הקומפקטי"
+                        placeholder="https://example.com/logo-compact.png"
+                        name="logoUrlCompact"
+                        value={values.logoUrlCompact}
+                        onChange={(e) => {
+                          handleChange(e);
+                          handleLogoUrlChange(e.target.value);
+                        }}
+                        onBlur={handleBlur}
+                        error={touched.logoUrlCompact && Boolean(errors.logoUrlCompact)}
+                        helperText={touched.logoUrlCompact && errors.logoUrlCompact}
+                        sx={{ mb: 2 }}
+                      />
+                      
+                      {values.logoUrl && (
+                        <Box sx={{ textAlign: "center" }}>
                           <Avatar
-                            src={logoPreview}
+                            src={values.logoUrl}
                             sx={{
                               width: 120,
                               height: 120,
                               borderRadius: 2,
                               border: "3px solid",
-                              borderColor: "primary.main"
+                              borderColor: "primary.main",
+                              mx: "auto"
                             }}
                           >
                             <ImageIcon sx={{ fontSize: 60 }} />
                           </Avatar>
-                          <Box
-                            onClick={handleRemoveLogo}
-                            sx={{
-                              position: "absolute",
-                              top: -8,
-                              right: -8,
-                              width: 32,
-                              height: 32,
-                              borderRadius: '50%',
-                              bgcolor: "error.main",
-                              color: "white",
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            <Delete fontSize="small" />
-                          </Box>
-                        </Box>
-                      ) : (
-                        <Avatar
-                          sx={{
-                            width: 120,
-                            height: 120,
-                            bgcolor: "grey.100",
-                            borderRadius: 2,
-                            border: "2px dashed",
-                            borderColor: "grey.400"
-                          }}
-                        >
-                          <CloudUpload sx={{ fontSize: 60, color: "grey.500" }} />
-                        </Avatar>
-                      )}
-
-                      <Box>
-                        <H6 sx={{ mb: 1 }}>לוגו האתר</H6>
-                        <Paragraph color="grey.600" fontSize="0.85rem" sx={{ mb: 2 }}>
-                          העלה לוגו באיכות גבוהה. מומלץ גודל: 300x300 פיקסלים
-                        </Paragraph>
-
-                        {isUploading && (
-                          <Box sx={{ width: 200, mb: 2 }}>
-                            <LinearProgress variant="determinate" value={uploadProgress} />
-                            <Typography variant="caption" color="text.secondary">
-                              מעלה... {uploadProgress}%
-                            </Typography>
-                          </Box>
-                        )}
-
-                        <input
-                          accept="image/*"
-                          style={{ display: "none" }}
-                          id="logo-upload"
-                          type="file"
-                          onChange={handleLogoUpload}
-                          disabled={isUploading}
-                        />
-                        <label htmlFor="logo-upload">
                           <Button
                             variant="outlined"
-                            component="span"
-                            startIcon={<CloudUpload />}
-                            disabled={isUploading}
-                            sx={{ borderRadius: 2 }}
+                            color="error"
+                            size="small"
+                            startIcon={<Delete />}
+                            onClick={() => {
+                              setFieldValue('logoUrl', '');
+                              setLogoPreview(null);
+                            }}
+                            sx={{ mt: 2 }}
                           >
-                            {logoPreview ? "החלף לוגו" : "העלה לוגו"}
+                            הסר לוגו
                           </Button>
-                        </label>
-                      </Box>
+                        </Box>
+                      )}
                     </FlexBox>
                   </CardContent>
                 </Card>

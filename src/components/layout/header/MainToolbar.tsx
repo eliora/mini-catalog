@@ -144,7 +144,7 @@ const MainToolbar: React.FC<MainToolbarProps> = ({
 
   // Get company name and logo from settings
   const companyName = companySettings?.company_name || '';
-  const logoUrl = companySettings?.logo_url || companySettings?.company_logo;
+  const logoUrl = companySettings?.logo_url;
 
   return (
     <>

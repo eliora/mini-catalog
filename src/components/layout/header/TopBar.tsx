@@ -119,7 +119,7 @@ const TopBar: React.FC<TopBarProps> = ({
             {/* Contact Information */}
             {showContactInfo && companySettings && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                {companySettings.contact_phone && (
+                {companySettings.company_phone && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <PhoneIcon sx={{ fontSize: 14, color: 'grey.400' }} />
                     <Typography 
@@ -129,12 +129,12 @@ const TopBar: React.FC<TopBarProps> = ({
                         fontSize: '0.7rem'
                       }}
                     >
-                      {companySettings.contact_phone}
+                      {companySettings.company_phone}
                     </Typography>
                   </Box>
                 )}
                 
-                {companySettings.contact_email && (
+                {companySettings.company_email && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <EmailIcon sx={{ fontSize: 14, color: 'grey.400' }} />
                     <Typography 
@@ -144,7 +144,7 @@ const TopBar: React.FC<TopBarProps> = ({
                         fontSize: '0.7rem'
                       }}
                     >
-                      {companySettings.contact_email}
+                      {companySettings.company_email}
                     </Typography>
                   </Box>
                 )}

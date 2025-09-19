@@ -7,15 +7,15 @@ export interface CompanySettings {
   company_email: string | null;
   company_phone: string | null;
   company_address: string | null;
-  company_logo: string | null;
+  company_website: string | null;
   tagline: string | null;
   logo_url: string | null;
+  logo_url_extended: string | null;
+  company_logo_extended: string | null;
+  logo_url_compact: string | null;
   primary_color: string | null;
   secondary_color: string | null;
   timezone: string | null;
-  business_name: string | null;
-  registration_number: string | null;
-  tax_id: string | null;
   is_vat_registered: boolean | null;
   currency: string | null;
   tax_rate: number | null;
@@ -41,10 +41,6 @@ export interface CompanySettings {
   created_at: string | null;
   updated_at: string | null;
   // Legacy field mappings for backward compatibility
-  contact_email?: string;
-  contact_phone?: string;
-  address?: string;
-  website?: string;
   logoUrl?: string;
   formattedAddress?: string;
   socialLinks?: SocialLink[];
@@ -90,12 +86,10 @@ export interface CompanyFormData {
   company_email?: string;
   company_phone?: string;
   company_address?: string;
-  business_name?: string;
-  registration_number?: string;
-  tax_id?: string;
+  company_website?: string;
   tagline?: string;
-  company_logo?: string;
   logo_url?: string;
+  logo_url_compact?: string;
   primary_color?: string;
   secondary_color?: string;
   timezone?: string;
@@ -122,8 +116,6 @@ export interface CompanyFormData {
   backup_frequency?: string;
   cache_duration?: number;
   // Legacy fields for backward compatibility
-  contact_email?: string;
-  contact_phone?: string;
   address?: string;
   website?: string;
   // Invoice settings

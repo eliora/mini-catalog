@@ -117,7 +117,7 @@ export const useOrderSubmission = (
         subtotal: parseFloat(subtotal.toFixed(2)),
         tax: parseFloat(tax.toFixed(2)),
         total_amount: parseFloat(total.toFixed(2)), // Note: using total_amount to match schema
-        tax_rate: companySettings?.tax_rate || 17,
+        tax_rate: companySettings?.tax_rate || 0.18, // Use decimal format from settings
         order_date: new Date().toISOString(),
         status: 'pending'
       };

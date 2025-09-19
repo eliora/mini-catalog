@@ -89,8 +89,8 @@ export default function TestContextsPage() {
               {company.settings && (
                 <>
                   <div>תיאור: {company.settings.company_description}</div>
-                  <div>אימייל: {company.settings.contact_email || 'אין'}</div>
-                  <div>טלפון: {company.settings.contact_phone || 'אין'}</div>
+                  <div>אימייל: {company.settings.company_email || 'אין'}</div>
+                  <div>טלפון: {company.settings.company_phone || 'אין'}</div>
                 </>
               )}
               {company.error && <div style={{ color: 'red' }}>שגיאה: {company.error}</div>}

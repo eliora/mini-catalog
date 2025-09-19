@@ -194,7 +194,6 @@ export const StatsCard = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(2),
-  transition: 'all 0.2s ease-in-out',
   '&:hover': {
     boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
   },

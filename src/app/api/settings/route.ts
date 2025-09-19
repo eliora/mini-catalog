@@ -12,12 +12,12 @@ const DEFAULT_SETTINGS: CompanySettings = {
   company_email: null,
   company_phone: null,
   company_address: null,
-  business_name: '',
-  registration_number: '',
-  tax_id: '',
+  company_website: null,
   tagline: '',
-  company_logo: '',
   logo_url: '',
+  logo_url_extended: '',
+  company_logo_extended: '',
+  logo_url_compact: '',
   primary_color: '#1976d2',
   secondary_color: '#dc004e',
   timezone: 'Asia/Jerusalem',
@@ -51,11 +51,6 @@ const DEFAULT_SETTINGS: CompanySettings = {
   cache_duration: 300,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
-  // Legacy fields for backward compatibility
-  contact_email: '',
-  contact_phone: '',
-  address: '',
-  website: '',
 };
 
 // GET /api/settings - Get company settings
@@ -113,12 +108,12 @@ export async function GET() {
       company_email: dbData.company_email || DEFAULT_SETTINGS.company_email,
       company_phone: dbData.company_phone || DEFAULT_SETTINGS.company_phone,
       company_address: dbData.company_address || DEFAULT_SETTINGS.company_address,
-      business_name: dbData.business_name || DEFAULT_SETTINGS.business_name,
-      registration_number: dbData.registration_number || DEFAULT_SETTINGS.registration_number,
-      tax_id: dbData.tax_id || DEFAULT_SETTINGS.tax_id,
+      company_website: dbData.company_website || DEFAULT_SETTINGS.company_website,
       tagline: dbData.tagline || DEFAULT_SETTINGS.tagline,
-      company_logo: dbData.company_logo || DEFAULT_SETTINGS.company_logo,
+      logo_url_compact: dbData.logo_url_compact || DEFAULT_SETTINGS.logo_url_compact,
       logo_url: dbData.logo_url || DEFAULT_SETTINGS.logo_url,
+      logo_url_extended: dbData.logo_url_extended || DEFAULT_SETTINGS.logo_url_extended,
+      company_logo_extended: dbData.company_logo_extended || DEFAULT_SETTINGS.company_logo_extended,
       primary_color: dbData.primary_color || DEFAULT_SETTINGS.primary_color,
       secondary_color: dbData.secondary_color || DEFAULT_SETTINGS.secondary_color,
       timezone: dbData.timezone || DEFAULT_SETTINGS.timezone,
@@ -145,11 +140,6 @@ export async function GET() {
       cache_duration: dbData.cache_duration || DEFAULT_SETTINGS.cache_duration,
       created_at: dbData.created_at,
       updated_at: dbData.updated_at,
-      // Legacy fields for backward compatibility
-      contact_email: dbData.company_email || DEFAULT_SETTINGS.company_email || undefined,
-      contact_phone: dbData.company_phone || DEFAULT_SETTINGS.company_phone || undefined,
-      address: dbData.company_address || DEFAULT_SETTINGS.company_address || undefined,
-      website: DEFAULT_SETTINGS.website,
     };
 
     return NextResponse.json(
@@ -198,11 +188,11 @@ export async function POST(_request: NextRequest) {
         .update({
           company_name: body.company_name,
           company_description: body.company_description,
-          company_email: body.contact_email,
-          company_phone: body.contact_phone,
+          company_email: body.company_email,
+          company_phone: body.company_phone,
           company_address: body.address,
           // company_website: body.website, // Field doesn't exist in database
-          company_logo: body.logo_url,
+          logo_url: body.logo_url,
           updated_at: new Date().toISOString()
         })
         .eq('id', existing.id)
@@ -215,11 +205,11 @@ export async function POST(_request: NextRequest) {
         .insert({
           company_name: body.company_name,
           company_description: body.company_description,
-          company_email: body.contact_email,
-          company_phone: body.contact_phone,
+          company_email: body.company_email,
+          company_phone: body.company_phone,
           company_address: body.address,
           // company_website: body.website, // Field doesn't exist in database
-          company_logo: body.logo_url,
+          logo_url: body.logo_url,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -256,15 +246,15 @@ export async function POST(_request: NextRequest) {
       company_email: dbData.company_email || DEFAULT_SETTINGS.company_email,
       company_phone: dbData.company_phone || DEFAULT_SETTINGS.company_phone,
       company_address: dbData.company_address || DEFAULT_SETTINGS.company_address,
-      company_logo: dbData.company_logo || DEFAULT_SETTINGS.company_logo,
+      company_website: dbData.company_website || DEFAULT_SETTINGS.company_website,
       tagline: dbData.tagline || DEFAULT_SETTINGS.tagline,
+      logo_url_compact: dbData.logo_url_compact || DEFAULT_SETTINGS.logo_url_compact,
       logo_url: dbData.logo_url || DEFAULT_SETTINGS.logo_url,
+      logo_url_extended: dbData.logo_url_extended || DEFAULT_SETTINGS.logo_url_extended,
+      company_logo_extended: dbData.company_logo_extended || DEFAULT_SETTINGS.company_logo_extended,
       primary_color: dbData.primary_color || DEFAULT_SETTINGS.primary_color,
       secondary_color: dbData.secondary_color || DEFAULT_SETTINGS.secondary_color,
       timezone: dbData.timezone || DEFAULT_SETTINGS.timezone,
-      business_name: dbData.business_name || DEFAULT_SETTINGS.business_name,
-      registration_number: dbData.registration_number || DEFAULT_SETTINGS.registration_number,
-      tax_id: dbData.tax_id || DEFAULT_SETTINGS.tax_id,
       is_vat_registered: dbData.is_vat_registered ?? DEFAULT_SETTINGS.is_vat_registered,
       currency: dbData.currency || DEFAULT_SETTINGS.currency,
       tax_rate: dbData.tax_rate || DEFAULT_SETTINGS.tax_rate,
@@ -288,11 +278,6 @@ export async function POST(_request: NextRequest) {
       cache_duration: dbData.cache_duration || DEFAULT_SETTINGS.cache_duration,
       created_at: dbData.created_at,
       updated_at: dbData.updated_at,
-      // Legacy fields for backward compatibility
-      contact_email: dbData.company_email || DEFAULT_SETTINGS.company_email || undefined,
-      contact_phone: dbData.company_phone || DEFAULT_SETTINGS.company_phone || undefined,
-      address: dbData.company_address || DEFAULT_SETTINGS.company_address || undefined,
-      website: DEFAULT_SETTINGS.website,
     };
 
     return NextResponse.json(
@@ -346,13 +331,11 @@ export async function PUT(_request: NextRequest) {
       company_email?: string;
       company_phone?: string;
       company_address?: string;
-      company_logo?: string;
       logo_url?: string;
       primary_color?: string;
       secondary_color?: string;
       tax_rate?: number;
       currency?: string;
-      business_name?: string;
       address?: string;
       phone?: string;
       email?: string;
@@ -373,11 +356,11 @@ export async function PUT(_request: NextRequest) {
     // Only include provided fields (map API fields to database fields)
     if (body.company_name !== undefined) updateData.company_name = body.company_name;
     if (body.company_description !== undefined) updateData.company_description = body.company_description;
-    if (body.contact_email !== undefined) updateData.company_email = body.contact_email;
-    if (body.contact_phone !== undefined) updateData.company_phone = body.contact_phone;
+    if (body.company_email !== undefined) updateData.company_email = body.company_email;
+    if (body.company_phone !== undefined) updateData.company_phone = body.company_phone;
     if (body.address !== undefined) updateData.company_address = body.address;
     // if (body.website !== undefined) updateData.company_website = body.website; // Field doesn't exist in database
-    if (body.logo_url !== undefined) updateData.company_logo = body.logo_url;
+    if (body.logo_url !== undefined) updateData.logo_url = body.logo_url;
     
     const { data, error } = await supabase
       .from('settings')
@@ -406,15 +389,15 @@ export async function PUT(_request: NextRequest) {
       company_email: dbData.company_email || DEFAULT_SETTINGS.company_email,
       company_phone: dbData.company_phone || DEFAULT_SETTINGS.company_phone,
       company_address: dbData.company_address || DEFAULT_SETTINGS.company_address,
-      company_logo: dbData.company_logo || DEFAULT_SETTINGS.company_logo,
+      company_website: dbData.company_website || DEFAULT_SETTINGS.company_website,
       tagline: dbData.tagline || DEFAULT_SETTINGS.tagline,
+      logo_url_compact: dbData.logo_url_compact || DEFAULT_SETTINGS.logo_url_compact,
       logo_url: dbData.logo_url || DEFAULT_SETTINGS.logo_url,
+      logo_url_extended: dbData.logo_url_extended || DEFAULT_SETTINGS.logo_url_extended,
+      company_logo_extended: dbData.company_logo_extended || DEFAULT_SETTINGS.company_logo_extended,
       primary_color: dbData.primary_color || DEFAULT_SETTINGS.primary_color,
       secondary_color: dbData.secondary_color || DEFAULT_SETTINGS.secondary_color,
       timezone: dbData.timezone || DEFAULT_SETTINGS.timezone,
-      business_name: dbData.business_name || DEFAULT_SETTINGS.business_name,
-      registration_number: dbData.registration_number || DEFAULT_SETTINGS.registration_number,
-      tax_id: dbData.tax_id || DEFAULT_SETTINGS.tax_id,
       is_vat_registered: dbData.is_vat_registered ?? DEFAULT_SETTINGS.is_vat_registered,
       currency: dbData.currency || DEFAULT_SETTINGS.currency,
       tax_rate: dbData.tax_rate || DEFAULT_SETTINGS.tax_rate,
@@ -438,11 +421,6 @@ export async function PUT(_request: NextRequest) {
       cache_duration: dbData.cache_duration || DEFAULT_SETTINGS.cache_duration,
       created_at: dbData.created_at,
       updated_at: dbData.updated_at,
-      // Legacy fields for backward compatibility
-      contact_email: dbData.company_email || DEFAULT_SETTINGS.company_email || undefined,
-      contact_phone: dbData.company_phone || DEFAULT_SETTINGS.company_phone || undefined,
-      address: dbData.company_address || DEFAULT_SETTINGS.company_address || undefined,
-      website: DEFAULT_SETTINGS.website,
     };
 
     return NextResponse.json(
