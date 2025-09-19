@@ -33,14 +33,7 @@ export default function Card1(props: Props) {
     <Card 
       sx={{ 
         p: 0,
-        borderRadius: 3,
-        boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-        overflow: "hidden",
-        transition: "all 0.3s ease",
-        "&:hover": {
-          transform: "translateY(-5px)",
-          boxShadow: "0 8px 30px rgba(0,0,0,0.15)"
-        }
+        borderRadius: 1,
       }}
     >
       {/* Header with gradient */}

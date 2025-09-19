@@ -14,7 +14,7 @@
 
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Alert, Snackbar } from '@mui/material';
 import { useCart } from '../../context/CartContext';
 import { useCompany } from '../../context/CompanyContext';
@@ -59,7 +59,7 @@ const OrderForm: React.FC = () => {
   
   // Check if user can view prices (authenticated users)
   const canViewPrices = !!user;
-  const printRef = useRef<HTMLDivElement>(null);
+  // const printRef = useRef<HTMLDivElement>(null); // Not needed since OrderSuccessView handles its own printing
 
   // === LOCAL STATE ===
   const [customerName, setCustomerName] = useState('');
@@ -165,7 +165,6 @@ const OrderForm: React.FC = () => {
   if (orderSummary) {
     return (
       <OrderSuccessView
-        ref={printRef}
         orderSummary={orderSummary}
         formatCurrency={formatCurrency}
         onNewOrder={resetOrderSummary}

@@ -331,7 +331,6 @@ export default function ProductFormDialog({
                           color: "white",
                           width: 24,
                           height: 24,
-                          "&:hover": { bgcolor: "error.dark" }
                         }}
                       >
                         <Delete sx={{ fontSize: 16 }} />

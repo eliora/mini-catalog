@@ -120,9 +120,6 @@ export default function DashboardSidebar() {
                     "&.Mui-selected": {
                       bgcolor: "primary.main",
                       color: "primary.contrastText",
-                      "&:hover": {
-                        bgcolor: "primary.dark",
-                      },
                       "& .MuiListItemIcon-root": {
                         color: "primary.contrastText"
                       }

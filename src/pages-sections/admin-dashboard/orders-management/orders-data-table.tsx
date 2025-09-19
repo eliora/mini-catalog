@@ -11,7 +11,6 @@ import {
   TableRow,
   TableSortLabel,
   Checkbox,
-  IconButton,
   Chip,
   Menu,
   MenuItem,
@@ -264,7 +263,6 @@ export default function OrdersDataTable({
             {paginatedOrders.map((orderItem) => (
               <TableRow
                 key={orderItem.id}
-                hover
                 selected={isSelected(orderItem.id)}
               >
                 <TableCell padding="checkbox">
@@ -359,46 +357,79 @@ export default function OrdersDataTable({
                   <TableCell align="center">
                     <FlexBox gap={0.5}>
                       <Tooltip title="הדפס">
-                        <IconButton
-                          size="small"
+                        <Box
                           onClick={() => onPrint(orderItem.id)}
-                          sx={{ color: "primary.main" }}
+                          sx={{ 
+                            width: 32,
+                            height: 32,
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            color: "primary.main"
+                          }}
                         >
                           <Print fontSize="small" />
-                        </IconButton>
+                        </Box>
                       </Tooltip>
 
                       <Tooltip title="שלח אימייל">
-                        <IconButton
-                          size="small"
+                        <Box
                           onClick={() => onSendEmail(orderItem.id)}
-                          sx={{ color: "info.main" }}
+                          sx={{ 
+                            width: 32,
+                            height: 32,
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            color: "info.main"
+                          }}
                         >
                           <Email fontSize="small" />
-                        </IconButton>
+                        </Box>
                       </Tooltip>
 
                       {(orderItem.status === "cancelled" || orderItem.status === "completed") && (
                         <Tooltip title="החיה הזמנה">
-                          <IconButton
-                            size="small"
+                          <Box
                             onClick={() => onRevive(orderItem)}
-                            sx={{ color: "success.main" }}
+                            sx={{ 
+                              width: 32,
+                              height: 32,
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              color: "success.main"
+                            }}
                           >
                             <Restore fontSize="small" />
-                          </IconButton>
+                          </Box>
                         </Tooltip>
                       )}
 
-                      <IconButton
-                        size="small"
+                      <Box
                         onClick={(e) => {
                           setAnchorEl(e.currentTarget);
                           setSelectedOrderForMenu(orderItem);
                         }}
+                        sx={{ 
+                          width: 32,
+                          height: 32,
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          color: "grey.600"
+                        }}
                       >
                         <MoreVert fontSize="small" />
-                      </IconButton>
+                      </Box>
                     </FlexBox>
                   </TableCell>
                 )}

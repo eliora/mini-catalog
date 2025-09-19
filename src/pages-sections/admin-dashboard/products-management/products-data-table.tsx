@@ -217,9 +217,6 @@ const ProductDataTable: React.FC<ProductDataTableProps> = ({ products, onEdit, o
             fontSize: '0.875rem',
             fontWeight: 600,
           },
-          '& .MuiDataGrid-row:hover': {
-            backgroundColor: '#f5f5f5',
-          },
           '& .MuiDataGrid-columnHeaderTitle': {
             fontWeight: 600,
           },

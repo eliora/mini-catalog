@@ -9,24 +9,24 @@ import { useState, useCallback } from 'react';
 import { CartItem } from '@/types/cart';
 import { CompanySettings } from '@/types/company';
 
+interface LegacyCartItem {
+  ref: string;
+  productName: string;
+  productName2?: string;
+  size?: string;
+  unitPrice: number;
+  quantity: number;
+}
+
 interface OrderSummary {
   orderId: string;
   customerName: string;
-  items: OrderItem[];
+  items: LegacyCartItem[];
   subtotal: number;
   tax: number;
   total: number;
 }
 
-interface OrderItem {
-  ref: string;
-  productName: string;
-  productName2: string;
-  size: string;
-  unitPrice: number;
-  quantity: number;
-  totalPrice: number;
-}
 
 interface SnackbarState {
   open: boolean;
@@ -98,15 +98,17 @@ export const useOrderSubmission = (
     try {
       const finalCustomerName = customerName.trim() || 'לקוח אנונימי';
       
-      // Prepare order items with validation
-      const validatedItems: OrderItem[] = cart.map(item => ({
-        ref: item.product_ref || item.ref || '',
-        productName: item.product_name || item.productName || '',
-        productName2: item.product_name_2 || item.productName2 || '',
-        size: item.size || '',
-        unitPrice: Number(item.unit_price) || 0,
+      // Prepare order items with validation - match database schema
+      const validatedItems = cart.map(item => ({
+        product_id: item.product_ref || item.ref || '',
+        product_name: item.product_name || item.productName || '',
         quantity: Number(item.quantity) || 1,
-        totalPrice: Number(item.unit_price) * Number(item.quantity)
+        unit_price: Number(item.unit_price) || 0,
+        total_price: Number(item.unit_price) * Number(item.quantity),
+        // Additional fields for reference
+        product_name_2: item.product_name_2 || item.productName2 || '',
+        size: item.size || '',
+        unit_type: item.unit_type || 'piece'
       }));
 
       const orderData = {
@@ -133,11 +135,20 @@ export const useOrderSubmission = (
           severity: 'success'
         });
         
-        // Capture a snapshot for the summary page
+        // Capture a snapshot for the summary page - convert to legacy format for display
+        const legacyItems = validatedItems.map(item => ({
+          ref: item.product_id,
+          productName: item.product_name,
+          productName2: item.product_name_2,
+          size: item.size,
+          unitPrice: item.unit_price,
+          quantity: item.quantity
+        }));
+        
         setOrderSummary({ 
           orderId: result.id,
           customerName: finalCustomerName,
-          items: validatedItems,
+          items: legacyItems,
           subtotal: parseFloat(subtotal.toFixed(2)),
           tax: parseFloat(tax.toFixed(2)),
           total: parseFloat(total.toFixed(2))

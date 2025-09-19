@@ -4,7 +4,6 @@ import {
   Box,
   Card,
   Button,
-  IconButton,
   Typography,
   Divider
 } from "@mui/material";
@@ -131,16 +130,21 @@ export default function BulkActionsToolbar({
               מחק
             </Button>
 
-            <IconButton
+            <Box
               onClick={onClearSelection}
-              size="small"
               sx={{ 
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
                 bgcolor: "grey.200",
-                "&:hover": { bgcolor: "grey.300" }
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer'
               }}
             >
-              <Close />
-            </IconButton>
+              <Close fontSize="small" />
+            </Box>
           </FlexBox>
         </FlexBetween>
       </Box>

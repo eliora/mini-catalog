@@ -5,7 +5,6 @@ import {
   Box,
   Avatar,
   Chip,
-  IconButton,
   Divider,
   List,
   ListItem,
@@ -146,9 +145,20 @@ export default function RecentPurchase() {
               />
 
               <ListItemSecondaryAction>
-                <IconButton size="small" sx={{ color: "grey.400" }}>
-                  <MoreVert />
-                </IconButton>
+                <Box 
+                  sx={{ 
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: "grey.400"
+                  }}
+                >
+                  <MoreVert fontSize="small" />
+                </Box>
               </ListItemSecondaryAction>
             </ListItem>
             

@@ -44,11 +44,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Validate required fields
-    if (!body.customerName || !body.total || !body.items) {
+    if (!body.customer_name || !body.total_amount || !body.items) {
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Missing required fields: customerName, total, items' 
+          error: 'Missing required fields: customer_name, total_amount, items' 
         } as ApiResponse<null>,
         { status: 400 }
       );
@@ -56,11 +56,11 @@ export async function POST(request: NextRequest) {
     
     // Prepare order data according to the database schema
     const orderData: OrderInsert = {
-      client_id: body.client_id, // Required - must be provided from frontend
-      total_amount: parseFloat(body.total),
+      client_id: body.client_id || null, // Optional for anonymous orders
+      total_amount: parseFloat(body.total_amount),
       items: body.items, // JSON field
       status: body.status || 'pending',
-      notes: body.notes || null,
+      notes: body.notes || body.customer_name, // Use customer_name as notes if no notes provided
     };
     
     const { data, error } = await supabase

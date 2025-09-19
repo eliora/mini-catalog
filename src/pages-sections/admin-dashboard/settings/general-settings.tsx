@@ -12,7 +12,6 @@ import {
   CardContent,
   Divider,
   Avatar,
-  IconButton,
   LinearProgress
 } from "@mui/material";
 import { 
@@ -137,20 +136,25 @@ export default function GeneralSettings() {
                           >
                             <ImageIcon sx={{ fontSize: 60 }} />
                           </Avatar>
-                          <IconButton
+                          <Box
                             onClick={handleRemoveLogo}
                             sx={{
                               position: "absolute",
                               top: -8,
                               right: -8,
+                              width: 32,
+                              height: 32,
+                              borderRadius: '50%',
                               bgcolor: "error.main",
                               color: "white",
-                              "&:hover": { bgcolor: "error.dark" }
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer'
                             }}
-                            size="small"
                           >
-                            <Delete />
-                          </IconButton>
+                            <Delete fontSize="small" />
+                          </Box>
                         </Box>
                       ) : (
                         <Avatar

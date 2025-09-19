@@ -156,10 +156,7 @@ const DashboardAppBar: React.FC<DashboardAppBarProps> = ({
             edge="start"
             onClick={onDrawerToggle}
             sx={{ 
-              mr: 2,
-              '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.04)'
-              }
+              mr: 2
             }}
           >
             <MenuIcon />
@@ -187,11 +184,6 @@ const DashboardAppBar: React.FC<DashboardAppBarProps> = ({
           {showNotifications && (
             <IconButton
               color="inherit"
-              sx={{
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                }
-              }}
             >
               <Badge badgeContent={notificationCount} color="error">
                 <NotificationsIcon />
@@ -220,10 +212,7 @@ const DashboardAppBar: React.FC<DashboardAppBarProps> = ({
             onClick={handleProfileMenuOpen}
             color="inherit"
             sx={{
-              p: 0.5,
-              '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.04)'
-              }
+              p: 0.5
             }}
           >
             <Avatar 

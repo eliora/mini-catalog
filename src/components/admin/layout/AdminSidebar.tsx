@@ -14,7 +14,6 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  ListItemButton,
   Box,
   Typography,
   useTheme,
@@ -154,28 +153,21 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
             const isActive = pathname === item.path;
             
             return (
-              <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
-                <ListItemButton
-                  onClick={() => handleNavigation(item.path)}
-                  selected={isActive}
-                  sx={{
-                    borderRadius: 2,
-                    mx: 0.5,
-                    '&.Mui-selected': {
-                      bgcolor: 'primary.main',
-                      color: 'primary.contrastText',
-                      '&:hover': {
-                        bgcolor: 'primary.dark',
-                      },
-                      '& .MuiListItemIcon-root': {
-                        color: 'primary.contrastText'
-                      }
-                    },
-                    '&:hover': {
-                      bgcolor: isActive ? 'primary.dark' : 'action.hover'
-                    }
-                  }}
-                >
+              <ListItem 
+                key={item.id} 
+                onClick={() => handleNavigation(item.path)}
+                sx={{ 
+                  mb: 0.5,
+                  borderRadius: 2,
+                  mx: 0.5,
+                  cursor: 'pointer',
+                  bgcolor: isActive ? 'primary.main' : 'transparent',
+                  color: isActive ? 'primary.contrastText' : 'text.primary',
+                  '& .MuiListItemIcon-root': {
+                    color: isActive ? 'primary.contrastText' : 'text.secondary'
+                  }
+                }}
+              >
                   <ListItemIcon
                     sx={{
                       minWidth: 40,
@@ -205,7 +197,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                       }}
                     />
                   )}
-                </ListItemButton>
               </ListItem>
             );
           })}

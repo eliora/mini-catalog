@@ -209,10 +209,6 @@ export default function SqlEditorDialog({
                       border: "1px solid",
                       borderColor: "grey.300",
                       borderRadius: 2,
-                      "&:hover": {
-                        borderColor: "primary.main",
-                        bgcolor: "primary.50"
-                      }
                     }}
                     onClick={() => handleQuerySelect(sample.query)}
                   >
@@ -322,7 +318,7 @@ export default function SqlEditorDialog({
                       </TableHead>
                       <TableBody>
                         {results.rows.map((row, index) => (
-                          <TableRow key={index} hover>
+                          <TableRow key={index}>
                             {row.map((cell, cellIndex) => (
                               <TableCell key={cellIndex}>{cell}</TableCell>
                             ))}
@@ -355,10 +351,6 @@ export default function SqlEditorDialog({
                     border: "1px solid",
                     borderColor: "grey.300",
                     borderRadius: 2,
-                    "&:hover": {
-                      borderColor: "primary.main",
-                      bgcolor: "primary.50"
-                    }
                   }}
                   onClick={() => handleQuerySelect(historyQuery)}
                 >

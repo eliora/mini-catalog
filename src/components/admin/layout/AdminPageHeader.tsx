@@ -93,7 +93,7 @@ const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
                 key={index}
                 component={NextLink}
                 href={crumb.href}
-                underline="hover"
+                underline="none"
                 color="inherit"
                 sx={{
                   display: 'flex',
