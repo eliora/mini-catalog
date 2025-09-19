@@ -91,7 +91,7 @@ export async function createProduct(supabase: SupabaseClient, productData: Recor
  */
 export async function updateProduct(supabase: SupabaseClient, id: string, updateData: Record<string, unknown>) {
   // First check if the product exists
-  const { data: existingProduct, error: checkError } = await supabase
+  const { error: checkError } = await supabase
     .from('products')
     .select('id')
     .eq('id', id)
@@ -138,7 +138,7 @@ export async function updateProduct(supabase: SupabaseClient, id: string, update
  */
 export async function deleteProduct(supabase: SupabaseClient, id: string): Promise<boolean> {
   // First check if the product exists
-  const { data: existingProduct, error: checkError } = await supabase
+  const { error: checkError } = await supabase
     .from('products')
     .select('id')
     .eq('id', id)

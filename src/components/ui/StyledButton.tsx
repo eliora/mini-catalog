@@ -19,7 +19,7 @@
 
 import React from 'react';
 import Button, { ButtonProps } from '@mui/material/Button';
-import { styled, Theme } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
 
 // Enhanced Button with consistent styling across the app
 const StyledButtonBase = styled(Button)<ButtonProps>(({ theme, variant }) => ({

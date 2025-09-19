@@ -2,10 +2,9 @@
 
 import React, { createContext, useCallback, useContext, useMemo, useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { User, Session } from '@supabase/supabase-js';
+import { Session } from '@supabase/supabase-js';
 import { supabaseBrowserClient } from '@/lib/supabaseClient';
-import { AuthState, AuthUser, UserProfile, SignInFormData, SignUpFormData, AuthResponse, UserRole } from '@/types/auth';
-import { Database } from '@/types/supabase';
+import { AuthState, AuthUser, UserProfile } from '@/types/auth';
 
 const AuthContext = createContext<AuthState | null>(null);
 
@@ -184,7 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(undefined);
     
     try {
-      const { data, error } = await supabaseBrowserClient.auth.signInWithPassword({
+      const { error } = await supabaseBrowserClient.auth.signInWithPassword({
         email,
         password,
       });
@@ -211,7 +210,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(undefined);
     
     try {
-      const { data, error } = await supabaseBrowserClient.auth.signUp({
+      const { error } = await supabaseBrowserClient.auth.signUp({
         email,
         password,
         options: {

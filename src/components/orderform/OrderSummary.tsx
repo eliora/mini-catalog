@@ -12,10 +12,8 @@ import {
   TextField,
   Stack
 } from '@mui/material';
-import { CartItem } from '../../types/cart';
-
 // Helper function to get cart length and total quantity
-function getCartStats(cart: CartItem[]): { length: number; totalQuantity: number } {
+function getCartStats(cart: Array<{ quantity?: number }>): { length: number; totalQuantity: number } {
   return {
     length: cart.length,
     totalQuantity: cart.reduce((sum, item) => sum + (item.quantity || 0), 0)
@@ -26,7 +24,7 @@ import { CompanySettings } from '../../types/company';
 interface OrderSummaryProps {
   customerName: string;
   onCustomerNameChange: (name: string) => void;
-  cart: CartItem[]; // Support both legacy and new cart formats
+  cart: Array<{ quantity?: number }>; // Support both legacy and new cart formats
   subtotal: number;
   tax: number;
   total: number;
@@ -48,7 +46,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   companySettings,
   isSubmitting,
   onSubmit,
-  canViewPrices = true
+  canViewPrices: _canViewPrices = true // eslint-disable-line @typescript-eslint/no-unused-vars
 }) => {
   return (
     <>

@@ -4,7 +4,7 @@ import { OrderRow, OrderInsert, OrderUpdate } from '@/types/order';
 import { ApiResponse } from '@/types/api';
 
 // GET /api/orders - Get all orders
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = await createSupabaseServerClient();
     

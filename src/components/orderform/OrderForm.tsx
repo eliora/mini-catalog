@@ -37,7 +37,6 @@ import { getProducts } from '../../api/products';
 
 // Types
 import { Product } from '../../types/product';
-import { CartItem } from '../../types/cart';
 
 // Legacy cart item interface for backward compatibility
 interface LegacyCartItem {

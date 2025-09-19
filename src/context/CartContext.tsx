@@ -3,7 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, useRef } from 'react';
 import { supabaseBrowserClient } from '@/lib/supabaseClient';
 import { getGlobalRealtimeManager } from '@/lib/realtime';
-import { CartState, CartItem, Cart, CartStorageData, AddToCartRequest, UpdateCartItemRequest } from '@/types/cart';
+import { CartState, CartItem, Cart, CartStorageData } from '@/types/cart';
 import { Product } from '@/types/product';
 
 const CartContext = createContext<CartState | null>(null);
@@ -113,7 +113,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     // TODO: Implement real-time cart sync when user is authenticated
     // This would sync cart across devices for logged-in users
     
-    const realtimeManager = getGlobalRealtimeManager(supabaseBrowserClient);
+    const _realtimeManager = getGlobalRealtimeManager(supabaseBrowserClient); // eslint-disable-line @typescript-eslint/no-unused-vars
     
     // For now, we'll just set up the infrastructure
     // In the future, this could sync with a server-side cart table

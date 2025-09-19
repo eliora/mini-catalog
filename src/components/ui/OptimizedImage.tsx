@@ -236,14 +236,15 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
           onError={handleError}
         />
       ) : (
-        /* Fallback regular img element */
-        <img
+        /* Fallback Next.js Image element */
+        <Image
           src={optimizedSrc}
           alt={alt}
+          width={fill ? undefined : Number(width)}
+          height={fill ? undefined : Number(height)}
+          fill={fill}
           sizes={sizes}
           style={{
-            width: fill ? '100%' : width,
-            height: fill ? '100%' : height,
             objectFit,
             opacity: loadState === 'loaded' ? 1 : 0.8,
             transition: 'opacity 0.3s ease',

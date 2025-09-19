@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 
 /**
  * GET /api/prices/check-access - Check if user has pricing access
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = await createSupabaseServerClient();
 
     // Try to fetch a single price to test permissions
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('prices')
       .select('product_ref')
       .limit(1);
