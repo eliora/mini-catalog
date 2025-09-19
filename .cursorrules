@@ -1,32 +1,155 @@
-# PROJECT CONTEXT
-This project is a MINI CATALOG E-COMMERCE APP built with React, Material-UI v7, Supabase, and TanStack Query.  
-The app contains:
-- Authentication (Supabase Auth)
-- Role-based admin panel
-- Product catalog with filters and infinite scroll
-- Integrated Hypay payment processing
-- Mobile-first responsive design
+CURSORRULES
+===========
 
-# GOAL
-- TypeScript support (functional components only)
-- MUI v7 with full SSR support
-- Supabase Auth, RLS, and API integration
-- TanStack Query for data fetching/caching
-- SEO-friendly pages and API routes
+PROJECT CONTEXT
+- Target stack: Next.js (v15.53), MUI v7, TypeScript.
+- Goal: Module-by-module migration fixing two top ESLint rules acrosS files:
+  1) @typescript-eslint/no-explicit-any
+  2) @typescript-eslint/no-unused-vars
+- Philosophy: Fix, don’t workaround. Reuse components. Keep files <= 300 lines.
 
+------------------------------------------------------------
+🔥 MANDATORY PRE-CODE WORKFLOW (EVERY TIME)
+------------------------------------------------------------
+1) ALWAYS run:           npm run lint
+2) Fix all ESLint issues → rerun lint until clean.
+3) ALWAYS run:           npx tsc --noEmit --skipLibCheck
+4) Only when both pass → npm run build
+5) Never fix lint + type errors in same pass — handle separately.
 
-# CONVERSION REQUIREMENTS
-- Migrate pages to `/app` directory using Next.js server components where possible.
-- Use Next.js API routes for backend logic that was in src/api.
-- Ensure MUI works with SSR (use `AppRouterCacheProvider` and `ThemeProvider`).
-- Ensure Supabase Auth works with server components (middleware + `createServerComponentClient`).
-- Preserve TanStack Query patterns (hydrate data for SSR if needed).
-- Maintain existing responsive behavior and component breakdown.
-- Optimize for SEO: use `metadata` in layouts/pages.
-- Avoid rewriting business logic unnecessarily — migrate structure, not behavior.
+------------------------------------------------------------
+🛠 PROVEN ERROR-FIXING METHOD (FILE-BY-FILE)
+------------------------------------------------------------
+1) When overwhelmed, use File-by-File:
+   npm run lint -- path/to/file.tsx
+2) Fix ALL warnings/errors in ONE file before moving on.
+3) Priority order:
+   - TypeScript errors (fix first)
+   - ESLint errors (fix second)
+   - ESLint warnings (last)
+4) Track progress:
+   npm run lint 2>&1 | Select-String "problems"
+   Number should go down over time.
+5) Verify each fix: npx tsc --noEmit
 
-# CODING STYLE
-- TypeScript everywhere (types/interfaces for props and API responses)
-- Use `async/await` for data fetching
-- Use `sx` prop for MUI styling (not inline styles)
-- Prefer server components for read-only pages, client components only where necessary (forms, auth, interactive UI)
+------------------------------------------------------------
+ESLINT RULES (ZERO TOLERANCE)
+------------------------------------------------------------
+- No global disables.
+- no-unused-vars: DELETE immediately or rename to `_var` if intentionally unused.
+- no-explicit-any: DO NOT use `any`. Use proper interface or `unknown` + cast.
+- @next/next/no-img-element: REPLACE with next/image ALWAYS.
+- Auto-fixable rules → run eslint --fix.
+- Emergency only: `// eslint-disable-next-line @typescript-eslint/no-explicit-any` with a TODO and justification.
+
+Recommended snippet to enable autofix-removal of unused imports:
+(put in .eslintrc)
+{
+  "plugins": ["unused-imports"],
+  "rules": {
+    "@typescript-eslint/no-unused-vars": "off",
+    "unused-imports/no-unused-imports": "error",
+    "unused-imports/no-unused-vars": ["warn", { "vars": "all", "varsIgnorePattern": "^_", "args": "after-used", "argsIgnorePattern": "^_" }]
+  }
+}
+
+------------------------------------------------------------
+TYPESCRIPT RULES (CRITICAL)
+------------------------------------------------------------
+- Always run: npx tsc --noEmit --skipLibCheck
+- FORBIDDEN: No `as any` unless accompanied by an eslint-disable comment and TODO.
+- REQUIRED: Create minimal types in src/types/.
+- Pattern for unsafe casts: `as unknown as SpecificType` (use sparingly).
+- For Supabase: always create table interfaces and use them.
+- Ensure caller/callee signatures match.
+
+------------------------------------------------------------
+REACT HOOKS (CRITICAL)
+------------------------------------------------------------
+- useCallback for functions used in deps.
+- Include ALL dependencies in useMemo/useCallback/useEffect.
+- Do NOT include outer-scope constants that will never change; prefer single source of truth hooks.
+- Remove unnecessary deps (example: do not include cart.items when cart is in deps).
+
+------------------------------------------------------------
+COMPONENT & FILE MANAGEMENT
+------------------------------------------------------------
+- MAX 250 lines/file (hard guideline). Split immediately if > 250.
+- Functional components + hooks only (no class components).
+- Shared logic → src/hooks/
+- API/DB logic → src/api/
+- Delete unused imports/variables immediately.
+- Always search repo to REUSE existing components before creating new:
+  - Search patterns: `src/components`, `ui/`, `shared/`, `common/`
+- When extracting, create small presentational components + container hooks.
+
+------------------------------------------------------------
+API ROUTES (Next.js app router)
+------------------------------------------------------------
+- Use named exports only: export async function GET(...) { ... }
+- Signature: (req: NextRequest) => NextResponse | Promise<NextResponse>
+- Always return NextResponse.json(...)
+- Keep handlers small; business logic lives in src/api/
+
+------------------------------------------------------------
+NEXT.JS BEST PRACTICES
+------------------------------------------------------------
+- FORBIDDEN: <img> tags — always use next/image with required props.
+- Pattern: <Image src={src} alt={alt} fill style={{ objectFit: 'contain' }} />
+- Ensure images are optimized and sizes specified where possible.
+
+------------------------------------------------------------
+COMPONENT REUSE & REFRACTORING RULES
+------------------------------------------------------------
+- ALWAYS check existing components first. Reuse > recreate.
+- Props must be typed; preferrably create small interfaces in src/types/
+- Extract visuals (MUI presentational) vs logic (custom hook)
+- Unit-test important business logic (optional but recommended)
+
+------------------------------------------------------------
+NO WORKAROUNDS / PREFER FIX
+------------------------------------------------------------
+- Do not suppress types or lint rules to “ship faster”.
+- If a fix requires refactor, do the refactor.
+- If a temporary suppression is absolutely necessary: add comment with reason + TODO + owner + date.
+
+------------------------------------------------------------
+GENERAL EXCELLENCE RULES
+------------------------------------------------------------
+- Keep code short and DRY.
+- Aggressively remove dead code and unused imports.
+- English comments only.
+- Immediate fixes — do not accumulate debt.
+
+------------------------------------------------------------
+EXAMPLE MINI WORKFLOW (file-by-file)
+------------------------------------------------------------
+1) Inspect file:
+   npm run lint -- src/components/Example.tsx
+
+2) Fix types first:
+   edit file → run npx tsc --noEmit --skipLibCheck (repeat until clear)
+
+3) Remove unused imports:
+   npx eslint --fix src/components/Example.tsx
+   or
+   npm run lint -- --fix src/components/Example.tsx
+
+4) Verify ESLint:
+   npm run lint -- src/components/Example.tsx
+
+5) Run all checks:
+   npm run lint && npx tsc --noEmit --skipLibCheck
+
+6) Build:
+   npm run build
+
+------------------------------------------------------------
+NOTES
+- ALWAYS read docs when unsure:
+  https://nextjs.org/docs
+  https://mui.com/material-ui/getting-started/
+- Prefer small, incremental, reviewed PRs — module-by-module.
+- When refactoring, run tests (if present) and static checks.
+
+END OF CURSORRULES
