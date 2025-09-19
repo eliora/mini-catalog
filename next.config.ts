@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   typedRoutes: false, // Moved from experimental
+  distDir: 'build', // Output to build directory for Vercel compatibility
   images: {
     remotePatterns: [
       {

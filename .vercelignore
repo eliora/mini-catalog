@@ -8,6 +8,7 @@ temp-packages/**
 **/*.map
 
 # Optional: local build artifacts (Vercel builds on server)
+# Note: We now use 'build' directory for Vercel compatibility
 .next/
 out/
 dist/
