@@ -1,0 +1,479 @@
+# AUTHENTICATION SYSTEM STRUCTURE
+# ======================================
+# Comprehensive mapping of all authentication-related files in the codebase
+# Generated: $(date)
+# 
+# This document provides a complete overview of the authentication system
+# architecture, including all components, APIs, types, and configuration files.
+
+## CORE AUTHENTICATION ARCHITECTURE
+=====================================
+
+### 1. AUTHENTICATION CONTEXT & STATE MANAGEMENT
+-----------------------------------------------
+📁 src/context/AuthContext.tsx
+   - Main authentication context provider
+   - Manages user session, profile, and auth state
+   - Handles sign in/out, password reset, profile updates
+   - Integrates with React Query for cache management
+   - Provides useAuth() hook for components
+
+📁 src/hooks/useSupabaseAuth.ts
+   - Alternative auth hook implementation
+   - Direct Supabase client integration
+   - Handles OAuth providers (Google, Facebook)
+   - User profile creation/updates
+   - Session persistence management
+
+### 2. SUPABASE CLIENT CONFIGURATION
+------------------------------------
+📁 src/lib/supabaseClient.ts
+   - Browser-side Supabase client configuration
+   - TypeScript integration with Database types
+   - Environment variable setup
+
+📁 src/lib/supabase/client.ts
+   - Browser client implementation
+   - SSR-compatible client creation
+
+📁 src/lib/supabase/server.ts
+   - Server-side Supabase client
+   - Cookie-based session handling
+   - SSR authentication support
+
+📁 src/lib/supabase/service.ts
+   - Service role client for admin operations
+   - Bypasses RLS for privileged operations
+
+### 3. MIDDLEWARE & ROUTE PROTECTION
+------------------------------------
+📁 middleware.ts
+   - Next.js middleware for route protection
+   - Admin route protection (/admin/*)
+   - Session refresh and validation
+   - Redirect handling for unauthenticated users
+   - Role-based access control (admin check)
+
+## AUTHENTICATION COMPONENTS
+============================
+
+### 4. LOGIN & SIGNUP FORMS
+---------------------------
+📁 src/components/auth/Login.tsx
+   - Main login component
+   - Email/password authentication
+   - Error handling and validation
+   - Redirect functionality
+
+📁 src/components/auth/SignInForm.tsx
+   - Sign-in form with social login options
+   - Google and Facebook OAuth integration
+   - Password visibility toggle
+   - Form validation and error handling
+
+📁 src/components/auth/SignUpForm.tsx
+   - Comprehensive user registration form
+   - Email/password signup
+   - Social login integration
+   - Password strength indicator
+   - Terms and conditions acceptance
+
+📁 src/components/auth/AuthDialog.tsx
+   - Modal dialog for authentication
+   - Tabbed interface (Sign In / Sign Up)
+   - Social login buttons
+   - Form switching functionality
+
+### 5. SIGNUP SUBCOMPONENTS
+--------------------------
+📁 src/components/auth/signup/SignUpFormFields.tsx
+   - Form input fields for registration
+   - Validation and error display
+   - Accessibility features
+
+📁 src/components/auth/signup/PasswordStrengthIndicator.tsx
+   - Password strength visualization
+   - Real-time strength calculation
+   - Visual feedback for password requirements
+
+📁 src/components/auth/signup/SocialLoginButtons.tsx
+   - Google and Facebook login buttons
+   - OAuth provider integration
+   - Loading states and error handling
+
+📁 src/components/auth/signup/signUpValidation.ts
+   - Form validation utilities
+   - Email format validation
+   - Password requirements checking
+   - Form data interfaces
+
+### 6. AUTHENTICATION CALLBACKS
+-------------------------------
+📁 src/components/auth/AuthCallback.tsx
+   - OAuth callback handler
+   - Session establishment
+   - Redirect after authentication
+
+📁 src/app/auth/callback/page.tsx
+   - Next.js page for OAuth callbacks
+   - URL parameter handling
+   - Session creation and redirects
+
+## AUTHENTICATION PAGES
+=======================
+
+### 7. AUTHENTICATION ROUTES
+----------------------------
+📁 src/app/auth/login/page.tsx
+   - Login page component
+   - Form integration
+   - Redirect handling
+
+## ADMIN AUTHENTICATION & AUTHORIZATION
+========================================
+
+### 8. ADMIN API AUTHENTICATION
+------------------------------
+📁 src/lib/api/admin/auth.ts
+   - Admin authentication utilities
+   - createAuthedAdminClient() function
+   - Role verification (admin check)
+   - Service role client creation
+   - AuthError class for error handling
+
+### 9. ADMIN API ROUTES (Protected)
+----------------------------------
+📁 src/app/api/admin/client-management/route.ts
+   - User/client management API
+   - CRUD operations for users
+   - Admin authentication required
+
+📁 src/app/api/admin/settings/route.ts
+   - Company settings management
+   - Admin-only access
+   - Settings CRUD operations
+
+📁 src/app/api/admin/products/route.ts
+   - Product management API
+   - Admin authentication required
+   - Product CRUD operations
+
+📁 src/app/api/admin/orders/route.ts
+   - Order management API
+   - Admin-only order operations
+   - Order listing and creation
+
+📁 src/app/api/admin/orders/[id]/route.ts
+   - Individual order management
+   - Order updates and retrieval
+   - Admin authentication required
+
+📁 src/app/api/admin/orders/[id]/revive/route.ts
+   - Order revival functionality
+   - Admin-only operation
+   - Status validation
+
+### 10. ADMIN SERVICE LAYERS
+----------------------------
+📁 src/lib/api/admin/client-service.ts
+   - User/client service functions
+   - Database operations for user management
+   - Validation and error handling
+
+📁 src/lib/api/admin/orders-service.ts
+   - Order service functions
+   - Order database operations
+   - Business logic for orders
+
+📁 src/lib/api/admin/product-service.ts
+   - Product service functions
+   - Product database operations
+   - Product management logic
+
+📁 src/lib/api/admin/settings-service.ts
+   - Settings service functions
+   - Company settings operations
+   - Configuration management
+
+📁 src/lib/api/admin/validation.ts
+   - Admin API validation utilities
+   - Input validation functions
+   - Data sanitization
+
+📁 src/lib/api/admin/product-validation.ts
+   - Product-specific validation
+   - Product data validation rules
+   - Error handling for products
+
+📁 src/lib/api/admin/query-helpers.ts
+   - Database query utilities
+   - Pagination and filtering
+   - Response formatting
+
+📁 src/lib/api/admin/responses.ts
+   - Standardized API responses
+   - Error response handling
+   - Success response formatting
+
+## AUTHENTICATION HOOKS
+========================
+
+### 11. ADMIN ACCESS HOOKS
+--------------------------
+📁 src/hooks/useAdminAccess.ts
+   - Admin access verification hook
+   - Role checking utilities
+   - Permission validation
+
+📁 src/hooks/useAdminResource.ts
+   - Admin resource management hook
+   - Resource access control
+   - Admin operation utilities
+
+## TYPE DEFINITIONS
+===================
+
+### 12. AUTHENTICATION TYPES
+----------------------------
+📁 src/types/auth.ts
+   - Core authentication type definitions
+   - UserProfile interface
+   - AuthState interface
+   - Form data interfaces (SignIn, SignUp, etc.)
+   - Role-based access control types
+   - AuthError and AuthResponse interfaces
+   - UserRole enum and permissions
+
+📁 src/types/supabase.ts
+   - Supabase database type definitions
+   - Generated types from database schema
+   - Table and column type definitions
+
+📁 src/types/index.ts
+   - Centralized type exports
+   - Authentication type re-exports
+
+## DATABASE SCHEMA & CONSTANTS
+==============================
+
+### 13. USER SCHEMA DEFINITIONS
+------------------------------
+📁 constants/users-schema.js
+   - Complete users table schema
+   - Column definitions and constraints
+   - User roles and status enums
+   - RLS policies
+   - Helper functions for user operations
+   - SQL queries for common operations
+
+📁 constants/index.js
+   - Centralized constants export
+   - Schema definitions
+
+## AUTHENTICATION FLOW DIAGRAM
+===============================
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   User Login    │───▶│  AuthContext     │───▶│  Supabase Auth  │
+│   Component     │    │  Provider        │    │  Client         │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Form Submit   │───▶│  Session State   │───▶│  Database       │
+│   Validation    │    │  Management      │    │  User Profile   │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Redirect      │───▶│  Route Protection│───▶│  Admin Access   │
+│   Handling      │    │  Middleware      │    │  Verification   │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+```
+
+## SECURITY FEATURES
+====================
+
+### 14. IMPLEMENTED SECURITY MEASURES
+-------------------------------------
+✅ JWT Token Management
+✅ Session Persistence
+✅ Route Protection Middleware
+✅ Role-Based Access Control (RBAC)
+✅ Admin Authentication Verification
+✅ OAuth Provider Integration
+✅ Password Strength Validation
+✅ Form Input Validation
+✅ CSRF Protection (via Supabase)
+✅ SQL Injection Prevention (via Supabase)
+✅ XSS Protection (via React)
+
+## AUTHENTICATION PROVIDERS
+===========================
+
+### 15. SUPPORTED AUTHENTICATION METHODS
+----------------------------------------
+🔐 Email/Password Authentication
+🔐 Google OAuth
+🔐 Facebook OAuth
+🔐 Supabase Auth (JWT-based)
+🔐 Session-based Authentication
+
+## FILE DEPENDENCIES
+====================
+
+### 16. CRITICAL DEPENDENCIES
+-----------------------------
+- @supabase/supabase-js: Core Supabase client
+- @supabase/ssr: Server-side rendering support
+- @tanstack/react-query: Cache management
+- next/server: Next.js server utilities
+- @mui/material: UI components
+- @mui/icons-material: Icons
+
+## ENVIRONMENT VARIABLES
+========================
+
+### 17. REQUIRED ENVIRONMENT VARIABLES
+--------------------------------------
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY
+- SUPABASE_SERVICE_ROLE_KEY (for admin operations)
+
+## TESTING & DEVELOPMENT
+=========================
+
+### 18. AUTHENTICATION TESTING
+-----------------------------
+📁 src/app/debug-page/page.tsx
+   - Debug page for testing authentication
+   - Session state inspection
+   - User profile debugging
+
+📁 src/app/test-contexts/page.tsx
+   - Context testing utilities
+   - Authentication state testing
+
+## MIGRATION & MAINTENANCE
+==========================
+
+### 19. AUTHENTICATION MIGRATION
+--------------------------------
+📁 AUTHENTICATION_MIGRATION_PLAN.md
+   - Migration strategy documentation
+   - Implementation status
+   - Future improvements
+
+### 20. ADDITIONAL SUPABASE CLIENT FILES
+---------------------------------------
+📁 src/lib/supabaseServer.ts
+   - Server-side Supabase client creation
+   - Cookie-based session handling
+   - SSR authentication support
+   - Environment variable configuration
+
+📁 src/lib/realtime.ts
+   - Real-time subscription management
+   - RealtimeManager class for WebSocket connections
+   - Cart, product, order, and settings subscriptions
+   - Global realtime manager utilities
+
+📁 src/lib/api/database.ts
+   - Generic database operations class
+   - CRUD operations with retry logic
+   - Database operation configuration
+   - Timeout and error handling
+
+📁 src/lib/api/base.ts
+   - Base API handler class
+   - Authentication and admin access checks
+   - Request timeout handling
+   - Standardized response formatting
+
+### 21. UI COMPONENTS WITH AUTH INTEGRATION
+------------------------------------------
+📁 src/components/ui/SupabaseError.tsx
+   - Error display component for Supabase operations
+   - Retry functionality for failed operations
+   - User-friendly error messaging
+   - Hebrew language support
+
+📁 src/components/layout/header/AccountMenu.tsx
+   - User account dropdown menu
+   - Login/logout functionality
+   - Admin panel access for authorized users
+   - User profile information display
+   - Authentication dialog integration
+
+### 22. ADMIN AUTHENTICATION GUARDS
+----------------------------------
+📁 src/components/admin/guards/AdminAuthGuard.tsx
+   - Route protection component for admin areas
+   - Authentication and authorization checks
+   - Redirect handling for unauthorized access
+   - Loading states and error displays
+
+📁 src/components/admin/providers/AdminProvider.tsx
+   - Admin-specific context provider
+   - Permission management system
+   - Admin role verification
+   - Permission-based access control
+
+### 23. ADMIN DATA MANAGEMENT
+----------------------------
+📁 src/components/admin/data-tables/ClientDataTable.tsx
+   - Client management data grid
+   - User role and status management
+   - CRUD operations for user accounts
+   - Admin authentication required
+
+📁 src/hooks/useClientManagement.ts
+   - Client management business logic
+   - User CRUD operations
+   - Pagination and filtering
+   - Admin authentication integration
+
+### 24. API ROUTES WITH AUTHENTICATION
+-------------------------------------
+📁 src/app/api/prices/check-access/route.ts
+   - Price access verification endpoint
+   - RLS policy checking
+   - User permission validation
+   - Authentication status checking
+
+📁 src/app/api/settings/route.ts
+   - Company settings management API
+   - Authentication-based access control
+   - RLS permission handling
+   - Default settings fallback
+
+### 25. AUTHENTICATION CONFIGURATION
+------------------------------------
+📁 supabase/config.toml
+   - Supabase project configuration
+   - Authentication settings
+   - Database connection settings
+   - Environment configuration
+
+## SUMMARY
+===========
+
+The authentication system is comprehensive and well-structured with:
+
+- **65+ authentication-related files** across the codebase
+- **Modern React patterns** with hooks and context
+- **Supabase integration** for backend authentication
+- **Role-based access control** for admin functions
+- **OAuth provider support** (Google, Facebook)
+- **Comprehensive type safety** with TypeScript
+- **Security best practices** implemented
+- **Modular architecture** for maintainability
+- **Real-time subscriptions** for live updates
+- **Generic database operations** with retry logic
+- **Admin authentication guards** for route protection
+- **Client management system** with full CRUD operations
+- **Error handling components** for user feedback
+- **Account management UI** with dropdown menus
+
+The system follows Next.js 15 best practices and provides a solid foundation for user authentication and authorization with extensive admin capabilities and real-time features.

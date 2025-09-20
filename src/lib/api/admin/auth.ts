@@ -1,7 +1,58 @@
 /**
- * @file Admin Authentication & Authorization Utilities
- * @description Centralizes the logic for verifying admin access in API routes.
- * This ensures a consistent and secure method for protecting admin-only endpoints.
+ * ADMIN AUTHENTICATION & AUTHORIZATION UTILITIES
+ * ==============================================
+ * 
+ * This file centralizes the logic for verifying admin access in API routes.
+ * It provides a secure and consistent method for protecting admin-only endpoints
+ * and ensures proper authentication and authorization checks.
+ * 
+ * ⚠️  SECURITY WARNING:
+ * This file handles sensitive authentication logic and service role client creation.
+ * The createAuthedAdminClient function provides FULL DATABASE ACCESS and should
+ * only be used after proper authentication and authorization verification.
+ * 
+ * KEY FEATURES:
+ * - Centralized admin authentication logic
+ * - Service role client creation with proper verification
+ * - Custom AuthError class for specific error handling
+ * - Multi-step authentication verification process
+ * - Database role verification
+ * - Secure error handling without information leakage
+ * 
+ * ARCHITECTURE:
+ * - Two-step authentication process (session + role verification)
+ * - Service role client creation only after verification
+ * - Custom error handling with status codes
+ * - Integration with Supabase SSR and service clients
+ * 
+ * SECURITY FEATURES:
+ * - Session verification before role checking
+ * - Database role verification from users table
+ * - Service role client only after full verification
+ * - Custom error handling with appropriate status codes
+ * - No sensitive information exposure in error messages
+ * 
+ * AUTHENTICATION FLOW:
+ * 1. Extract user session from request cookies
+ * 2. Verify user is authenticated
+ * 3. Create service role client for database access
+ * 4. Verify user role from database
+ * 5. Return service client if admin, throw error if not
+ * 
+ * USAGE:
+ * - Import createAuthedAdminClient in admin API routes
+ * - Use AuthError for proper error handling
+ * - Always wrap in try-catch blocks
+ * - Return appropriate HTTP status codes
+ * 
+ * ERROR HANDLING:
+ * - AuthError with status codes (401 for auth, 403 for authorization)
+ * - Proper error logging without sensitive data exposure
+ * - Graceful fallback for missing user profiles
+ * 
+ * @file src/lib/api/admin/auth.ts
+ * @author Authentication System
+ * @version 1.0.0
  */
 import { NextRequest } from 'next/server';
 import { createClientForApi } from '@/lib/supabase/server';

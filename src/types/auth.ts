@@ -1,3 +1,63 @@
+/**
+ * AUTHENTICATION TYPE DEFINITIONS
+ * ================================
+ * 
+ * This file contains all TypeScript type definitions for the authentication system.
+ * It provides comprehensive type safety for user authentication, authorization,
+ * and profile management throughout the application.
+ * 
+ * KEY FEATURES:
+ * - Comprehensive authentication type definitions
+ * - User profile interfaces with database integration
+ * - Form data interfaces for authentication forms
+ * - Role-based access control types
+ * - Error handling interfaces
+ * - Supabase database type integration
+ * 
+ * ARCHITECTURE:
+ * - Extends Supabase generated types
+ * - Provides fallback types for missing database tables
+ * - Application-specific interfaces for business logic
+ * - Form validation interfaces
+ * - Role and permission definitions
+ * 
+ * TYPE CATEGORIES:
+ * - Database Types: ProfileRow, ProfileInsert, ProfileUpdate
+ * - User Types: AuthUser, UserProfile
+ * - State Types: AuthState
+ * - Form Types: SignInFormData, SignUpFormData, etc.
+ * - Error Types: AuthError, AuthResponse
+ * - Role Types: UserRole, RolePermissions
+ * 
+ * SECURITY FEATURES:
+ * - Type-safe authentication state management
+ * - Role-based access control types
+ * - Secure form data interfaces
+ * - Error handling without sensitive data exposure
+ * 
+ * DATABASE INTEGRATION:
+ * - Supabase generated type integration
+ * - Fallback types for missing tables
+ * - Type-safe database operations
+ * - Profile management interfaces
+ * 
+ * USAGE:
+ * - Import types in authentication components
+ * - Use for form validation and state management
+ * - Provides type safety for API responses
+ * - Enables proper TypeScript intellisense
+ * 
+ * EXTENSIBILITY:
+ * - Easy to extend with new user fields
+ * - Modular type definitions
+ * - Support for additional roles and permissions
+ * - Flexible form data interfaces
+ * 
+ * @file src/types/auth.ts
+ * @author Authentication System
+ * @version 1.0.0
+ */
+
 import { User, Session } from '@supabase/supabase-js';
 import { Database } from './supabase';
 

@@ -1,3 +1,47 @@
+/**
+ * SUPABASE AUTHENTICATION HOOK
+ * =============================
+ * 
+ * Alternative authentication hook that provides direct Supabase client integration.
+ * This hook offers a more granular approach to authentication management compared
+ * to the AuthContext provider.
+ * 
+ * KEY FEATURES:
+ * - Direct Supabase client integration
+ * - OAuth provider support (Google, Facebook, GitHub, Twitter)
+ * - User profile creation and management
+ * - Session persistence with timeout handling
+ * - Comprehensive error handling and recovery
+ * - Automatic user profile synchronization
+ * 
+ * ARCHITECTURE:
+ * - Uses React hooks for state management
+ * - Integrates directly with Supabase Auth
+ * - Manages user profiles in custom users table
+ * - Provides both auth and profile operations
+ * 
+ * SECURITY FEATURES:
+ * - Session timeout handling
+ * - Automatic profile creation for new users
+ * - Role preservation for existing users
+ * - Secure OAuth redirect handling
+ * 
+ * USAGE:
+ * - Import and use in components that need direct auth control
+ * - Provides more granular control than AuthContext
+ * - Ideal for custom authentication flows
+ * 
+ * DIFFERENCES FROM AuthContext:
+ * - More direct Supabase integration
+ * - OAuth provider support
+ * - Custom profile management
+ * - Timeout handling for sign out
+ * 
+ * @file src/hooks/useSupabaseAuth.ts
+ * @author Authentication System
+ * @version 1.0.0
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabaseBrowserClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';

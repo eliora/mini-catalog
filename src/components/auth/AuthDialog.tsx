@@ -1,3 +1,65 @@
+/**
+ * AUTHENTICATION DIALOG COMPONENT
+ * ================================
+ * 
+ * This component provides a modal dialog for user authentication with tabbed
+ * interface for sign-in and sign-up forms. It features responsive design,
+ * smooth animations, and comprehensive form integration.
+ * 
+ * KEY FEATURES:
+ * - Modal dialog with tabbed interface
+ * - Sign-in and sign-up form integration
+ * - Responsive design (full-screen on mobile)
+ * - Smooth slide-up animation
+ * - Form switching between sign-in and sign-up
+ * - Success callback handling
+ * - Close button with proper accessibility
+ * - Sticky header with dynamic title
+ * 
+ * ARCHITECTURE:
+ * - Uses Material-UI Dialog with custom transitions
+ * - Tabbed interface with proper ARIA attributes
+ * - Responsive design with useMediaQuery
+ * - Form components integration (SignInForm, SignUpForm)
+ * - Proper TypeScript interfaces and forwardRef usage
+ * 
+ * ACCESSIBILITY FEATURES:
+ * - Proper ARIA labels and roles
+ * - Keyboard navigation support
+ * - Screen reader compatibility
+ * - Focus management
+ * - Tab panel accessibility
+ * 
+ * RESPONSIVE DESIGN:
+ * - Full-screen mode on mobile devices
+ * - Adaptive sizing for different screen sizes
+ * - Proper overflow handling
+ * - Custom scrollbar styling
+ * 
+ * ANIMATIONS:
+ * - Slide-up transition for dialog appearance
+ * - Smooth tab switching
+ * - Hover effects on interactive elements
+ * - Loading state animations
+ * 
+ * USAGE:
+ * - Import and use in header components or pages
+ * - Pass open/onClose props for dialog control
+ * - Pass initialTab prop to start with specific form
+ * - Pass onAuthSuccess callback for success handling
+ * 
+ * STYLING:
+ * - Clean dialog design with rounded corners
+ * - Sticky header with border separation
+ * - Custom scrollbar for content area
+ * - Responsive padding and margins
+ * - Hebrew RTL text support
+ * 
+ * @file src/components/auth/AuthDialog.tsx
+ * @author Authentication System
+ * @version 1.0.0
+ */
+
 'use client';
 
 import React, { useState, forwardRef, ReactElement, Ref } from 'react';

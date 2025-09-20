@@ -1,3 +1,50 @@
+/**
+ * NEXT.JS AUTHENTICATION MIDDLEWARE
+ * ==================================
+ * 
+ * This middleware handles authentication and authorization for the entire application.
+ * It runs on every request and provides route protection, session management,
+ * and admin access control.
+ * 
+ * KEY FEATURES:
+ * - Route protection for admin areas
+ * - Session refresh and validation
+ * - Admin role verification
+ * - OAuth callback handling
+ * - Automatic redirects for unauthorized access
+ * - Cookie-based session management
+ * 
+ * ARCHITECTURE:
+ * - Uses Next.js middleware for request interception
+ * - Integrates with Supabase SSR for server-side auth
+ * - Cookie-based session handling
+ * - Role-based access control
+ * 
+ * SECURITY FEATURES:
+ * - Admin route protection
+ * - Session validation on every request
+ * - Role verification from database
+ * - Secure redirect handling
+ * - OAuth callback processing
+ * 
+ * PROTECTED ROUTES:
+ * - /admin/* - Requires admin role
+ * - /auth/callback - Handles OAuth callbacks
+ * 
+ * USAGE:
+ * - Automatically runs on all requests
+ * - No manual configuration required
+ * - Handles authentication transparently
+ * 
+ * CONFIGURATION:
+ * - Matches all routes except static files and API routes
+ * - Customizable matcher pattern
+ * 
+ * @file middleware.ts
+ * @author Authentication System
+ * @version 1.0.0
+ */
+
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 

@@ -1,3 +1,59 @@
+/**
+ * SIGN IN FORM COMPONENT
+ * =======================
+ * 
+ * This component provides a comprehensive sign-in form with social login options.
+ * It features email/password authentication, OAuth provider integration,
+ * password visibility toggle, and forgot password functionality.
+ * 
+ * KEY FEATURES:
+ * - Email/password authentication
+ * - Social login integration (Google, Facebook)
+ * - Password visibility toggle
+ * - Forgot password functionality
+ * - Real-time form validation
+ * - Comprehensive error handling with Hebrew messages
+ * - Loading states and disabled states
+ * - Responsive design with Material-UI
+ * 
+ * ARCHITECTURE:
+ * - Uses AuthContext for authentication state management
+ * - Material-UI components for consistent styling
+ * - TypeScript interfaces for type safety
+ * - Form validation with error display
+ * - Social login redirect handling
+ * 
+ * SECURITY FEATURES:
+ * - Input validation and sanitization
+ * - Email format validation
+ * - Error message handling without exposing sensitive info
+ * - Secure form submission
+ * - Password reset functionality
+ * 
+ * SOCIAL LOGIN:
+ * - Google OAuth integration
+ * - Facebook OAuth integration
+ * - Redirect-based authentication flow
+ * - Error handling for OAuth failures
+ * 
+ * USAGE:
+ * - Import and use in authentication dialogs/pages
+ * - Pass onSuccess callback for success handling
+ * - Pass onSwitchToSignUp callback for form switching
+ * - Optional showSocialLogin prop to hide social buttons
+ * 
+ * STYLING:
+ * - Clean form layout with proper spacing
+ * - Social login buttons with provider icons
+ * - Password visibility toggle with icons
+ * - Hebrew RTL text support
+ * - Responsive design for mobile and desktop
+ * 
+ * @file src/components/auth/SignInForm.tsx
+ * @author Authentication System
+ * @version 1.0.0
+ */
+
 'use client';
 
 import React, { useState } from 'react';

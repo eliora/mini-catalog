@@ -1,3 +1,46 @@
+/**
+ * AUTHENTICATION CONTEXT PROVIDER
+ * ================================
+ * 
+ * This is the main authentication context provider that manages the entire
+ * authentication state for the application. It provides a centralized way
+ * to handle user authentication, session management, and profile data.
+ * 
+ * KEY FEATURES:
+ * - Centralized authentication state management
+ * - Session persistence and automatic refresh
+ * - User profile loading and management
+ * - React Query integration for cache management
+ * - Role-based access control utilities
+ * - Comprehensive error handling
+ * 
+ * ARCHITECTURE:
+ * - Uses React Context API for state sharing
+ * - Integrates with Supabase Auth for backend authentication
+ * - Manages both auth user and custom user profile data
+ * - Provides hooks for components to access auth state
+ * 
+ * SECURITY FEATURES:
+ * - Automatic session refresh
+ * - Secure cookie handling
+ * - Role verification for admin access
+ * - Cache clearing on logout
+ * 
+ * USAGE:
+ * - Wrap your app with <AuthProvider>
+ * - Use useAuth() hook in components to access auth state
+ * - Provides signIn, signUp, signOut, and profile management
+ * 
+ * DEPENDENCIES:
+ * - @tanstack/react-query: Cache management
+ * - @supabase/supabase-js: Authentication backend
+ * - React Context API: State management
+ * 
+ * @file src/context/AuthContext.tsx
+ * @author Authentication System
+ * @version 1.0.0
+ */
+
 'use client';
 
 import React, { createContext, useCallback, useContext, useMemo, useState, useEffect } from 'react';

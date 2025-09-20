@@ -1,3 +1,48 @@
+/**
+ * LOGIN COMPONENT
+ * ================
+ * 
+ * This component provides a comprehensive login interface for admin users.
+ * It features a clean, modern design with proper validation, error handling,
+ * and accessibility features.
+ * 
+ * KEY FEATURES:
+ * - Email/password authentication
+ * - Real-time form validation
+ * - Comprehensive error handling with Hebrew messages
+ * - Loading states and disabled states
+ * - Responsive design with Material-UI
+ * - Accessibility features (ARIA labels, proper form structure)
+ * - Automatic redirect after successful login
+ * 
+ * ARCHITECTURE:
+ * - Uses AuthContext for authentication state management
+ * - Material-UI components for consistent styling
+ * - TypeScript interfaces for type safety
+ * - Form validation with error display
+ * 
+ * SECURITY FEATURES:
+ * - Input validation and sanitization
+ * - Error message handling without exposing sensitive info
+ * - Secure form submission
+ * - Loading state management
+ * 
+ * USAGE:
+ * - Import and use in login pages
+ * - Pass onLogin callback for success handling
+ * - Pass redirectTo prop for post-login navigation
+ * 
+ * STYLING:
+ * - Card-based layout with shadow and rounded corners
+ * - Icon integration with input fields
+ * - Responsive design for mobile and desktop
+ * - Hebrew RTL text support
+ * 
+ * @file src/components/auth/Login.tsx
+ * @author Authentication System
+ * @version 1.0.0
+ */
+
 'use client';
 
 import React, { useState } from 'react';

@@ -14,23 +14,7 @@ PROJECT CONTEXT
 1) ALWAYS run:           npm run lint
 2) Fix all ESLint issues → rerun lint until clean.
 3) ALWAYS run:           npx tsc --noEmit --skipLibCheck
-4) Only when both pass → npm run build
-5) Never fix lint + type errors in same pass — handle separately.
-
-------------------------------------------------------------
-🛠 PROVEN ERROR-FIXING METHOD (FILE-BY-FILE)
-------------------------------------------------------------
-1) When overwhelmed, use File-by-File:
-   npm run lint -- path/to/file.tsx
-2) Fix ALL warnings/errors in ONE file before moving on.
-3) Priority order:
-   - TypeScript errors (fix first)
-   - ESLint errors (fix second)
-   - ESLint warnings (last)
-4) Track progress:
-   npm run lint 2>&1 | Select-String "problems"
-   Number should go down over time.
-5) Verify each fix: npx tsc --noEmit
+4) Never fix lint + type errors in same pass — handle separately.
 
 ------------------------------------------------------------
 ESLINT RULES (ZERO TOLERANCE)
@@ -41,7 +25,6 @@ ESLINT RULES (ZERO TOLERANCE)
 - no-explicit-any: DO NOT use `any`. Use proper interface or `unknown` + cast.
 - @next/next/no-img-element: REPLACE with next/image ALWAYS.
 - Auto-fixable rules → run eslint --fix.
-- Emergency only: `// eslint-disable-next-line @typescript-eslint/no-explicit-any` with a TODO and justification.
 
 Recommended snippet to enable autofix-removal of unused imports:
 (put in .eslintrc)
@@ -85,21 +68,6 @@ COMPONENT & FILE MANAGEMENT
 - When extracting, create small presentational components + container hooks.
 
 ------------------------------------------------------------
-API ROUTES (Next.js app router)
-------------------------------------------------------------
-- Use named exports only: export async function GET(...) { ... }
-- Signature: (req: NextRequest) => NextResponse | Promise<NextResponse>
-- Always return NextResponse.json(...)
-- Keep handlers small; business logic lives in src/api/
-
-------------------------------------------------------------
-NEXT.JS BEST PRACTICES
-------------------------------------------------------------
-- FORBIDDEN: <img> tags — always use next/image with required props.
-- Pattern: <Image src={src} alt={alt} fill style={{ objectFit: 'contain' }} />
-- Ensure images are optimized and sizes specified where possible.
-
-------------------------------------------------------------
 COMPONENT REUSE & REFRACTORING RULES
 ------------------------------------------------------------
 - ALWAYS check existing components first. Reuse > recreate.
@@ -123,34 +91,9 @@ GENERAL EXCELLENCE RULES
 - Immediate fixes — do not accumulate debt.
 
 ------------------------------------------------------------
-EXAMPLE MINI WORKFLOW (file-by-file)
-------------------------------------------------------------
-1) Inspect file:
-   npm run lint -- src/components/Example.tsx
-
-2) Fix types first:
-   edit file → run npx tsc --noEmit --skipLibCheck (repeat until clear)
-
-3) Remove unused imports:
-   npx eslint --fix src/components/Example.tsx
-   or
-   npm run lint -- --fix src/components/Example.tsx
-
-4) Verify ESLint:
-   npm run lint -- src/components/Example.tsx
-
-5) Run all checks:
-   npm run lint && npx tsc --noEmit --skipLibCheck
-
-6) Build:
-   npm run build
-
-------------------------------------------------------------
 NOTES
 - ALWAYS read docs when unsure:
   https://nextjs.org/docs
   https://mui.com/material-ui/getting-started/
 - Prefer small, incremental, reviewed PRs — module-by-module.
 - When refactoring, run tests (if present) and static checks.
-
-END OF CURSORRULES

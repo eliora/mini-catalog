@@ -1,8 +1,44 @@
 /**
- * @file Supabase Server-Side Clients
- * @description Provides functions to create Supabase clients for use in different
+ * SUPABASE SERVER-SIDE CLIENTS
+ * =============================
+ * 
+ * This file provides functions to create Supabase clients for use in different
  * server-side Next.js contexts (Server Components, API Routes, etc.).
  * It leverages the `@supabase/ssr` package to handle cookie-based authentication.
+ * 
+ * KEY FEATURES:
+ * - Server Component client creation
+ * - API Route client creation
+ * - Cookie-based authentication handling
+ * - SSR-compatible client management
+ * - Type-safe database operations
+ * 
+ * ARCHITECTURE:
+ * - Uses @supabase/ssr for SSR compatibility
+ * - Async cookie handling for Server Components
+ * - Synchronous cookie handling for API Routes
+ * - Environment variable configuration
+ * 
+ * SECURITY FEATURES:
+ * - Cookie-based session management
+ * - Server-side authentication
+ * - Type-safe database operations
+ * - Environment variable validation
+ * 
+ * USAGE:
+ * - createClient() for Server Components
+ * - createClientForApi() for API Routes
+ * - Automatic cookie handling
+ * - Session persistence across requests
+ * 
+ * DIFFERENCES:
+ * - Server Components: Async cookie handling
+ * - API Routes: Synchronous cookie handling
+ * - Both provide full authentication support
+ * 
+ * @file src/lib/supabase/server.ts
+ * @author Authentication System
+ * @version 1.0.0
  */
 
 import { createServerClient, type CookieOptions } from '@supabase/ssr'

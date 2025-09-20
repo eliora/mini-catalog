@@ -1,31 +1,67 @@
 /**
- * SignUpForm Component - User registration form
+ * SIGN UP FORM COMPONENT
+ * ======================
  * 
- * Comprehensive user registration form with validation and social login options.
- * Refactored with TypeScript and enhanced features.
+ * This component provides a comprehensive user registration form with validation
+ * and social login options. It features modular architecture with extracted
+ * components for better maintainability and performance.
  * 
- * Architecture:
+ * KEY FEATURES:
+ * - Email/password registration
+ * - Social login integration (Google, Facebook)
+ * - Real-time form validation
+ * - Password strength indicator
+ * - Terms and conditions acceptance
+ * - Success/error messaging with Hebrew support
+ * - Loading states and disabled states
+ * - TypeScript support with proper interfaces
+ * - Accessibility enhancements
+ * 
+ * ARCHITECTURE:
+ * - Modular component design with extracted subcomponents
  * - SocialLoginButtons: Google and Facebook authentication
  * - SignUpFormFields: Form input fields with validation
  * - PasswordStrengthIndicator: Password strength visualization
  * - signUpValidation: Validation utilities and functions
+ * - Uses AuthContext for authentication state management
  * 
- * Features:
- * - Email/password registration
- * - Social login (Google, Facebook)
- * - Real-time form validation
- * - Password strength indicator
+ * SECURITY FEATURES:
+ * - Comprehensive form validation
+ * - Password strength requirements
+ * - Email format validation
  * - Terms and conditions acceptance
- * - Success/error messaging
- * - Loading states
- * - TypeScript support
- * - Accessibility enhancements
+ * - Error message handling without exposing sensitive info
+ * - Secure form submission
  * 
- * Performance:
- * - React.memo optimization
- * - Extracted validation utilities
- * - Modular component architecture
- * - Efficient state management
+ * SOCIAL LOGIN:
+ * - Google OAuth integration
+ * - Facebook OAuth integration
+ * - Redirect-based authentication flow
+ * - Error handling for OAuth failures
+ * 
+ * PERFORMANCE:
+ * - React.memo optimization for re-render prevention
+ * - Extracted validation utilities for reusability
+ * - Modular component architecture for better code organization
+ * - Efficient state management with useCallback
+ * 
+ * USAGE:
+ * - Import and use in authentication dialogs/pages
+ * - Pass onSuccess callback for success handling
+ * - Pass onSwitchToSignIn callback for form switching
+ * - Optional showSocialLogin prop to hide social buttons
+ * - Optional redirectTo prop for post-registration navigation
+ * 
+ * STYLING:
+ * - Clean form layout with proper spacing
+ * - Social login buttons with provider icons
+ * - Password strength visualization
+ * - Hebrew RTL text support
+ * - Responsive design for mobile and desktop
+ * 
+ * @file src/components/auth/SignUpForm.tsx
+ * @author Authentication System
+ * @version 1.0.0
  */
 
 'use client';
