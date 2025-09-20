@@ -196,7 +196,7 @@ const MobileFilterChips: React.FC<MobileFilterChipsProps> = ({
           pb: 1
         }}>
           <FilterIcon color="primary" />
-          <Typography variant="h6" fontWeight="bold">
+          <Typography variant="subtitle1" fontWeight="bold">
             מסננים
           </Typography>
           {activeFiltersCount > 0 && (
